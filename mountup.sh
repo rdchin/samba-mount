@@ -86,6 +86,8 @@ TEMP_FILE="mountup_temp.txt"
 #
 #@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
+# Add your actual data below:
+#
 # +----------------------------------------+
 # |       Function f_server_arrays         |
 # +----------------------------------------+
