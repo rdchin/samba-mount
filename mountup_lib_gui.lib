@@ -126,6 +126,8 @@ THIS_FILE="mountup_lib_gui.lib"
 #
 #@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
+# Add your actual data below:
+#
 # +----------------------------------------+
 # |       Function f_server_arrays         |
 # +----------------------------------------+
