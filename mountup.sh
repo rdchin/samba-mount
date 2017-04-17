@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-04-17 16:56"
+VERSION="2017-04-17 17:26"
 THIS_FILE="mountup.sh"
 TEMP_FILE="mountup_temp.txt"
 #
@@ -729,7 +729,6 @@ f_main_menu_txt () {
             echo "$Y (C/c) - Code History."
             echo
             echo "Alternate usage: \"bash mountup.sh <SERVER NAME>\" (Will mount all share-points)."
-            #echo "(Will mount all share-points from that server)"
             echo
             echo -n $(tput bold)
             echo -n "Please select letter or 0-$X (0): " ; read CHOICE_SERVER
