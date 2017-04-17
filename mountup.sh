@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2016-12-11 17:01"
+VERSION="2017-04-17 16:56"
 THIS_FILE="mountup.sh"
 TEMP_FILE="mountup_temp.txt"
 #
@@ -16,6 +16,10 @@ TEMP_FILE="mountup_temp.txt"
 ## After each edit made, please update Code History and VERSION.
 ##
 ## Code Change History
+##
+## 2017-04-17 *Main Program, f_mount_all new feature to include a server name
+##             after the command  Usage: "bash mountup.sh <SERVER NAME>"
+##             to mount all share-points for that server.
 ##
 ## 2016-12-11 *f_mount_txt fixed faulty code by total rewrite with pseudo-code.
 ##            *f_post_mount_txt added to simplify code.
@@ -193,7 +197,7 @@ f_test_environment () {
       # if [ -z "$BASH_VERSION" ]; then
       # if [ "$BASH_VERSION" = '' ]; then
       f_test_dash_txt
-} # End of function f_test_environment.
+}  # End of function f_test_environment.
 #
 # +----------------------------------------+
 # |        Function f_test_dash_txt        |
@@ -228,7 +232,7 @@ f_test_dash_txt () {
          f_press_enter_key_to_continue
          f_abort_txt
       fi
-} # End of function f_test_dash_txt.
+}  # End of function f_test_dash_txt.
 #
 # +----------------------------------------+
 # |          Function f_detect_ui          |
@@ -261,7 +265,7 @@ f_detect_ui () {
             GUI="text"
          fi
       fi
-} # End of function f_detect_ui.
+}  # End of function f_detect_ui.
 #
 # +----------------------------------------+
 # |         Function f_script_path         |
@@ -280,7 +284,7 @@ f_script_path () {
       #
       # !!!Non-BASH environments will give error message about line below!!!
       SCRIPT_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-} # End of function f_script_path.
+}  # End of function f_script_path.
 #
 # +----------------------------------------+
 # |        Function f_test_connection      |
@@ -318,7 +322,7 @@ f_test_connection () {
            fi
            ;;
       esac
-} # End of function f_test_connection.
+}  # End of function f_test_connection.
 #
 # +----------------------------------------+
 # |            Function f_abort_txt        |
@@ -337,7 +341,7 @@ f_abort_txt() {
       echo "An error occurred. Exiting..." >&2
       exit 1
       echo -n $(tput sgr0) # Set font to normal color.
-} # End of function f_abort_txt.
+}  # End of function f_abort_txt.
 #
 # +----------------------------------------+
 # | Function f_press_enter_key_to_continue |
@@ -352,7 +356,7 @@ f_press_enter_key_to_continue () { # Display message and wait for user input.
       echo -n "Press '"Enter"' key to continue."
       read X
       unset X  # Throw out this variable.
-} # End of function f_press_enter_key_to_continue.
+}  # End of function f_press_enter_key_to_continue.
 #
 # +------------------------------------+
 # |        Function f_about_txt        |
@@ -369,7 +373,7 @@ f_about_txt () {
       echo "Version: $VERSION"
       echo
       f_press_enter_key_to_continue
-} # End of f_about_txt.
+}  # End of f_about_txt.
 #
 # +----------------------------------------+
 # |       Function f_code_history_txt      |
@@ -387,7 +391,7 @@ f_code_history_txt () {
       # less -P customizes prompt for
       # %f <FILENAME> page <num> of <pages> (Spacebar, PgUp/PgDn . . .)
       sed -n 's/^##//'p $THIS_DIR/$THIS_FILE | less -P '(Spacebar, PgUp/PgDn, Up/Dn arrows, press q to quit)'
-} # End of function f_code_history_txt.
+}  # End of function f_code_history_txt.
 #
 # +----------------------------------------+
 # |    Function f_show_mount_points_txt    |
@@ -428,7 +432,7 @@ f_show_mount_points_txt () {
          sleep 2  # Either quickly display error or nothing is mounted.
       fi
       unset ERROR X # Throw out this variable.
-} # End of function f_show_mount_points_txt.
+}  # End of function f_show_mount_points_txt.
 #
 # +----------------------------------------+
 # |         Function f_username_txt        |
@@ -447,7 +451,7 @@ f_username_txt() {
                *) SMBUSER="$ANS" ;;
       esac
 unset ANS
-} # End of function f_username_txt.
+}  # End of function f_username_txt.
 #
 # +----------------------------------------+
 # |         Function f_password_txt        |
@@ -460,7 +464,7 @@ unset ANS
 f_password_txt() {
       read -s -p "Enter SMB mount-point password: " PASSWORD
       echo
-} # End of function f_password_txt.
+}  # End of function f_password_txt.
 #
 # +----------------------------------------+
 # |  Function f_mount_or_dismount_all_txt  |
@@ -528,7 +532,7 @@ f_mount_or_dismount_all_txt () {
             NUM=$(($NUM+1))  #Increment NUM by 1.
       done
       unset EXITOUT NUM SP MP # PASSWORD  # Throw out this variable.
-} # End of function f_mount_or_dismount_all_txt.
+}  # End of function f_mount_or_dismount_all_txt.
 #
 # +----------------------------------------+
 # |          Function f_mount_txt          |
@@ -561,7 +565,8 @@ f_mount_txt () {
                #
                # Case SMBUSER   PASSWORD   Action
                #
-               #   1. null       null       First time in loop or a mount failure in f_post_mount_txt sets both to null. Ask for SMB user name. If none entered, set SMBUSER="anonymous".
+               #   1. null       null       First time in loop or a mount failure in f_post_mount_txt sets both to null.
+               #                            Ask for SMB user name. If none entered, set SMBUSER="anonymous".
                #   2. $USER      null       Mount anonymously.
                #   3. $USER      $PASSWORD  Mount with credentials.
                #   4. anonymous  null       Mount anonymously.
@@ -605,7 +610,7 @@ f_mount_txt () {
             fi
       done
       unset A X ERROR  # Throw out this variable.
-} # End of function f_mount_txt.
+}  # End of function f_mount_txt.
 #
 # +----------------------------------------+
 # |        Function f_post_mount_txt       |
@@ -649,7 +654,7 @@ f_post_mount_txt () {
                echo
                # f_press_enter_key_to_continue
             fi
-} # End of function f_post_mount_txt.
+}  # End of function f_post_mount_txt.
 #
 # +----------------------------------------+
 # |         Function f_dismount_txt        |
@@ -680,7 +685,7 @@ f_dismount_txt () {
       fi
       #
       unset ERROR  # Throw out this variable.
-} # End of function f_dismount_txt.
+}  # End of function f_dismount_txt.
 #
 # +----------------------------------------+
 # |        Function f_main_menu_txt        |
@@ -722,6 +727,9 @@ f_main_menu_txt () {
             echo "$X (A/a) - About this script."
             let Y=$X+1
             echo "$Y (C/c) - Code History."
+            echo
+            echo "Alternate usage: \"bash mountup.sh <SERVER NAME>\" (Will mount all share-points)."
+            #echo "(Will mount all share-points from that server)"
             echo
             echo -n $(tput bold)
             echo -n "Please select letter or 0-$X (0): " ; read CHOICE_SERVER
@@ -774,7 +782,7 @@ f_main_menu_txt () {
             fi
       done
       unset X Y CHOICE CHOICEA XNUM YNUM ARRAY_LEN ARRAY_NAME SERVER_NAME  # Throw out this variable.
-} # End of function f_main_menu_txt.
+}  # End of function f_main_menu_txt.
 #
 # +----------------------------------------+
 # |       Function f_action_menu_txt       |
@@ -859,7 +867,23 @@ f_action_menu_txt () {
             esac
       done
       unset CHOICE_ACT ANS XNUM # Throw out this variable.
-} # End of function f_action_menu_txt.
+}  # End of function f_action_menu_txt.
+#
+# +----------------------------------------+
+# |         Function f_mount_all           |
+# +----------------------------------------+
+#
+#  Inputs: $1=Server name.
+#    Uses: CHOICE_ACT, ANS XNUM.
+# Outputs: SMBUSER="".
+#
+f_mount_all () {
+      f_test_connection $GUI $1
+      if [ $ERROR -eq 0 ] ; then
+         f_mount_or_dismount_all_txt $1 "mount"
+      fi
+      f_show_mount_points_txt 1
+}  # End of function f_mount_all.
 #
 # **************************************
 # ***     Start of Main Program      ***
@@ -883,12 +907,20 @@ f_detect_ui
 f_script_path
 MAINMENU_DIR=$SCRIPT_PATH
 THIS_DIR=$MAINMENU_DIR  # Set $THIS_DIR to location of Main Menu.
-#
-f_server_arrays
-#
 GUI="text"      # Diagnostic line. Force plain text w/o GUI for testing purposes.
 # GUI="whiptail"  # Diagnostic line. Force whiptail GUI for testing purposes.
 # GUI="dialog"    # Diagnostic line. Force dialog GUI for testing purposes.
+#
+f_server_arrays
+#
+TARGET_SERVER=$1
+#
+if [ -n "$TARGET_SERVER" ] ; then  # If $TARGET_SERVER is non-null.
+   f_mount_all $TARGET_SERVER
+   exit 0  # This cleanly closes the process generated by #!bin/bash. 
+           # Otherwise every time this script is run, another instance of
+           # process /bin/bash is created using up resources.
+fi
 #
 # **************************************
 # ***           Main Menu            ***
@@ -898,7 +930,6 @@ case $GUI in
      f_main_menu_txt
      clear   # Blank the screen.
      f_show_mount_points_txt 0  # Display mount-points status.
-     #
      ;;
 esac
 #
