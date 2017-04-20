@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-04-17 17:26"
+VERSION="2017-04-20 00:25"
 THIS_FILE="mountup.sh"
 TEMP_FILE="mountup_temp.txt"
 #
@@ -17,9 +17,13 @@ TEMP_FILE="mountup_temp.txt"
 ##
 ## Code Change History
 ##
+## 2017-04-20 *Cleanup comments.
+##            *f_mount_all_txt had a bad call to f_mount_or_dismount_all_txt 
+##             fixed input parameters that were missing.
+##
 ## 2017-04-17 *Main Program, f_mount_all new feature to include a server name
-##             after the command  Usage: "bash mountup.sh <SERVER NAME>"
-##             to mount all share-points for that server.
+##             after the command i.e. "bash mountup.sh <server name>" to mount
+##             all share-points for that server.
 ##
 ## 2016-12-11 *f_mount_txt fixed faulty code by total rewrite with pseudo-code.
 ##            *f_post_mount_txt added to simplify code.
@@ -91,6 +95,7 @@ TEMP_FILE="mountup_temp.txt"
 #@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
+#
 #
 # +----------------------------------------+
 # |       Function f_server_arrays         |
@@ -728,8 +733,6 @@ f_main_menu_txt () {
             let Y=$X+1
             echo "$Y (C/c) - Code History."
             echo
-            echo "Alternate usage: \"bash mountup.sh <SERVER NAME>\" (Will mount all share-points)."
-            echo
             echo -n $(tput bold)
             echo -n "Please select letter or 0-$X (0): " ; read CHOICE_SERVER
             echo -n $(tput sgr0)
@@ -872,14 +875,15 @@ f_action_menu_txt () {
 # |         Function f_mount_all           |
 # +----------------------------------------+
 #
-#  Inputs: $1=Server name.
-#    Uses: CHOICE_ACT, ANS XNUM.
-# Outputs: SMBUSER="".
+#  Inputs: $1=GUI
+#          $2=Server name.
+#    Uses: None.
+# Outputs: ERROR.
 #
 f_mount_all () {
-      f_test_connection $GUI $1
+      f_test_connection $1 $2
       if [ $ERROR -eq 0 ] ; then
-         f_mount_or_dismount_all_txt $1 "mount"
+         f_mount_or_dismount_all_txt $1 $2 "mount"
       fi
       f_show_mount_points_txt 1
 }  # End of function f_mount_all.

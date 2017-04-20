@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-01-07 15:00"
+VERSION="2017-04-20 00:25"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -16,6 +16,9 @@ THIS_FILE="mountup_lib_gui.lib"
 #@ After each edit made, please update Code History and VERSION.
 #@
 #@ Code Change History
+#@
+#@ 2017-04-20 *mountup_gui.sh added f_detect_ui and check if the file exists
+#@             and is readable, mountup_lib_gui.lib. Cleaned up comments.
 #@
 #@ 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
 #@              choosing menu item "Pick" mount-points.
@@ -127,6 +130,7 @@ THIS_FILE="mountup_lib_gui.lib"
 #@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
+#
 #
 # +----------------------------------------+
 # |       Function f_server_arrays         |
