@@ -17,7 +17,7 @@ TEMP_FILE="mountup_temp.txt"
 ##
 ## Code Change History
 ##
-## 2017-08-05 *f_server_arrays SRV[$ARRAY_NUM] change from 1st 2-letters
+## 2017-08-08 *f_server_arrays SRV[$ARRAY_NUM] change from 1st 2-letters
 ##             to 1st 3-letters of server name for Main Menu.
 ##
 ## 2017-05-03 *Main Program added detection of valid arguments. 
@@ -88,35 +88,24 @@ TEMP_FILE="mountup_temp.txt"
 #
 # Format <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-# @@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
-# @@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
+#@@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
+#@@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
 #
-# @@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
+#@@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
 #
-# @@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
+#@@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
 #
-# @@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
+#@@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
 #
-# @@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
+#@@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
 #
-# @@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
-# @@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
+#@@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
+#@@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
 #
 # @@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
-#@@//beansprout/public#@@/mnt/beansprout/public#@@Public files.
-#@@//beansprout/public-no-backup#@@/mnt/beansprout/public-no-backup#@@Public files but not backed up.
-#@@//beansprout/robert#@@/mnt/beansprout/robert#@@Roberts documents.
-#@@//papyrus/public#@@/mnt/papyrus/public#@@Public folder.
-#@@//papyrus/public-no-backup#@@/mnt/papyrus/public-no-backup#@@Public folder but not backed up.
-#@@//papyrus/robert#@@/mnt/papyrus/robert#@@Robert folder.
-#@@//parsley/public#@@/mnt/parsley/public#@@Public files.
-#@@//parsley/public-no-backup#@@/mnt/parsley/public-no-backup#@@Public files but not backed up.
-#@@//parsley/robert#@@/mnt/parsley/robert#@@Roberts documents.
-#@@//scotty/public#@@/mnt/scotty/public#@@Public files.
-#@@//scotty/public-no-backup#@@/mnt/scotty/public-no-backup#@@Public files but not backed up.
-#@@//scotty/robert#@@/mnt/scotty/robert#@@Roberts documents.
+#
 #
 # +----------------------------------------+
 # |       Function f_server_arrays         |
