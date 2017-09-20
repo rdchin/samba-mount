@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-04-20 00:25"
+VERSION="2017-09-19 22:28"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -17,11 +17,16 @@ THIS_FILE="mountup_lib_gui.lib"
 #@
 #@ Code Change History
 #@
+#@ 2017-09-19 *f_mount_gui removed checks for SMB username, password.
+#@            *f_mount_or_dismount_all_gui bug fix for SMB username.
+#@            *f_test_mount_gui added checks for SMB username, password.
+#@            *f_pick_match added checks for SMB username, password.
+#@
 #@ 2017-04-20 *mountup_gui.sh added f_detect_ui and check if the file exists
 #@             and is readable, mountup_lib_gui.lib. Cleaned up comments.
 #@
 #@ 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
-#@              choosing menu item "Pick" mount-points.
+#@             choosing menu item "Pick" mount-points.
 #@
 #@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter SMB username. 
 #@            *f_show_mount_points_gui added display of username with mount-point.
@@ -113,23 +118,35 @@ THIS_FILE="mountup_lib_gui.lib"
 #
 # Format <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-#@@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
-#@@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
+# @@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
+# @@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
 #
-#@@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
+# @@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
 #
-#@@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
+# @@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
 #
-#@@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
+# @@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
 #
-#@@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
+# @@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
 #
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
 #
-#@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
+# @@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
+#@@//beansprout/public#@@/mnt/beansprout/public#@@Public files.
+#@@//beansprout/public-no-backup#@@/mnt/beansprout/public-no-backup#@@Public files but not backed up.
+#@@//beansprout/robert#@@/mnt/beansprout/robert#@@Roberts documents.
+#@@//papyrus/public#@@/mnt/papyrus/public#@@Public folder.
+#@@//papyrus/public-no-backup#@@/mnt/papyrus/public-no-backup#@@Public folder but not backed up.
+#@@//papyrus/robert#@@/mnt/papyrus/robert#@@Robert folder.
+#@@//parsley/public#@@/mnt/parsley/public#@@Public files.
+#@@//parsley/public-no-backup#@@/mnt/parsley/public-no-backup#@@Public files but not backed up.
+#@@//parsley/robert#@@/mnt/parsley/robert#@@Roberts documents.
+#@@//scotty/public#@@/mnt/scotty/public#@@Public files.
+#@@//scotty/public-no-backup#@@/mnt/scotty/public-no-backup#@@Public files but not backed up.
+#@@//scotty/robert#@@/mnt/scotty/robert#@@Roberts documents.
 #
 #
 # +----------------------------------------+
@@ -584,7 +601,7 @@ f_mount_or_dismount_all_gui () {
       EXITOUT=0
       NUM=1
       if [ $3 = "mount" ] ; then
-         f_username_gui $1 "$USERNAME"
+         f_username_gui $1 "$USER"
          if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
             EXITOUT=1
          fi
@@ -624,8 +641,8 @@ f_mount_or_dismount_all_gui () {
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=Share-point.
 #          $3=Mount-point.
-#          $4=SMBUSER.
-#          $5=PASSWORD.
+#          $4=SMBUSER  (smb username).
+#          $5=PASSWORD (smb password).
 #    Uses: QUIT, ERROR. temp.txt.
 # Outputs: None.
 #
@@ -638,6 +655,8 @@ f_mount_gui () {
       # echo "Mount-point="$3  # Diagnostic line.
       #
       QUIT=0
+      SMBUSER=$4   # Set SMBUSER and PASSWORD since if fails to mount,
+      PASSWORD=$5  # then user can change their value.
       until [ $QUIT -eq 1 ]  # Start loop.
       do
             # Is the shared directory mounted yet?
@@ -647,27 +666,17 @@ f_mount_gui () {
                QUIT=1  # Quit loop.
                f_display_temp_file_gui $1
             else  # Directory is not mounted yet.
-               if [ -z "$4" ] && [ $QUIT -eq 0 ] ; then
-                  f_username_gui $1 "$USERNAME"  # Set the default username to the username that is running this script.
-                  if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
-                     EXITOUT=1
-                  fi
-               fi
-               if [ -z "$5" ] && [ $QUIT -eq 0 ] ; then
-                  f_password_gui $1 $2
-                  if [ $ERROR -eq 1 ] ; then  # <Cancel> button was pressed.
-                     QUIT=1  # Quit loop.
-                  fi
-               fi
-               #
                if [ $QUIT -eq 0 ] ; then
                   f_mount_gui2 $1 $2 $3 $SMBUSER $PASSWORD
                   f_test_mount_gui $1 $2 $3  # Output: QUIT=1/0.
+                                             #         SMBUSER.
+                                             #         PASSWORD.
                fi
             fi
-      if [ -r temp.txt ] ; then
-         rm temp.txt
-      fi
+            #
+            if [ -r temp.txt ] ; then
+               rm temp.txt
+            fi
       done  # End loop.
       unset ERROR QUIT  # Throw out this variable.
 } # End of function f_mount_gui.
@@ -679,7 +688,7 @@ f_mount_gui () {
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=Share-point.
 #          $3=Mount-point.
-#          $4=$SMBUSER (smb username).
+#          $4=$SMBUSER  (smb username).
 #          $5=$PASSWORD (smb password).
 #    Uses: None.
 # Outputs: ERROR.
@@ -697,7 +706,7 @@ f_mount_gui2 () {
          # Raspberry Pi Model 1 cannot use -o password option.
          # Omit the mount -o password flag.
          # if [ $XX ] ; then
-         #    sudo mount -o username=$2 -t cifs $2 $3 2>>temp.txt # Write any error messages to file temp.txt.
+         #    sudo mount -o username=$4 -t cifs $2 $3 2>>temp.txt # Write any error messages to file temp.txt.
          #    ERROR=$?
          #   if [ $ERROR -eq 1 ] ; then
          #      f_display_temp_file_gui $1
@@ -715,7 +724,7 @@ f_mount_gui2 () {
 #          $3=Mount-point.
 #    Uses: ERROR.
 # Outputs: QUIT, temp.txt.
-#
+#f_mount_or_dismount_all_gui
 f_test_mount_gui () {
       mountpoint $3 >/dev/null 2>temp.txt # Write any error messages to file temp.txt. Get status of mountpoint, mounted?.
       if [ $ERROR -eq 0 ] ; then  # Directory is already mounted. 
@@ -731,9 +740,22 @@ f_test_mount_gui () {
             ERROR=$?
          fi
          if [ $ERROR -eq 0 ] ; then  # Outputs user response to $ERROR.
-            # ERROR status=0. Yes, try another password to mount Share-point.
+            # ERROR status=0. Yes, try another SMB username and password to mount Share-point.
             QUIT=0 # Try again to mount.
-            unset PASSWORD
+            unset SMBUSER PASSWORD
+            if [ -z "$SMBUSER" ] ; then
+               f_username_gui $1 $USER  # Set the default username to the username that is running this script.
+               # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               #    QUIT=1  # Quit loop.
+               # fi
+            fi
+            #
+            if [ -z "$PASSWORD" ] ; then
+               f_password_gui $1 $2
+               # if [ $ERROR -eq 1 ] ; then  # <Cancel> button was pressed.
+               #    QUIT=1  # Quit loop.
+               # fi
+            fi
          else
             # ERROR status=1. No, do not try another password just return to previous menu. Exit loop.
             QUIT=1 # Quit loop, return to previous menu.
@@ -1025,7 +1047,20 @@ f_pick_match () {
              do
                 if [[ $MNT =~ $2 ]] ; then
                    # echo "Mount $3 on $4"  # Diagnostic line.
-                   f_mount_gui $1 $3 $4 # Yes, so mount it.
+                   if [ -z "$SMBUSER" ] ; then
+                      f_username_gui $1 $USER  # Set the default username to the username that is running this script.
+                      # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+                      #    Quit out of loop.
+                      # fi
+                   fi
+                   #
+                   if [ -z "$PASSWORD" ] ; then
+                      f_password_gui $1 $3
+                      # if [ $ERROR -eq 1 ] ; then  # <Cancel> button was pressed.
+                      #    QUIT=1  # Quit loop.
+                      # fi
+                   fi
+                   f_mount_gui $1 $3 $4 $SMBUSER $PASSWORD  # Yes, so mount it.
                 fi
             done
       else  # No CHOICE_ACT does not contain XNUM, so unmount it.
