@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-11-17 00:28"
+VERSION="2017-11-23 13:49"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -11,11 +11,17 @@ THIS_FILE="mountup_lib_gui.lib"
 #@
 #@ To add more file server names, share-points with corresponding mount-points,
 #@ edit the text at the end of function f_server_arrays.
-#@ Format <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>/<Mount-point on local PC>
+#@ Format <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>
+#@        /<Mount-point on local PC>
 #@
 #@ After each edit made, please update Code History and VERSION.
 #@
 #@ Code Change History
+#@
+#@ 2017-11-23 *f_username_gui prevented a null username.
+#@            *f_test_mount_gui changed when to ask for a username/password.
+#@            *f_pick_menu_gui added username dialog.
+#@            Deleted any trailing <spaces> in the source code.
 #@
 #@ 2017-11-17 *f_mount_gui2 improved clarity of error message.
 #@
@@ -30,22 +36,22 @@ THIS_FILE="mountup_lib_gui.lib"
 #@ 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
 #@             choosing menu item "Pick" mount-points.
 #@
-#@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter SMB username. 
-#@            *f_show_mount_points_gui added display of username with mount-point.
+#@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter SMB username.
+#@            *f_show_mount_points_gui added display username with mount-point.
 #@
 #@ 2016-08-03 *mountup_gui.sh remove $GENERATED_FILE if it exists.
 #@
 #@ 2016-05-25 *mountup_lib_gui.lib changed to use Dialog's checklist.
 #@             It will now cycle through the entire array of share-points
 #@             one by one and if needed mount or dismount each one at a time.
-#@            *mountup_update_gui.sh now calls mountup_gui.sh so that the 
+#@            *mountup_update_gui.sh now calls mountup_gui.sh so that the
 #@             arrays of servers, share/mountpoints are refreshed before
 #@             (dis)mounting of any share-points.
 #@            *mountup_gui.sh can still be run by itself if there are
 #@             changes in the list of file servers (no additions/deletions).
 #@
 #@ 2016-05-05 *Script works but after (dis)mounting it returns to Main Menu
-#@             which is annoying. 
+#@             which is annoying.
 #@            *I tried to force the script flow so that if (dis)mounting in
 #@             the sub-menu then force it not display the Main Menu again but
 #@             instead simply regenerate the sub-menu and re-display it.
@@ -56,7 +62,7 @@ THIS_FILE="mountup_lib_gui.lib"
 #@             dynamic and changes whenever a server share-point is
 #@             (dis)mounted and so the Dialog menu code must be regenerated.
 #@            *Script mountup_update_gui.sh generates script mountup_gui.sh
-#@             and should be run as new servers need to be added to the 
+#@             and should be run as new servers need to be added to the
 #@             Main Menu.
 #@            *Running script mountup_gui.sh generates script mountup_gui2.sh
 #@             where mountup_gui.sh displays the Main Menu while
@@ -120,23 +126,35 @@ THIS_FILE="mountup_lib_gui.lib"
 #
 # Format <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-#@@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
-#@@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
+# @@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
+# @@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
 #
-#@@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
+# @@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
 #
-#@@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
+# @@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
 #
-#@@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
+# @@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
 #
-#@@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
+# @@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
 #
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
 #
-#@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
+# @@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
+#@@//beansprout/public#@@/mnt/beansprout/public#@@Public files.
+#@@//beansprout/public-no-backup#@@/mnt/beansprout/public-no-backup#@@Public files but not backed up.
+#@@//beansprout/robert#@@/mnt/beansprout/robert#@@Roberts documents.
+#@@//papyrus/public#@@/mnt/papyrus/public#@@Public folder.
+#@@//papyrus/public-no-backup#@@/mnt/papyrus/public-no-backup#@@Public folder but not backed up.
+#@@//papyrus/robert#@@/mnt/papyrus/robert#@@Robert folder.
+#@@//parsley/public#@@/mnt/parsley/public#@@Public files.
+#@@//parsley/public-no-backup#@@/mnt/parsley/public-no-backup#@@Public files but not backed up.
+#@@//parsley/robert#@@/mnt/parsley/robert#@@Roberts documents.
+#@@//scotty/public#@@/mnt/scotty/public#@@Public files.
+#@@//scotty/public-no-backup#@@/mnt/scotty/public-no-backup#@@Public files but not backed up.
+#@@//scotty/robert#@@/mnt/scotty/robert#@@Roberts documents.
 #
 # +----------------------------------------+
 # |       Function f_server_arrays         |
@@ -177,7 +195,7 @@ f_server_arrays () {
       if [ -r $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
-      #      
+      #
       while read XSTR
       do
             case $XSTR in
@@ -360,9 +378,9 @@ f_press_enter_key_to_continue () { # Display message and wait for user input.
 # +----------------------------------------+
 #
 #  Inputs: $1=GUI - "text", "dialog" or "whiptail" The CLI GUI application in use.
-#          $2 - Network name of server. 
+#          $2 - Network name of server.
 #    Uses: None.
-# Outputs: ERROR. 
+# Outputs: ERROR.
 #
 f_test_connection () {
       # Check if there is an internet connection before doing a download.
@@ -406,6 +424,9 @@ f_username_gui() {
       $1 --title "SMB mount-point user name" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>temp.txt
       ERROR=$?
       SMBUSER=$(cat temp.txt)
+      if [ -z "$SMBUSER" ] ; then
+         SMBUSER=$2
+      fi
       #
       if [ -r temp.txt ] ; then
          rm temp.txt
@@ -433,7 +454,7 @@ f_password_gui() {
       else
          $1 --title "Password for $2" --clear --passwordbox "Enter SMB mount-point password:" 10 70 2>temp.txt
          ERROR=$?
-      fi     
+      fi
       PASSWORD=$(cat temp.txt)
       #
       if [ -r temp.txt ] ; then
@@ -464,7 +485,7 @@ f_about_gui () {
 # +----------------------------------------+
 #
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          THIS_DIR, THIS_FILE. 
+#          THIS_DIR, THIS_FILE.
 #    Uses: None.
 # Outputs: temp.txt.
 #
@@ -496,7 +517,7 @@ f_code_history_gui () {
 # +----------------------------------------+
 #
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $THIS_FILE, 
+#          $THIS_FILE,
 #    Uses: X, Y, ERROR, temp.txt.
 # Outputs: None.
 #
@@ -517,12 +538,12 @@ f_show_mount_points_gui () {
          else
             echo >>temp.txt
             grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>temp.txt
-         fi 
+         fi
       else
          df -h --type=cifs --output=source,avail,target >>temp.txt
          echo >>temp.txt
          grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>temp.txt
-      fi 
+      fi
       #
       if [ $ERROR -eq 1 ] ; then
          $1 --title "Nothing is mounted" --textbox temp.txt 11 40
@@ -533,7 +554,7 @@ f_show_mount_points_gui () {
          # Get columns (width).
          X=$(stty size | awk '{ print $2 }')
          #
-         $1 --title "Mount-points (use arrow keys to scroll up/down/side-ways)" --textbox temp.txt $Y $X 
+         $1 --title "Mount-points (use arrow keys to scroll up/down/side-ways)" --textbox temp.txt $Y $X
       fi
       #
       if [ -r temp.txt ] ; then
@@ -548,7 +569,7 @@ f_show_mount_points_gui () {
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" The CLI GUI application in use.
 #    Uses: temp.txt.
-# Outputs: None. 
+# Outputs: None.
 #
 f_display_temp_file_gui () {
       if [ -s temp.txt ] ; then  # File temp.txt contains error message, so display it.
@@ -651,7 +672,7 @@ f_mount_gui () {
             # Is the shared directory mounted yet?
             mountpoint $3 >/dev/null 2>temp.txt # Write any error messages to file temp.txt.
             ERROR=$?
-            if [ $ERROR -eq 0 ] ; then  # Directory is already mounted. 
+            if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
                QUIT=1  # Quit loop.
                f_display_temp_file_gui $1
             else  # Directory is not mounted yet.
@@ -688,7 +709,6 @@ f_mount_gui2 () {
       ERROR=$?
       # echo "mount -o username=$4 -o password=$5 -t cifs $2 $3"  # Diagnostic line.
       if [ "$ERROR" -ne 0 ] ; then
-         unset PASSWORD  # Delete possibly bad password causing mount error.
          echo >>temp.txt
          echo "Failed to mount" >temp2.txt
          echo "Share-point: $2" >>temp2.txt
@@ -724,7 +744,7 @@ f_mount_gui2 () {
 #f_mount_or_dismount_all_gui
 f_test_mount_gui () {
       mountpoint $3 >/dev/null 2>temp.txt # Write any error messages to file temp.txt. Get status of mountpoint, mounted?.
-      if [ $ERROR -eq 0 ] ; then  # Directory is already mounted. 
+      if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
          QUIT=1  # Quit loop.
          # echo "Directory $3 is already mounted."  # Diagnostic line.
       else
@@ -739,20 +759,15 @@ f_test_mount_gui () {
          if [ $ERROR -eq 0 ] ; then  # Outputs user response to $ERROR.
             # ERROR status=0. Yes, try another SMB username and password to mount Share-point.
             QUIT=0 # Try again to mount.
-            unset SMBUSER PASSWORD
-            if [ -z "$SMBUSER" ] ; then
-               f_username_gui $1 $USER  # Set the default username to the username that is running this script.
-               # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
-               #    QUIT=1  # Quit loop.
-               # fi
-            fi
+            f_username_gui $1 $SMBUSER  # Set the default username to the SMB username entered previously.
+            f_password_gui $1 $2
+            #if [ $SMBUSER != $USER ] ; then
+            #   f_password_gui $1 $2  # Force a new password if changing user name.
+            #fi
+            # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+            #    QUIT=1  # Quit loop.
+            # fi
             #
-            if [ -z "$PASSWORD" ] ; then
-               f_password_gui $1 $2
-               # if [ $ERROR -eq 1 ] ; then  # <Cancel> button was pressed.
-               #    QUIT=1  # Quit loop.
-               # fi
-            fi
          else
             # ERROR status=1. No, do not try another password just return to previous menu. Exit loop.
             QUIT=1 # Quit loop, return to previous menu.
@@ -773,7 +788,7 @@ f_dismount_gui () {
       #
       # mountpoint command 0=directory is a mountpoint (already mounted).
       #                    1=directory is not a mountpoint (not mounted).
-      # Test if unmounted already, 
+      # Test if unmounted already,
       # if so then don't unmount again or will get mount error.
       #
       #
@@ -890,7 +905,6 @@ f_action_menu_gui () {
       CHOICE_ACT=-1
       until [ "$CHOICE_ACT" = "0" ]
       do    # Start of Mount/Dismount File Server Menu until loop.
-            unset PASSWORD
             MENU_TITLE="Mount/Dismount $2 File Server Menu"
             CHOICE_ACT=$($1 --clear --title "$MENU_TITLE" --menu "\n\n For $2 server - Use (up/down arrow keys) or (letters):" 20 80 11 \
                    "Quit" "Quit to command line prompt." \
@@ -929,7 +943,7 @@ f_action_menu_gui () {
       if [ -r mountup_sharepoints_menu_gui.lib ] ; then
          rm mountup_sharepoints_menu_gui.lib
       fi
-      unset CHOICE_ACT PASSWORD MENU_TITLE # Throw out this variable.
+      unset CHOICE_ACT MENU_TITLE # Throw out this variable.
 } # End of function f_action_menu_gui.
 #
 # +----------------------------------------+
@@ -981,7 +995,7 @@ f_pick_menu_gui () {
              else                        # Directory is mounted.
                 STATUS[$XNUM]="on"
                 # echo "$MP is mounted."  # Diagnostic line.
-             fi              
+             fi
              #
           done
           #
@@ -1006,6 +1020,13 @@ f_pick_menu_gui () {
       # f_press_enter_key_to_continue  # Diagnostic line.
       #
       if [ $ERROR = 0 ] ; then  # If <Cancel> button was not pressed.
+               # Set the user name for all mount points.
+         if [  -n "$SMBUSER" ] ; then  # if SMBUSER is not null.
+            f_username_gui $1 $SMBUSER
+         else
+            f_username_gui $1 $USER    # if SMBUSER is null, not yet set.
+         fi
+         #
          for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
              do
                 SP=$(eval echo "\$\{$2_SP[$XNUM]\}")   # Create command "${<server_name>_SP[$NUM]}" from array <Server name>_SP[n].
