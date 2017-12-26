@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-11-23 13:49"
+VERSION="2017-12-26 15:52"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -9,14 +9,24 @@ THIS_FILE="mountup_lib_gui.lib"
 #@ file servers. The shared (Samba) directories will be mounted on the
 #@ corresponding mount-point (directories) on theLocal PC.
 #@
-#@ To add more file server names, share-points with corresponding mount-points,
-#@ edit the text at the end of function f_server_arrays.
+#@ To add more file server names, share-points with corresponding
+#@ mount-points, edit the text at the end of function f_server_arrays.
 #@ Format <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>
 #@        /<Mount-point on local PC>
 #@
 #@ After each edit made, please update Code History and VERSION.
 #@
 #@ Code Change History
+#@
+#@ 2017-12-26 *Changed conditions script-wide so that if asked for username
+#@             or password and the "Cancel" button is selected, then 
+#@             exit out completely from that menu choice.
+#@
+#@ 2017-12-25 *Function f_mount_or_dismount_all_gui added call to ask
+#@             for password. It used to just ask for user name.
+#@             Old behavior allowed for anonymous mounts first, and if any
+#@             mounting failed, then it would ask for a password.
+#@             New behavior asks for both user name and password upfront.  
 #@
 #@ 2017-11-23 *f_username_gui prevented a null username.
 #@            *f_test_mount_gui changed when to ask for a username/password.
@@ -36,14 +46,16 @@ THIS_FILE="mountup_lib_gui.lib"
 #@ 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
 #@             choosing menu item "Pick" mount-points.
 #@
-#@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter SMB username.
-#@            *f_show_mount_points_gui added display username with mount-point.
+#@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter
+#@             SMB username.
+#@            *f_show_mount_points_gui added display username with
+#@             mount-point.
 #@
 #@ 2016-08-03 *mountup_gui.sh remove $GENERATED_FILE if it exists.
 #@
 #@ 2016-05-25 *mountup_lib_gui.lib changed to use Dialog's checklist.
 #@             It will now cycle through the entire array of share-points
-#@             one by one and if needed mount or dismount each one at a time.
+#@             one by one and if needed mount/dismount each one at a time.
 #@            *mountup_update_gui.sh now calls mountup_gui.sh so that the
 #@             arrays of servers, share/mountpoints are refreshed before
 #@             (dis)mounting of any share-points.
@@ -53,8 +65,8 @@ THIS_FILE="mountup_lib_gui.lib"
 #@ 2016-05-05 *Script works but after (dis)mounting it returns to Main Menu
 #@             which is annoying.
 #@            *I tried to force the script flow so that if (dis)mounting in
-#@             the sub-menu then force it not display the Main Menu again but
-#@             instead simply regenerate the sub-menu and re-display it.
+#@             the sub-menu then force it not display the Main Menu again
+#@             but instead simply regenerate the sub-menu and re-display it.
 #@            *Unfortunately I could not force it so once any selection in
 #@             the sub-menu is made, script flow exits to the Main Menu
 #@             which I found annoying.
@@ -64,7 +76,7 @@ THIS_FILE="mountup_lib_gui.lib"
 #@            *Script mountup_update_gui.sh generates script mountup_gui.sh
 #@             and should be run as new servers need to be added to the
 #@             Main Menu.
-#@            *Running script mountup_gui.sh generates script mountup_gui2.sh
+#@            *Made script mountup_gui.sh generate script mountup_gui2.sh
 #@             where mountup_gui.sh displays the Main Menu while
 #@             mountup_gui2.sh displays the sub-menu (Dis)Mount Menu.
 #@
@@ -82,16 +94,16 @@ THIS_FILE="mountup_lib_gui.lib"
 #@
 #@ 2016-03-25 *Rearranged functions as common, text, gui, and main program.
 #@
-#@ 2016-03-02 *f_mount_all_gui_2, f_mount_gui if mount fails either try again
-#@             or abort mounting all remaining mount-points on the server.
+#@ 2016-03-02 *f_mount_all_gui_2, f_mount_gui if mount fails either try
+#@             again or abort mounting all remaining mount-points.
 #@
-#@ 2016-02-09 *f_code_history_gui allow textbox to be as large as window size.
+#@ 2016-02-09 *f_code_history_gui allow maximized textbox.
 #@
-#@ 2015-12-24 *f_mount_text added a mount command with no option -o password for
-#@             Raspberry Pi Model 1.
+#@ 2015-12-24 *f_mount_text added a mount command with no option -o password
+#@             for Raspberry Pi Model 1.
 #@
-#@ 2015-12-21 *f_mount_gui added a mount command with no option -o password for
-#@             Raspberry Pi Model 1.
+#@ 2015-12-21 *f_mount_gui added a mount command with no option -o password
+#@             for Raspberry Pi Model 1.
 #@
 #@ 2015-12-01 *Created new script. Based this script on script, peapodup.sh
 #@             which (dis)mounted one or more shared directories on a server.
@@ -405,11 +417,12 @@ f_test_connection () {
 #
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=USERNAME (default).
+#          $3=MP - Mount-point to display on --usernamebox.
 #    Uses: temp.txt.
 # Outputs: SMBUSER, ERROR.
 #
 f_username_gui() {
-      $1 --title "SMB mount-point user name" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>temp.txt
+      $1 --title "User name for $3" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>temp.txt
       ERROR=$?
       SMBUSER=$(cat temp.txt)
       if [ -z "$SMBUSER" ] ; then
@@ -512,11 +525,11 @@ f_code_history_gui () {
 f_show_mount_points_gui () {
       date >temp.txt
       echo >>temp.txt
-      # Test if this version of df has these OPTIONS.
+      # Test if this version of "df" has these OPTIONS.
       df -h --type=cifs --output=source,avail,target >/dev/null 2>&1
       ERROR=$?
       if [ $ERROR -eq 1 ] ; then
-         # Older version of df or nothing mounted, so use df with minimal OPTIONS.
+         # Older version of "df" or nothing mounted, so use df with minimal OPTIONS.
          df -h --type=cifs >>temp.txt
          ERROR=$?
          if [ $ERROR -eq 1 ] ; then
@@ -598,10 +611,17 @@ f_mount_or_dismount_all_gui () {
       #
       EXITOUT=0
       NUM=1
+      # When mounting, ask for a username and password once for all mount-points.
       if [ $3 = "mount" ] ; then
-         f_username_gui $1 "$USER"
+         f_username_gui $1 "$USER" "All mount-points"  # Get user name.
          if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
             EXITOUT=1
+         fi
+         if [ $EXITOUT -eq 0 ] ; then
+            f_password_gui $1 $2        # Get password.
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               EXITOUT=1
+            fi
          fi
       fi
       #
@@ -652,7 +672,7 @@ f_mount_gui () {
       # echo "Share-point="$2  # Diagnostic line.
       # echo "Mount-point="$3  # Diagnostic line.
       #
-      QUIT=0
+      QUIT=0       # QUIT=1 quits until-loop, QUIT=0 until-loop
       SMBUSER=$4   # Set SMBUSER and PASSWORD since if fails to mount,
       PASSWORD=$5  # then user can change their value.
       until [ $QUIT -eq 1 ]  # Start loop.
@@ -728,7 +748,7 @@ f_mount_gui2 () {
 #          $2=Share-point.
 #          $3=Mount-point.
 #    Uses: ERROR.
-# Outputs: QUIT, temp.txt.
+# Outputs: QUIT, SMBUSER. temp.txt.
 #f_mount_or_dismount_all_gui
 f_test_mount_gui () {
       mountpoint $3 >/dev/null 2>temp.txt # Write any error messages to file temp.txt. Get status of mountpoint, mounted?.
@@ -747,8 +767,19 @@ f_test_mount_gui () {
          if [ $ERROR -eq 0 ] ; then  # Outputs user response to $ERROR.
             # ERROR status=0. Yes, try another SMB username and password to mount Share-point.
             QUIT=0 # Try again to mount.
-            f_username_gui $1 $SMBUSER  # Set the default username to the SMB username entered previously.
-            f_password_gui $1 $2
+            f_username_gui $1 $SMBUSER $3  # Set the default username to the SMB username entered previously.
+            if [ $ERROR -ne 0 ] ; then
+               QUIT=1  # Quit f_mount_gui loop, return to previous menu.
+               EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all_gui.
+            fi
+            #
+            if [ $ERROR -eq 0 ] ; then
+               f_password_gui $1 $2
+               if [ $ERROR -ne 0 ] ; then
+                  QUIT=1 # Quit f_mount_gui loop, return to previous menu.
+                  EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all_gui.
+               fi
+            fi
             #if [ $SMBUSER != $USER ] ; then
             #   f_password_gui $1 $2  # Force a new password if changing user name.
             #fi
@@ -758,7 +789,8 @@ f_test_mount_gui () {
             #
          else
             # ERROR status=1. No, do not try another password just return to previous menu. Exit loop.
-            QUIT=1 # Quit loop, return to previous menu.
+            QUIT=1  # Quit f_mount_gui loop, return to previous menu.
+            EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all_gui.
          fi
       fi
 } # End of function f_test_mount_gui.
@@ -782,8 +814,8 @@ f_dismount_gui () {
       #
       mountpoint $2 >/dev/null
       ERROR=$?
-      if [ $ERROR -eq 0 ] ; then
-         sudo umount $2
+      if [ $ERROR -eq 0 ] ; then  # mountpoint is mounted so now dismount.
+         sudo umount $2 2>temp.txt # Write any error messages to file temp.txt.
       fi
       # Was umount command successful?
       if [ -s temp.txt ] ; then  # File temp.txt contains error message, so display it.
@@ -941,7 +973,7 @@ f_action_menu_gui () {
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=SERVER NAME.
 #          $3=GENERATED_FILE.
-#    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC.
+#    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC, QUIT.
 # Outputs: STATUS[XNUM], $2_DESC[XNUM].
 #
 f_pick_menu_gui () {
@@ -978,10 +1010,10 @@ f_pick_menu_gui () {
              mountpoint $MP >/dev/null  # Get status of mountpoint, mounted?.
              ERROR=$?
              if [ $ERROR -eq 1 ] ; then  # Directory is not mounted.
-                STATUS[$XNUM]="off"
+                STATUS[$XNUM]="off" # Create STATUS array entry to indicate whether directory is not mounted for f_checklist_mp_gui.
                 # echo "$MP is not mounted."  # Diagnostic line.
              else                        # Directory is mounted.
-                STATUS[$XNUM]="on"
+                STATUS[$XNUM]="on"  # Create STATUS array entry to indicate whether directory is mounted for f_checklist_mp_gui.
                 # echo "$MP is mounted."  # Diagnostic line.
              fi
              #
@@ -1007,31 +1039,48 @@ f_pick_menu_gui () {
       # echo "CHOICE_ACT=$CHOICE_ACT"  # Diagnostic line.
       # f_press_enter_key_to_continue  # Diagnostic line.
       #
+      QUIT=0
       if [ $ERROR = 0 ] ; then  # If <Cancel> button was not pressed.
-               # Set the user name for all mount points.
-         if [  -n "$SMBUSER" ] ; then  # if SMBUSER is not null.
-            f_username_gui $1 $SMBUSER
+         if [  -n "$SMBUSER" ] ; then  # if SMBUSER is not null, already set then confirm SMBUSER as the username.
+            f_username_gui $1 $SMBUSER $4
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu_gui.
+            fi
          else
-            f_username_gui $1 $USER    # if SMBUSER is null, not yet set.
+            f_username_gui $1 $USER $4   # if SMBUSER is null, so not yet set, then use USER as the default username.
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu_gui.
+            fi
          fi
          #
-         for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
-             do
-                SP=$(eval echo "\$\{$2_SP[$XNUM]\}")   # Create command "${<server_name>_SP[$NUM]}" from array <Server name>_SP[n].
-                SP=$(eval echo $SP)
-                #
-                MP=$(eval echo "\$\{$2_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" from array <Server name>_MP[n].
-                MP=$(eval echo $MP)
-                #
-                # echo "XNUM=$XNUM"  # Diagnostic line.
-                # echo "SP=$SP"      # Diagnostic line.
-                # echo "MP=$MP"      # Diagnostic line.
-                # echo "CHOICE_ACT=$CHOICE_ACT" # Diagnostic line.
-                # echo "f_pick_match $1 $XNUM $SP $MP"  # Diagnostic line.
-                f_pick_match $1 $XNUM $SP $MP  # CHOICE_ACT cannot be passed as a parameter because string contains <spaces>.
-                # f_press_enter_key_to_continue  # Diagnostic line.
-                # echo  # Diagnostic line.
-             done
+         if [ $QUIT -eq 0 ] ; then
+            f_password_gui $1 $3
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu_gui.
+            fi
+         fi
+         #
+         if [ $QUIT -eq 0 ] ; then
+            for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+                do
+                   SP=$(eval echo "\$\{$2_SP[$XNUM]\}")   # Create command "${<server_name>_SP[$NUM]}" from array <Server name>_SP[n].
+                   SP=$(eval echo $SP)
+                   #
+                   MP=$(eval echo "\$\{$2_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" from array <Server name>_MP[n].
+                   MP=$(eval echo $MP)
+                   #
+                   # echo "XNUM=$XNUM"  # Diagnostic line.
+                   # echo "SP=$SP"      # Diagnostic line.
+                   # echo "MP=$MP"      # Diagnostic line.
+                   # echo "CHOICE_ACT=$CHOICE_ACT" # Diagnostic line.
+                   # echo "f_pick_match $1 $XNUM $SP $MP"  # Diagnostic line.
+                   #
+                   f_pick_match $1 $XNUM $SP $MP  # CHOICE_ACT cannot be passed as a parameter because string contains <spaces>.
+                   #
+                   # f_press_enter_key_to_continue  # Diagnostic line.
+                   # echo  # Diagnostic line.
+                done
+         fi
       fi
 }  # End of function f_pick_menu_gui
 #
@@ -1045,27 +1094,16 @@ f_pick_menu_gui () {
 #          $4=MP Mount-point.
 #          CHOICE_ACT
 #    Uses: MNT.
-# Outputs: None.
+# Outputs: QUIT.
 #
 f_pick_match () {
       if [[ "$CHOICE_ACT" =~ "$2" ]] ; then  # Does CHOICE_ACT contain XNUM?
-         for MNT in $CHOICE_ACT
+         # Yes, CHOICE_ACT contains XNUM so mount it.
+         for MNT in $CHOICE_ACT  # for-loop to allow username and password to be asked more than once if needed.
              do
-                if [[ $MNT =~ $2 ]] ; then
+                if [[ $MNT =~ $2 ]] ; then  # Does MNT contain XNUM?
+                   # Yes, MNT contains XNUM so mount it. 
                    # echo "Mount $3 on $4"  # Diagnostic line.
-                   if [ -z "$SMBUSER" ] ; then
-                      f_username_gui $1 $USER  # Set the default username to the username that is running this script.
-                      # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
-                      #    Quit out of loop.
-                      # fi
-                   fi
-                   #
-                   if [ -z "$PASSWORD" ] ; then
-                      f_password_gui $1 $3
-                      # if [ $ERROR -eq 1 ] ; then  # <Cancel> button was pressed.
-                      #    QUIT=1  # Quit loop.
-                      # fi
-                   fi
                    f_mount_gui $1 $3 $4 $SMBUSER $PASSWORD  # Yes, so mount it.
                 fi
             done
