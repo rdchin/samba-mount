@@ -1,16 +1,21 @@
 #!/bin/bash
 #
-VERSION="2017-12-26 15:52"
+VERSION="2017-12-26 19:56"
 THIS_FILE="mountup_gui.sh"
 #
 #@ Brief Description
 #@
+#@ Usage: "bash mountup_gui.sh [SERVER NAME]
+#@
+#@        Server name is optional, if given, then attempt to mount
+#@        all share-points on that server.
+#@
 #@ This script will mount shared cifs (Samba) directories from one or more
 #@ file servers. The shared (Samba) directories will be mounted on the
-#@ corresponding mount-point (directories) on theLocal PC.
+#@ corresponding mount-points (directories) on the Local PC.
 #@
-#@ Code Change History is maintained in the library file, "mountup_lib_gui.lib"
-#@ and can be read from the Main Menu.
+#@ Code Change History is maintained in the library file:
+#@ "mountup_lib_gui.lib" and can be read from the Main Menu.
 #
 # +----------------------------------------+
 # |          Function f_detect_ui          |
