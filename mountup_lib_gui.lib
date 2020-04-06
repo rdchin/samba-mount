@@ -1,113 +1,50 @@
 #!/bin/bash
 #
-VERSION="2017-12-26 19:56"
+VERSION="2020-04-06 01:13"
 THIS_FILE="mountup_lib_gui.lib"
 #
-#@ Brief Description
-#@
-#@ This script will mount shared cifs (Samba) directories from one or more
-#@ file servers. The shared (Samba) directories will be mounted on the
-#@ corresponding mount-points (directories) on the Local PC.
-#@
-#@ To add more file server names, share-points with corresponding
-#@ mount-points, edit the text at the end of function f_server_arrays.
-#@ Format: <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>
-#@        /<Mount-point on local PC>
-#@
-#@ After each edit made, please update Code History and VERSION.
-#@
-#@ Code Change History
-#@
-#@ 2017-12-26 *Changed conditions script-wide so that if asked for username
-#@             or password and the "Cancel" button is selected, then 
-#@             exit out completely from that menu choice.
-#@
-#@ 2017-12-25 *Function f_mount_or_dismount_all_gui added call to ask
-#@             for password. It used to just ask for user name.
-#@             Old behavior allowed for anonymous mounts first, and if any
-#@             mounting failed, then it would ask for a password.
-#@             New behavior asks for both user name and password upfront.  
-#@
-#@ 2017-11-23 *f_username_gui prevented a null username.
-#@            *f_test_mount_gui changed when to ask for a username/password.
-#@            *f_pick_menu_gui added username dialog.
-#@            Deleted any trailing <spaces> in the source code.
-#@
-#@ 2017-11-17 *f_mount_gui2 improved clarity of error message.
-#@
-#@ 2017-09-19 *f_mount_gui removed checks for SMB username, password.
-#@            *f_mount_or_dismount_all_gui bug fix for SMB username.
-#@            *f_test_mount_gui added checks for SMB username, password.
-#@            *f_pick_match added checks for SMB username, password.
-#@
-#@ 2017-04-20 *mountup_gui.sh added f_detect_ui and check if the file exists
-#@             and is readable, mountup_lib_gui.lib. Cleaned up comments.
-#@
-#@ 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
-#@             choosing menu item "Pick" mount-points.
-#@
-#@ 2017-01-04 *f_mount_gui added call to f_username_gui to enter
-#@             SMB username.
-#@            *f_show_mount_points_gui added display username with
-#@             mount-point.
-#@
-#@ 2016-08-03 *mountup_gui.sh remove $GENERATED_FILE if it exists.
-#@
-#@ 2016-05-25 *mountup_lib_gui.lib changed to use Dialog's checklist.
-#@             It will now cycle through the entire array of share-points
-#@             one by one and if needed mount/dismount each one at a time.
-#@            *mountup_update_gui.sh now calls mountup_gui.sh so that the
-#@             arrays of servers, share/mountpoints are refreshed before
-#@             (dis)mounting of any share-points.
-#@            *mountup_gui.sh can still be run by itself if there are
-#@             changes in the list of file servers (no additions/deletions).
-#@
-#@ 2016-05-05 *Script works but after (dis)mounting it returns to Main Menu
-#@             which is annoying.
-#@            *I tried to force the script flow so that if (dis)mounting in
-#@             the sub-menu then force it not display the Main Menu again
-#@             but instead simply regenerate the sub-menu and re-display it.
-#@            *Unfortunately I could not force it so once any selection in
-#@             the sub-menu is made, script flow exits to the Main Menu
-#@             which I found annoying.
-#@            *The complexity of this script is because the sub-menu is
-#@             dynamic and changes whenever a server share-point is
-#@             (dis)mounted and so the Dialog menu code must be regenerated.
-#@            *Script mountup_update_gui.sh generates script mountup_gui.sh
-#@             and should be run as new servers need to be added to the
-#@             Main Menu.
-#@            *Made script mountup_gui.sh generate script mountup_gui2.sh
-#@             where mountup_gui.sh displays the Main Menu while
-#@             mountup_gui2.sh displays the sub-menu (Dis)Mount Menu.
-#@
-#@ 2016-05-01 *Script allows any number of shared directories.
-#@            *Script now has a fully extensible Main Menu with menu items
-#@             easily added in comment lines beginning with "#@@".
-#@            *Script now has a fully extensible directory sub-menu with
-#@             menu items easily added in comment lines beginning with "#@@".
-#@            *These scripts are together:
-#@             mountup_lib_gui.lib provides functions used by other scripts.
-#@             mountup_update_gui.sh generates and updates mountup_gui.sh.
-#@             mountup_update_gui.sh is the actual Server Menu.
-#@
-#@ 2016-03-31 *Posted on GitHub.com as a template.
-#@
-#@ 2016-03-25 *Rearranged functions as common, text, gui, and main program.
-#@
-#@ 2016-03-02 *f_mount_all_gui_2, f_mount_gui if mount fails either try
-#@             again or abort mounting all remaining mount-points.
-#@
-#@ 2016-02-09 *f_code_history_gui allow maximized textbox.
-#@
-#@ 2015-12-24 *f_mount_text added a mount command with no option -o password
-#@             for Raspberry Pi Model 1.
-#@
-#@ 2015-12-21 *f_mount_gui added a mount command with no option -o password
-#@             for Raspberry Pi Model 1.
-#@
-#@ 2015-12-01 *Created new script. Based this script on script, peapodup.sh
-#@             which (dis)mounted one or more shared directories on a server.
-#@            *(Dis)mount all shared directories of any given file-server.
+#@@Quit#@@Quit to command-line prompt.#@@break
+#@@Show#@@Show mounted directories.#@@f_show_mount_points_gui
+#@@About#@@Version information of this script.#@@f_about_gui
+#@@Code History#@@Display code change history of this script.#@@f_code_history_gui
+#
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# | Add additional source file servers, share-points, and mount-points here. |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+#
+# Format: <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
+#
+# @#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
+# @#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
+#
+# @#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
+#
+# @#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
+#
+# @#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
+#
+# @#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
+#
+# @#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
+# @#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+#
+# @#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+#
+# Add your actual data below:
+#@#//beansprout/public#@#/mnt/beansprout/public#@#Public files.
+#@#//beansprout/public-no-backup#@#/mnt/beansprout/public-no-backup#@#Public files but not backed up.
+#@#//beansprout/robert#@#/mnt/beansprout/robert#@#Roberts documents.
+#@#//papyrus/public#@#/mnt/papyrus/public#@#Public folder.
+#@#//papyrus/public-no-backup#@#/mnt/papyrus/public-no-backup#@#Public folder but not backed up.
+#@#//papyrus/robert#@#/mnt/papyrus/robert#@#Robert folder.
+#@#//parsley/public#@#/mnt/parsley/public#@#Public files.
+#@#//parsley/public-no-backup#@#/mnt/parsley/public-no-backup#@#Public files but not backed up.
+#@#//parsley/robert#@#/mnt/parsley/robert#@#Roberts documents.
+#@#//scotty/public#@#/mnt/scotty/public#@#Public files.
+#@#//scotty/public-no-backup#@#/mnt/scotty/public-no-backup#@#Public files but not backed up.
+#@#//scotty/robert#@#/mnt/scotty/robert#@#Roberts documents.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -129,32 +66,344 @@ THIS_FILE="mountup_lib_gui.lib"
 #
 #       64     some mount succeeded
 #
+# +------------------------------+
+# |       Function f_message     |
+# +------------------------------+
 #
-# +--------------------------------------------------------------------------+
-# |                                                                          |
-# | Add additional source file servers, share-points, and mount-points here. |
-# |                                                                          |
-# +--------------------------------------------------------------------------+
+#  Inputs: $1 - "text", "dialog" or "whiptail" The CLI GUI application in use.
+#          $2 - "OK"  [OK] button at end of text.
+#               "NOK" No [OK] button at end of text but pause n seconds
+#                     to allow reader to read text by using sleep n command.
+#          $3 - Title.
+#          $4 - Text string or text file. 
+#          
+#    Uses: None.
+# Outputs: ERROR. 
 #
-# Format: <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
+f_message () {
+      #
+      case $1 in
+           "dialog" | "whiptail")
+           #
+           # If text strings have Dialog \Z commands for font color bold/normal, 
+           # they must be used AFTER \n (line break) commands.
+           # Example: "This is a test.\n\Z1\ZbThis is in bold-red letters.\n\ZnThis is in normal font."
+           #
+           # Is $4 a text string or a text file?
+           if [ -r "$4" ] ; then
+              # If $4 is a text file.
+              #
+              # Get the screen resolution or X-window size.
+              # Get rows (height).
+              YY=$(stty size | awk '{ print $1 }')
+              # Get columns (width).
+              XX=$(stty size | awk '{ print $2 }')
+              #
+              # If text file, calculate number of lines and length of sentences.
+              # to calculate height and width of Dialog box.
+              #
+              # Calculate longest line length in TEMP_FILE to find maximum menu width for Dialog or Whiptail.
+              # The "Word Count" wc command output will not include the TEMP_FILE name
+              # if you redirect "<$TEMP_FILE" into wc.
+              X=$(wc --max-line-length <$4)
+              #
+              # Calculate number of lines or Menu Choices to find maximum menu lines for Dialog or Whiptail.
+              Y=$(wc --lines <$4)
+              #
+              if [ "$2" = "OK" ] ; then
+                 # If $2 is "OK" then use a Dialog/Whiptail textbox.
+                 #
+                 case $1 in
+                      dialog)
+                      # Dialog needs about 6 more lines for the header and [OK] button.
+                      let Y=Y+6
+                      # If number of lines exceeds screen/window height then set textbox height.
+                      if [ $Y -ge $YY ] ; then
+                         Y=$YY
+                      fi
+                      #
+                      # Dialog needs about 10 more spaces for the right and left window frame. 
+                      let X=X+10
+                      # If line length exceeds screen/window width then set textbox width.
+                      if [ $X -ge $XX ] ; then
+                         X=$XX
+                      fi
+                      dialog --colors --title "$3" --textbox "$4" $Y $X
+                      ;;
+                      whiptail)
+                      # Whiptail does not have OPTION --colors.
+                      # Whiptail needs about 6 more lines for the header and [OK] button.
+                      let Y=Y+6
+                      # If number of lines exceeds screen/window height then set textbox height.
+                      if [ $Y -ge $YY ] ; then
+                         Y=$YY
+                      fi
+                      #
+                      # Whiptail needs about 5 more spaces for the right and left window frame. 
+                      let X=X+5
+                      # If line length exceeds screen/window width then set textbox width.
+                      if [ $X -ge $XX ] ; then
+                         X=$XX
+                      fi
+                      whiptail --scrolltext --title "$3" --textbox "$4" $Y $X
+                      ;;
+                 esac
+                 #
+              else
+                 # If $2 is "NOK" then use a Dialog infobox or Whiptail textbox.
+                 case $1 in
+                      whiptail)
+                      # Whiptail only does a --textbox or --msgbox (not --infobox).
+                      whiptail --title "$3" --textbox "$4" $Y $X
+                      ;;
+                      dialog)
+                      #
+                      # Translate "\n" or the <crlf> to "|". Join all lines together delimited by "|".
+                      #   $ cat $4 | tr "\n" "|" 
+                      #
+                      # Substitute string "|" with string "\n"
+                      #   $ sed -i 's/|/\\n/g' 
+                      #
+                      # Join all lines together delimited by string "\n" 
+                      # to allow the output of multiple lines of text in a single string variable
+                      # using the interpretation of back-slash escapes to recreate each line <CRLF>.
+                      #   $ cat $4 | tr "\n" "|"  > $4 ; sed -i 's/|/\\n/g' $4
+                      #
+                      # A Dialog Infobox displays the message in a window without you having to an press [OK] button.
+                      TEMP_FILE=$THIS_FILE"men.sh_temp2.txt"
+                      echo $4
+                      echo
+                      cat "$4" | tr "\n" "|"  > $TEMP_FILE ; sed -i 's/|/\\n/g' $TEMP_FILE
+                      Z=$(cat $TEMP_FILE)
+                      dialog --colors --title "$3" --infobox "$Z" $Y $X ; sleep 3
+                      ;;
+                 esac
+              fi
+              #
+              if [ -r $TEMP_FILE ] ; then
+                 rm $TEMP_FILE
+              fi
+              #
+           else
+              # If $4 is a text string.
+              #
+              if [ "$2" = "OK" ] ; then
+                 # If $2 is "OK" then use a Dialog msgbox.
+                 #
+                 X=$(echo -n "$4" | wc -c)
+                 let X=X+10
+                 Y=7
+                 #
+                 case $1 in
+                      whiptail)
+                      # Whiptail only does a --textbox or--msgbox (not --infobox).
+                      whiptail --title "$3" --msgbox "$4" $Y $X
+                      ;;
+                      dialog)
+                      dialog --colors --title "$3" --msgbox "$4" $Y $X
+                      ;;
+                 esac
+              else
+                 # If $2 is "NOK" then use a Dialog infobox.
+                 #
+                 X=$(echo -n "$4" | wc -c)
+                 let X=X+10
+                 Y=7
+                 #
+                 case $1 in
+                      whiptail)
+                      # Whiptail only does a --textbox or--msgbox (not --infobox).
+                      whiptail --title "$3" --msgbox "$4" $Y $X
+                      ;;
+                      dialog)
+                      dialog --colors --title "$3" --infobox "$4" $Y $X ; sleep 3
+                      ;;
+                  esac
+               fi
+           fi
+           ;;
+           *)
+           # Is $4 a text string or a text file?
+           #
+           if [ -r "$4" ] ; then
+              # If $4 is a text file.
+              #
+              if [ "$2" = "OK" ] ; then
+                 # If $2 is "OK" then use command "less".
+                 #
+                 clear  # Blank the screen.
+                 #
+                 # Display text file contents.
+                 less -P '%P\% (Spacebar, PgUp/PgDn, Up/Dn arrows, press q to quit)' $4
+                 #
+                 clear  # Blank the screen.
+                 #
+              else
+                 # If $2 is "NOK" then use "cat" and "sleep" commands to give time to read it.
+                 #
+                 clear  # Blank the screen.
+                 # Display title.
+                 echo
+                 echo $3
+                 echo
+                 echo
+                 # Display text file contents.
+                 cat $4
+                 sleep 5
+                 #
+                 clear  # Blank the screen.
+                 #
+              fi
+              #
+              if [ -r $TEMP_FILE ] ; then
+                 rm $TEMP_FILE
+              fi
+              #
+           else
+              # If $4 is a text string.
+              #
+              if [ "$2" = "OK" ] ; then
+                 # If $2 is "OK" then use f_press_enter_key_to_continue.
+                 #
+                 clear  # Blank the screen.
+                 #
+                 # Display title.
+                 echo
+                 echo -e $3
+                 echo
+                 echo
+                 # Display text file contents.
+                 echo -e $4
+                 echo
+                 f_press_enter_key_to_continue
+                 #
+                 clear  # Blank the screen.
+                 #
+              else
+                 # If $2 is "NOK" then use f_press_enter_key_to_continue.
+                 #
+                 clear  # Blank the screen.
+                 #
+                 # Display title.
+                 echo
+                 echo -e $3
+                 echo
+                 echo
+                 # Display text file contents.
+                 echo -e $4
+                 echo
+                 echo
+                 sleep 5
+                 #
+                 clear  # Blank the screen.
+                 #
+              fi
+           fi
+           ;;
+      esac
+} # End of function f_message.
 #
-#@@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
-#@@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
+# +----------------------------------------+
+# |        Function f_menu_arrays          |
+# +----------------------------------------+
 #
-#@@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
+#  Inputs: $1=file of menu choice strings.
+#    Uses: ARRAY_NUM, ARRAY_NAME, ARRAY_VALUE, TEMP_FILE, XSTR.
+# Outputs: MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH, arrays CHOICE(n), SUMMARY(n), FUNC(n). 
 #
-#@@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
-#
-#@@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
-#
-#@@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
-#
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
-#
-#@@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
-#
-# Add your actual data below:
+f_menu_arrays () {
+      # Create arrays CHOICE, SUMMARY, FUNC to store menu option information.
+      #
+      # Example:
+      # Menu option name is "Directory Listing"
+      # Shared directory to be mounted is "//hansolo/public/contacts"
+      # Local PC mount-point is "/mnt/hansolo/contacts"
+      #
+      #     CHOICE[1]="Directory Listing"
+      #     SUMMARY[1]="get a listing of files in a directory."
+      #     FUNC[1]="f_dir_listing"     # Function to do command "ls -l".
+      #
+      unset CHOICE SUMMARY FUNC  # Delete arrays in memory.
+      ARRAY_NUM=1
+      TEMP_FILE="dropfsd_temp.txt"
+      #
+      #                 Field-1 (null)  Field-2                      Field-3                     Field-4
+      # Format of XSTR="<Delimiter> <Choice Title> <Delimiter> <Short Description> <Delimiter> <function>^<OPTION1>^<OPTION2>"
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+      while read XSTR
+      do
+            case $XSTR in
+                  \#@@*) echo $XSTR >>$TEMP_FILE
+                  ;;
+            esac
+      done < $1  # Read lines from file $1.
+      #
+      # Delete last line which is from the case statement pattern 
+      # immediately above. 
+      # Delete last line in $TEMP_FILE which is actual code not data.
+      sed -i /echo*/d $TEMP_FILE 
+      #
+      # Calculate longest line length in TEMP_FILE to find maximum menu width
+      # for Dialog or Whiptail.
+      # The "Word Count" wc command output will not include the TEMP_FILE name
+      # when you redirect "<$TEMP_FILE" into wc.
+      #
+      MAX_LENGTH=0  # Initialize variable maximum string length.
+      while read XSTR
+      do
+            X=$(echo $XSTR | awk -F "#@@" '{ print $2" "$3 }')
+            X_LENGTH=$(echo $X | wc --max-line-length)
+            if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
+               MAX_LENGTH=$X_LENGTH
+            fi
+      done < $TEMP_FILE
+      #
+      # Calculate number of lines or Menu Choices to find maximum menu lines
+      # for Dialog or Whiptail.
+      MAX_LINES=$(wc --lines <$TEMP_FILE)
+      #
+      MAX_CHOICE_LENGTH=0
+      #
+      while read XSTR
+      do
+            # Set array CHOICE[n] = <field-1> or "Choice Title" of XSTR.
+            ARRAY_NAME="CHOICE"
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $2 }}')
+            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+            #
+            # Calculate length of next Menu Option Choice string.
+                CHOICE_LENGTH=${#ARRAY_VALUE}
+                # Save the value of the longest length of the Menu Option.
+                if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
+                   # Save new maximum string length.
+                   MAX_CHOICE_LENGTH=$CHOICE_LENGTH
+                fi
+            #
+            # Set array SUMMARY[n]=<field-2> or "Summary" of XSTR.
+            ARRAY_NAME="SUMMARY"
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $3 }}')
+            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+            #
+            # Set array $FUNC=<field-3> or "Function" of XSTR.
+            ARRAY_NAME="FUNC"
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $4 }}')
+            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+            #
+            let ARRAY_NUM=$ARRAY_NUM+1
+      done < $TEMP_FILE
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      unset TEMP_FILE XSTR  # Throw out this variable.
+} # End of f_menu_arrays.
 #
 # +----------------------------------------+
 # |       Function f_server_arrays         |
@@ -167,6 +416,7 @@ THIS_FILE="mountup_lib_gui.lib"
 #          SERVER_SP[SERVER_NUM]=<Server's shared directory to be mounted>.
 #          LOCAL_MP[SERVER_NUM]=<Mount-point of local PC>.
 #          SERVER_DESC[1]=<Description of Shared Directory contents>.
+#          MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH.
 #
 f_server_arrays () {
       # Create arrays to handle mount-point names and server source directory names.
@@ -199,12 +449,36 @@ f_server_arrays () {
       while read XSTR
       do
             case $XSTR in
-                  \#@@*) echo $XSTR >>$TEMP_FILE
+                  \#@#*) echo $XSTR >>$TEMP_FILE
                   ;;
             esac
       done < mountup_lib_gui.lib
       #
+      # Delete last line which is from the case statement pattern 
+      # immediately above. 
+      # Delete last line in $TEMP_FILE which is actual code not data.
       sed -i /echo*/d $TEMP_FILE # Delete last line in $TEMP_FILE which is actual code not data.
+      #
+      # Calculate longest line length in TEMP_FILE to find maximum menu width
+      # for Dialog or Whiptail.
+      # The "Word Count" wc command output will not include the TEMP_FILE name
+      # when you redirect "<$TEMP_FILE" into wc.
+      #
+      MAX_LENGTH=0  # Initialize variable maximum string length.
+      while read XSTR
+      do
+            X=$(echo $XSTR | awk -F "#@#" '{ print $2" "$3 }')
+            X_LENGTH=$(echo $X | wc --max-line-length)
+            if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
+               MAX_LENGTH=$X_LENGTH
+            fi
+      done < $TEMP_FILE
+      #
+      # Calculate number of lines or Menu Choices to find maximum menu lines
+      # for Dialog or Whiptail.
+      MAX_LINES=$(wc --lines <$TEMP_FILE)
+      #
+      MAX_CHOICE_LENGTH=0
       #
       while read XSTR
       do
@@ -221,13 +495,21 @@ f_server_arrays () {
             #
             # Set array $SERVER_NAME_SP[SERVER_NUM]=<field-2> or "Shared directory" of XSTR.
             ARRAY_NAME=$SERVER_NAME"_SP"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $2 }}')
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $2 }}')
             eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
             #echo "$ARRAY_NAME[$ARRAY_NUM]=${ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
             #
+            # Calculate length of next Menu Option Choice string.
+            CHOICE_LENGTH=${#ARRAY_VALUE}
+            # Save the value of the longest length of the Menu Option.
+            if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
+               # Save new maximum string length.
+               MAX_CHOICE_LENGTH=$CHOICE_LENGTH
+            fi
+            #
             # Set array $SERVER_NAME_MP[SERVER_NUM]=<field-3> of XSTR.
             ARRAY_NAME=$SERVER_NAME"_MP"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $3 }}')
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $3 }}')
             #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
             #echo "$ARRAY_NAME[$ARRAY_NUM]=${$ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
             eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
@@ -235,7 +517,7 @@ f_server_arrays () {
             # Set array $SERVER NAME DESC[SERVER_NUM]=<field-4> of XSTR.
             ARRAY_NAME=$SERVER_NAME"_DESC"
             #echo XSTR=$XSTR  # Test diagnostic line.
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $4 }}')
+            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $4 }}')
             ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
             #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
             eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
@@ -250,162 +532,49 @@ f_server_arrays () {
 } # End of f_server_arrays.
 #
 # +----------------------------------------+
-# |      Function f_test_environment       |
-# +----------------------------------------+
-#
-#  Inputs: $BASH_VERSION (System variable).
-#    Uses: None.
-# Outputs: None.
-#
-f_test_environment () {
-      # Set default colors in case configuration file is not readable
-      # or does not exist.
-      #
-      # Test the environment. Are you in the BASH environment?
-      # $BASH_VERSION is null if you are not in the BASH environment.
-      # Typing "sh" at the CLI may invoke a different shell other than BASH.
-      # if [ -z "$BASH_VERSION" ]; then
-      # if [ "$BASH_VERSION" = '' ]; then
-      f_test_dash_txt
-} # End of function f_test_environment.
-#
-# +----------------------------------------+
-# |        Function f_test_dash_txt        |
-# +----------------------------------------+
-#
-#  Inputs: None.
-#    Uses: None.
-# Outputs: None.
-#
-f_test_dash_txt () {
-      # Set default colors in case configuration file is not readable
-      # or does not exist.
-      #
-      echo -n $(tput sgr0) # Set font to normal color.
-      if [ -z "$BASH_VERSION" ]; then
-         clear # Clear screen.
-         echo -n $(tput bold)
-         echo -n $(tput setaf 1) # Set font to color red.
-         echo "WARNING:"
-         echo "You are using the DASH environment."
-         echo "This script needs a BASH environment to run properly."
-         echo $(tput sgr0) # Set font to normal color.
-         echo "Ubuntu and Linux Mint default to DASH but also have BASH available."
-         echo
-         echo "Restart this script by typing:"
-         echo -n $(tput bold)
-         echo "       \"bash $THIS_FILE\""
-         echo -n $(tput sgr0) # Set font to normal color.
-         echo "at the command line prompt (without the quotation marks)."
-         echo
-         echo -n $(tput sgr0) # Set font to normal color.
-         f_press_enter_key_to_continue
-         f_abort_txt
-      fi
-} # End of function f_test_dash_txt.
-#
-# +----------------------------------------+
-# |          Function f_detect_ui          |
-# +----------------------------------------+
-#
-#  Inputs: None.
-#    Uses: ERROR.
-# Outputs: GUI (dialog, whiptail, text).
-#
-f_detect_ui () {
-      command -v dialog >/dev/null
-      # "&>/dev/null" does not work in Debian distro.
-      # 1=standard messages, 2=error messages, &=both.
-      ERROR=$?
-      # Is Dialog GUI installed?
-      if [ $ERROR -eq 0 ] ; then
-         # Yes, Dialog installed.
-         GUI="dialog"
-      else
-         # Is Whiptail GUI installed?
-         command -v whiptail >/dev/null
-         # "&>/dev/null" does not work in Debian distro.
-         # 1=standard messages, 2=error messages, &=both.
-         ERROR=$?
-         if [ $ERROR -eq 0 ] ; then
-            # Yes, Whiptail installed.
-            GUI="whiptail"
-         else
-            # No CLI GUIs installed
-            GUI="text"
-         fi
-      fi
-} # End of function f_detect_ui.
-#
-# +----------------------------------------+
-# |         Function f_script_path         |
-# +----------------------------------------+
-#
-#  Inputs: $BASH_SOURCE (System variable).
-#    Uses: None.
-# Outputs: SCRIPT_PATH, THIS_DIR.
-#
-f_script_path () {
-      # BASH_SOURCE[0] gives the filename of the script.
-      # dirname "{$BASH_SOURCE[0]}" gives the directory of the script
-      # Execute commands: cd <script directory> and then pwd
-      # to get the directory of the script.
-      # NOTE: This code does not work with symlinks in directory path.
-      #
-      # !!!Non-BASH environments will give error message about line below!!!
-      SCRIPT_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-      THIS_DIR=$SCRIPT_PATH  # Set $THIS_DIR to location of this script.
-
-} # End of function f_script_path.
-#
-# +----------------------------------------+
-# | Function f_press_enter_key_to_continue |
-# +----------------------------------------+
-#
-#  Inputs: None.
-#    Uses: X.
-# Outputs: None.
-#
-f_press_enter_key_to_continue () { # Display message and wait for user input.
-      echo
-      echo -n "Press '"Enter"' key to continue."
-      read X
-      unset X  # Throw out this variable.
-} # End of function f_press_enter_key_to_continue.
-#
-# +----------------------------------------+
 # |        Function f_test_connection      |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" The CLI GUI application in use.
-#          $2 - Network name of server.
+#  Inputs: $1 - "text", "dialog" or "whiptail" The CLI GUI application in use.
+#          $2 Network name of server. 
 #    Uses: None.
-# Outputs: ERROR.
+# Outputs: ERROR. 
 #
 f_test_connection () {
+      #
       # Check if there is an internet connection before doing a download.
       case $1 in
            whiptail | dialog)
            ping -c 1 -q $2 >/dev/null # Ping server address.
            ERROR=$?
            if [ $ERROR -ne 0 ] ; then
-              $1 --title "Ping Test Connection" --msgbox "Network connnection to $2 file server failed.\nCannot (dis)mount shared directories." 7 70
+              case $1 in
+                   dialog)
+                   f_message $1 "OK" "Ping Test Internet Connection" "\n\Z1\Zb     No Internet connection, cannot access on-line data files.\Zn"
+                   ;;
+                   whiptail)
+                   f_message $1 "OK" "Ping Test Internet Connection" "\n     No Internet connection, cannot access on-line data files."
+                   ;;
+              esac
+           else
+              f_message $1 "NOK" "Ping Test Internet Connection" "Internet connnection to $2 is good."
            fi
            ;;
-           text)
+           *)
            echo
-           echo "Test LAN Connection to $2"
+           echo "Test Internet Connection to $2"
            echo
            ping -c 1 -q $2  # Ping server address.
            ERROR=$?
-           echo
            if [ $ERROR -ne 0 ] ; then
               echo -n $(tput setaf 1) # Set font to color red.
               echo -n $(tput bold)
-              echo ">>> Network connnection to $2 failed. <<<"
-              echo "    Cannot (dis)mount shared directories."
+              f_message $1 "NOK" "Ping Test Internet Connecton" ">>> No Internet connection, cannot access on-line data files. <<<"
               echo -n $(tput sgr0)
-              f_press_enter_key_to_continue
+           else
+              f_message $1 "NOK" "Ping Test Internet Connecton" "Internet connnection to $2 is good."
+              echo
+              echo
            fi
            ;;
       esac
@@ -422,7 +591,7 @@ f_test_connection () {
 # Outputs: SMBUSER, ERROR.
 #
 f_username_gui() {
-      $1 --title "User name for $3" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>temp.txt
+      #$1 --title "User name for $3" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>temp.txt
       ERROR=$?
       SMBUSER=$(cat temp.txt)
       if [ -z "$SMBUSER" ] ; then
@@ -466,76 +635,6 @@ f_password_gui() {
            255) PASSWORD="" ;; # <ESC> key pressed.
       esac
 } # End of function f_password_gui.
-#
-# +------------------------------------+
-# |        Function f_about_gui        |
-# +------------------------------------+
-#
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          THIS_FILE, VERSION.
-#    Uses: None.
-# Outputs: None.
-#
-f_about_gui () {
-      #
-      # Display text (all lines beginning with "#@" but do not print "#@").
-      # sed substitutes null for "#@" at the beginning of each line
-      # so it is not printed.
-      # less -P customizes prompt for
-      # %f <FILENAME> page <num> of <pages> (Spacebar, PgUp/PgDn . . .)
-      #
-      THIS_FILE="mountup_gui.sh"
-      f_script_path
-      echo "Script: $THIS_FILE. Version: $VERSION" >temp.txt
-      echo >>temp.txt
-      sed -n 's/^#@//'p $THIS_DIR/$THIS_FILE >> temp.txt
-      # Get the screen resolution or X-window size.
-      # Get rows (height).
-      Y=$(stty size | awk '{ print $1 }')
-      # Get columns (width).
-      X=$(stty size | awk '{ print $2 }')
-      #
-      $1 --title "About $THIS_FILE (use arrow keys to scroll up/down/side-ways)" --textbox temp.txt $Y $X
-      #
-      if [ -r temp.txt ] ; then
-         rm temp.txt
-      fi
-      THIS_FILE="mountup_lib_gui.lib"
-} # End of f_about_gui.
-#
-# +----------------------------------------+
-# |       Function f_code_history_gui      |
-# +----------------------------------------+
-#
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          THIS_DIR, THIS_FILE.
-#    Uses: None.
-# Outputs: temp.txt.
-#
-f_code_history_gui () {
-      # Display text (all lines beginning with "#@" but do not print "#@").
-      # sed substitutes null for "#@" at the beginning of each line
-      # so it is not printed.
-      # less -P customizes prompt for
-      # %f <FILENAME> page <num> of <pages> (Spacebar, PgUp/PgDn . . .)
-      #
-      f_script_path
-      THIS_FILE="mountup_lib_gui.lib"
-      echo "Script: $THIS_FILE. Version: $VERSION" >temp.txt
-      echo >>temp.txt
-      sed -n 's/^#@//'p $THIS_DIR/$THIS_FILE >> temp.txt
-      # Get the screen resolution or X-window size.
-      # Get rows (height).
-      Y=$(stty size | awk '{ print $1 }')
-      # Get columns (width).
-      X=$(stty size | awk '{ print $2 }')
-      #
-      $1 --title "Code History (use arrow keys to scroll up/down/side-ways)" --textbox temp.txt $Y $X
-      #
-      if [ -r temp.txt ] ; then
-         rm temp.txt
-      fi
-} # End of function f_code_history_gui.
 #
 # +----------------------------------------+
 # |    Function f_show_mount_points_gui    |
@@ -859,10 +958,137 @@ f_dismount_gui () {
 #
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=GENERATED_FILE.
+#          $3=Menu Title.
+#          $4=MAX_LENGTH
+#          $5=MAX_LINES
 #    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER.
 # Outputs: None.
 #
 f_update_menu_gui () {
+      echo "#!/bin/bash" >$2
+      echo "#" >>$2
+      echo "VERSION=\"$VERSION\"" >>$2
+      echo "#" >>$2
+      echo "#***********************************CAUTION***********************************" >>$2
+      echo "# Any edits made to this code will be lost since this code is" >>$2
+      echo "# automatically generated and updated by running the script," >>$2
+      echo "# \"mountup_gui.sh\" which contains data for the server menu." >>$2
+      echo "#***********************************CAUTION***********************************" >>$2
+      echo "#" >>$2
+      echo "# +----------------------------------------+" >>$2
+      echo "# |        Function f_server_menu_gui      |" >>$2
+      echo "# +----------------------------------------+" >>$2
+      echo "#" >>$2
+      echo "#  Inputs: \$1=GUI." >>$2
+      echo "#    Uses: VERSION, THIS_FILE, CHOICE_SERVER, MENU_TITLE." >>$2
+      echo "# Outputs: None." >>$2
+      echo "#" >>$2
+      echo "f_server_menu_gui () {" >>$2
+      echo "      # Invoke the file mountup_lib_gui.lib functions to display menu." >>$2
+      echo "      . mountup_lib_gui.lib    # invoke the necessary files". >>$2
+      echo "      #" >>$2
+      echo "      f_server_arrays  # Create arrays from script mountup_gui.sh." >>$2
+      echo "      #" >>$2
+      echo "      CHOICE_SERVER=\"\"  # Initialize variable." >>$2
+      echo "      until [ \"\$CHOICE_SERVER\" = \"0\" ]" >>$2
+      echo "            do    # Start of Main Menu until loop." >>$2
+                           MENU_TITLE=$(echo $3 | tr '_' ' ')
+      echo "               MENU_TITLE=\"$MENU_TITLE\"" >>$2
+      #
+      # Get the screen resolution or X-window size.
+      # Get rows (height).
+      Y=$(stty size | awk '{ print $1 }')
+      # Get columns (width).
+      X=$(stty size | awk '{ print $2 }')
+      #
+      # If screen or window width is greater than MAX_LENGTH_UI (number of characters).
+      # Then shrink menu display to fit number of characters.
+      let MAX_LENGTH=$4+10
+      if [ $X -gt $MAX_LENGTH ] ; then
+         X=$MAX_LENGTH
+      fi
+      #
+      # Pad vertical menu box display for a minimum display area.
+      let MAX_LINES=$5+7
+      if [ $Y -gt $MAX_LINES ] ; then
+         let Y=$MAX_LINES
+      fi
+      # 
+      # Menu height - actual height of menu options.
+      # Because the SERVER Arrays have possibly more than one element per server name,
+      # The calculated menu height will be wrong with this type of array structure.
+      # Force menu height to an eye-pleasing value so that menu window is not too long.
+      Z=8
+      #
+      case $1 in
+           dialog)
+           if [ $3 = "Main_Menu" ] ; then    
+              echo "               CHOICE_SERVER=\$(\$GUI --no-cancel --clear --title \"\$MENU_TITLE\" --menu \"\n\nUse (up/down arrow keys) or (letters):\" $Y $X $Z \\" >>$2
+           else
+              echo "               CHOICE_SERVER=\$(\$GUI --clear --title \"\$MENU_TITLE\" --menu \"\n\nUse (up/down arrow keys) or (letters):\" $Y $X $Z \\" >>$2
+           fi
+           ;;
+           whiptail)
+           if [ $3 = "Main_Menu" ] ; then    
+              echo "               CHOICE_SERVER=\$(\$GUI --nocancel --clear --title \"\$MENU_TITLE\" --menu \"\n\nUse (up/down arrow keys) or (letters):\" $Y $X $Z \\" >>$2
+           else
+              echo "               CHOICE_SERVER=\$(\$GUI --clear --title \"\$MENU_TITLE\" --menu \"\n\nUse (up/down arrow keys) or (letters):\" $Y $X $Z \\" >>$2
+           fi
+           ;;
+      esac
+      #
+      #echo "               CHOICE_SERVER=\$(\$GUI --clear --title \"\$MENU_TITLE\" --menu \"\n\nUse (up/down arrow keys) or (letters):\" 20 80 11 \\" >>$2
+      echo "                     \"Quit\" \"Quit to command line prompt.\" \\" >>$2
+      echo "                     \"Show\" \"Show mounted directories.\" \\" >>$2
+      ARRAY_NAME="SERVER"
+      ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
+      ARRAY_LEN=$(eval echo $ARRAY_LEN)
+            for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+                do
+                   SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+                   SERVER=$(eval echo $SERVER)
+                   if [ -n $SERVER ] ; then
+                       echo "                     \"$SERVER\" \"$SERVER fileserver.\" \\" >>$2
+                   fi
+                done
+      echo "                     \"About\" \"Version information of this script.\" \\" >>$2
+      echo "                     \"Code History\" \"Display code change history of this script.\" \\" >>$2
+      echo "               2>&1 >/dev/tty)" >>$2
+      echo "               case \$CHOICE_SERVER in" >>$2
+      echo "                    \"Quit\") break ;;" >>$2
+      echo "                    \"Show\") f_show_mount_points_gui \$GUI ;;" >>$2
+      echo "                    \"About\") f_about_gui \$GUI ;;" >>$2
+      echo "                    \"Code History\") f_code_history_gui \$GUI ;;" >>$2
+      ARRAY_NAME="SERVER"
+      ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
+      ARRAY_LEN=$(eval echo $ARRAY_LEN)
+            for (( XNUM=1; XNUM<${ARRAY_LEN}; XNUM++ ));
+                do
+                   SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+                   SERVER=$(eval echo $SERVER)
+                   if [ -n $SERVER ] ; then
+                      echo "                    \"${SERVER[$XNUM]}\") f_action_menu_gui \$GUI $SERVER" >>$2
+                      echo "                    ;;" >>$2
+                   fi
+                done
+      echo "               esac" >>$2
+      echo "       done" >>$2
+      echo "       unset VERSION THIS_FILE CHOICE_SERVER MENU_TITLE  # Throw out this variable." >>$2
+      echo "       #" >>$2
+      echo "       } # End of function f_server_menu_gui." >>$2
+      unset ARRAY_NAME ARRAY_LEN XNUM SERVER
+} # End of function f_update_menu_gui.
+#
+# +----------------------------------------+
+# |        Function f_update_menu_gui-oem      |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=GENERATED_FILE.
+#    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER.
+# Outputs: None.
+#
+f_update_menu_gui-oem () {
       echo "#!/bin/bash" >$2
       echo "#" >>$2
       echo "VERSION=\"$VERSION\"" >>$2
@@ -931,7 +1157,7 @@ f_update_menu_gui () {
       echo "       #" >>$2
       echo "       } # End of function f_server_menu_gui." >>$2
       unset ARRAY_NAME ARRAY_LEN XNUM SERVER
-} # End of function f_update_menu_gui.
+} # End of function f_update_menu_gui-oem.
 #
 # +----------------------------------------+
 # |        Function f_action_menu_gui      |
