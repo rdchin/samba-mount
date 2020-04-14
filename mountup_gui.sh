@@ -9,7 +9,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-04-13 15:38"
+VERSION="2020-04-14 01:36"
 THIS_FILE="mountup_gui.sh"
 #
 # +----------------------------------------+
@@ -60,6 +60,9 @@ THIS_FILE="mountup_gui.sh"
 # +----------------------------------------+
 #
 ## Code Change History
+##
+## 2020-04-14 *f_test_mount, f_yn_question Bug fixed.
+##            *Standardized temporary files and cleanup code.
 ##
 ## 2020-04-13 *Combine mountup_gui.sh with mountup.sh into a single script.
 ##            *Cleanup code and documentation.
@@ -172,6 +175,7 @@ THIS_FILE="mountup_gui.sh"
 # Outputs: ERROR.
 #
 f_arguments () {
+      #
       # If there is more than one argument, display help USAGE message, because only one argument is allowed.
       if [ $# -ge 2 ] ; then
          f_help_message text
@@ -229,6 +233,7 @@ f_arguments () {
 # Outputs: GUI (dialog, whiptail, text).
 #
 f_detect_ui () {
+      #
       command -v dialog >/dev/null
       # "&>/dev/null" does not work in Debian distro.
       # 1=standard messages, 2=error messages, &=both.
@@ -262,6 +267,7 @@ f_detect_ui () {
 # Outputs: SCRIPT_PATH, THIS_DIR.
 #
 f_script_path () {
+      #
       # BASH_SOURCE[0] gives the filename of the script.
       # dirname "{$BASH_SOURCE[0]}" gives the directory of the script
       # Execute commands: cd <script directory> and then pwd
@@ -283,6 +289,7 @@ f_script_path () {
 # Outputs: None.
 #
 f_test_environment () {
+      #
       # Set default colors in case configuration file is not readable
       # or does not exist.
       #
@@ -329,7 +336,9 @@ f_test_dash () {
 #    Uses: X.
 # Outputs: None.
 #
-f_press_enter_key_to_continue () { # Display message and wait for user input.
+f_press_enter_key_to_continue () { 
+      #
+      # Display message and wait for user input.
       echo
       echo -n "Press '"Enter"' key to continue."
       read X
@@ -457,6 +466,184 @@ f_help_message () {
       f_message $1 "OK" "$THIS_FILE Usage (use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
       #
 } # End of f_help_message.
+#
+# +----------------------------------------+
+# |          Function f_yn_question        |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
+#          $2 - "Y" or "N" - the default answer.         
+#          $3 - Title string (may be null).
+#          $4 - Question text string.
+#    Uses: None.
+# Outputs: ANS=0 is "Yes".
+#          ANS=1 is "No".
+#          ANS=255 if <Esc> is pressed in dialog/whiptail --yesno box.
+#
+f_yn_question () {
+      #
+      # Ask Yes/No question.
+      #
+      case $1 in
+           dialog | whiptail)
+              # If $4 is a text string.
+              #
+              # Does $4 contain "\n"?  Does the string $4 contain multiple sentences?
+              case $4 in
+                 *\n*)
+                    # Yes, string $4 contains multiple sentences.
+                    #
+                    # Use command "sed" with "-e" to filter out multiple "\Z" commands.
+                    # Filter out "\Z[0-7]", "\Zb", \ZB", "\Zr", "\ZR", "\Zu", "\ZU", "\Zn".
+                    ZNO=$(echo $4 | sed -e 's|\\Z0||g' -e 's|\\Z1||g' -e 's|\\Z2||g' -e 's|\\Z3||g' -e 's|\\Z4||g' -e 's|\\Z5||g' -e 's|\\Z6||g' -e 's|\\Z7||g' -e 's|\\Zb||g' -e 's|\\ZB||g' -e 's|\\Zr||g' -e 's|\\ZR||g' -e 's|\\Zu||g' -e 's|\\ZU||g' -e 's|\\Zn||g')
+                    # Calculate the length of the longest sentence with the $4 string.
+                    # How many sentences?
+                    # Replace "\n" with "%" and then use awk to count how many sentences.
+                    # Save number of sentences.
+                    Y=$(echo $ZNO | sed 's|\\n|%|g'| awk -F '%' '{print NF}')
+                    TEMP_FILE=$THIS_FILE"_temp.txt"
+                    echo -e $ZNO > $TEMP_FILE
+                    X=$(wc --max-line-length < $TEMP_FILE)
+                 ;;
+                 *)
+                    # No, line length is $4 string length. 
+                    X=$(echo -n "$4" | wc -c)
+                    Y=1
+                    ;;
+              esac
+                 #
+                 # Calculate line length of $4 if it contains "\n" <new line> markers.
+                 # Find length of all sentences delimited by "\n"
+                 #
+      esac
+      #
+      case $1 in
+           dialog)
+              # Dialog needs about 5 more lines for the header and [OK] button.
+              let Y=Y+5
+              # If number of lines exceeds screen/window height then set textbox height.
+              if [ $Y -ge $YSCREEN ] ; then
+                 Y=$YSCREEN
+              fi
+              #
+              # Dialog needs about 10 more spaces for the right and left window frame. 
+              let X=X+10
+              # If line length exceeds screen/window width then set textbox width.
+              if [ $X -ge $XSCREEN ] ; then
+                 X=$XSCREEN
+              fi
+           ;;
+           whiptail)
+              # Whiptail only has options --textbox or--msgbox (not --infobox).
+              # Whiptail does not have option "--colors" with "\Z" commands for font color bold/normal.
+              # Filter out any "\Z" commands when using the same string for both Dialog and Whiptail.
+              # Use command "sed" with "-e" to filter out multiple "\Z" commands.
+              # Filter out "\Z[0-7]", "\Zb", \ZB", "\Zr", "\ZR", "\Zu", "\ZU", "\Zn".
+              ZNO=$(echo $4 | sed -e 's|\\Z0||g' -e 's|\\Z1||g' -e 's|\\Z2||g' -e 's|\\Z3||g' -e 's|\\Z4||g' -e 's|\\Z5||g' -e 's|\\Z6||g' -e 's|\\Z7||g' -e 's|\\Zb||g' -e 's|\\ZB||g' -e 's|\\Zr||g' -e 's|\\ZR||g' -e 's|\\Zu||g' -e 's|\\ZU||g' -e 's|\\Zn||g')
+              #
+              # Whiptail needs about 6 more lines for the header and [OK] button.
+              let Y=Y+6
+              # If number of lines exceeds screen/window height then set textbox height.
+              if [ $Y -ge $YSCREEN ] ; then
+                 Y=$YSCREEN
+              fi
+              #
+              # Whiptail needs about 6 more spaces for the right and left window frame. 
+              let X=X+6
+              # If line length exceeds screen/window width then set textbox width.
+              if [ $X -ge $XSCREEN ] ; then
+                 X=$XSCREEN
+              fi
+           ;;
+      esac
+      #
+      case $1 in
+           dialog | whiptail)
+           case $2 in
+                Y)
+                   # "Yes" is the default answer.
+                   $1 --title "$3" --yesno "$4" $Y $X
+                   ANS=$?
+                ;;
+                N)
+                   # "No" is the default answer.
+                   $1 --title "$3" --defaultno --yesno "$4" $Y $X
+                   ANS=$?
+                ;;
+           esac
+           ;;
+           text)
+              #
+              clear  # Blank screen.
+              #
+              TEMP_FILE=$THIS_FILE"_temp.txt"
+              #
+              # Does $4 contain "\n"?  Does the string $4 contain multiple sentences?
+              case $4 in
+                   *\n*)
+                      # Yes, string $4 contains multiple sentences.
+                      #
+                      # Use command "sed" with "-e" to filter out multiple "\Z" commands.
+                      # Filter out "\Z[0-7]", "\Zb", \ZB", "\Zr", "\ZR", "\Zu", "\ZU", "\Zn".
+                      ZNO=$(echo $4 | sed -e 's|\\Z0||g' -e 's|\\Z1||g' -e 's|\\Z2||g' -e 's|\\Z3||g' -e 's|\\Z4||g' -e 's|\\Z5||g' -e 's|\\Z6||g' -e 's|\\Z7||g' -e 's|\\Zb||g' -e 's|\\ZB||g' -e 's|\\Zr||g' -e 's|\\ZR||g' -e 's|\\Zu||g' -e 's|\\ZU||g' -e 's|\\Zn||g')
+                      #
+                      # Create a text file from the string.
+                      echo -e $ZNO > $TEMP_FILE
+                   ;;
+                   *)
+                      # No, string $4 contains a single sentence. 
+                      #
+                      # Create a text file from the string.
+                      echo $4 > $TEMP_FILE
+                   ;;
+              esac
+              #
+              # Calculate number of lines or Menu Choices to find maximum menu lines for Dialog or Whiptail.
+              Y=$(wc --lines < $TEMP_FILE)
+              #
+              # Display Title and Question.
+              echo $3
+              echo
+              NSEN=1
+              while read XSTR
+                    do
+                       if [ $NSEN -lt $Y ] ; then
+                          echo $XSTR
+                       fi
+                       let NSEN=NSEN+1
+                    done < $TEMP_FILE
+                    #
+              XSTR=$(tail -n 1 $TEMP_FILE)
+              #
+              case $2 in
+                   Y)
+                      # "Yes" is the default answer.
+                      echo -n "$XSTR (Y/n) "; read ANS
+                      #
+                      case $ANS in
+                           [Nn] | [Nn][Oo])
+                              ANS=1  # No.
+                           ;;
+                           *)
+                              ANS=0  # Yes (Default).
+                           ;;
+                      esac
+                   ;;
+                   N)
+                      # "No" is the default answer.
+                      echo -n "$XSTR (y/N) "; read ANS
+                      case $ANS in
+                           [Yy] | [Yy][Ee] | [Yy][Ee][Ss])
+                              ANS=0  # Yes.
+                           ;;
+                           *)
+                              ANS=1  # No (Default).
+                           ;;
+                      esac
+              esac        
+      esac
+      #
+} # End of function f_yn_question
 #
 # +------------------------------+
 # |       Function f_message     |

@@ -9,7 +9,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-04-13 15:38"
+VERSION="2020-04-14 01:36"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -86,6 +86,7 @@ THIS_FILE="mountup_lib_gui.lib"
 # Outputs: MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH, arrays CHOICE(n), SUMMARY(n), FUNC(n). 
 #
 f_menu_arrays () {
+      #
       # Create arrays CHOICE, SUMMARY, FUNC to store menu option information.
       #
       # Example:
@@ -109,12 +110,12 @@ f_menu_arrays () {
       fi
       #
       while read XSTR
-      do
-            case $XSTR in
-                  \#@@*) echo $XSTR >>$TEMP_FILE
-                  ;;
-            esac
-      done < $1  # Read lines from file $1.
+            do
+               case $XSTR in
+                    \#@@*) echo $XSTR >>$TEMP_FILE
+                    ;;
+               esac
+            done < $1  # Read lines from file $1.
       #
       # Delete last line which is from the case statement pattern 
       # immediately above. 
@@ -128,13 +129,13 @@ f_menu_arrays () {
       #
       MAX_LENGTH=0  # Initialize variable maximum string length.
       while read XSTR
-      do
-            X=$(echo $XSTR | awk -F "#@@" '{ print $2" "$3 }')
-            X_LENGTH=$(echo $X | wc --max-line-length)
-            if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
-               MAX_LENGTH=$X_LENGTH
-            fi
-      done < $TEMP_FILE
+            do
+               X=$(echo $XSTR | awk -F "#@@" '{ print $2" "$3 }')
+               X_LENGTH=$(echo $X | wc --max-line-length)
+               if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
+                  MAX_LENGTH=$X_LENGTH
+               fi
+            done < $TEMP_FILE
       #
       # Calculate number of lines or Menu Choices to find maximum menu lines
       # for Dialog or Whiptail.
@@ -143,39 +144,40 @@ f_menu_arrays () {
       MAX_CHOICE_LENGTH=0
       #
       while read XSTR
-      do
-            # Set array CHOICE[n] = <field-1> or "Choice Title" of XSTR.
-            ARRAY_NAME="CHOICE"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $2 }}')
-            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #
-            # Calculate length of next Menu Option Choice string.
-                CHOICE_LENGTH=${#ARRAY_VALUE}
-                # Save the value of the longest length of the Menu Option.
-                if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
-                   # Save new maximum string length.
-                   MAX_CHOICE_LENGTH=$CHOICE_LENGTH
-                fi
-            #
-            # Set array SUMMARY[n]=<field-2> or "Summary" of XSTR.
-            ARRAY_NAME="SUMMARY"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $3 }}')
-            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #
-            # Set array $FUNC=<field-3> or "Function" of XSTR.
-            ARRAY_NAME="FUNC"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $4 }}')
-            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #
-            let ARRAY_NUM=$ARRAY_NUM+1
-      done < $TEMP_FILE
+            do
+               # Set array CHOICE[n] = <field-1> or "Choice Title" of XSTR.
+               ARRAY_NAME="CHOICE"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $2 }}')
+               ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #
+               # Calculate length of next Menu Option Choice string.
+               CHOICE_LENGTH=${#ARRAY_VALUE}
+               # Save the value of the longest length of the Menu Option.
+               if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
+                  # Save new maximum string length.
+                  MAX_CHOICE_LENGTH=$CHOICE_LENGTH
+               fi
+               #
+               # Set array SUMMARY[n]=<field-2> or "Summary" of XSTR.
+               ARRAY_NAME="SUMMARY"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $3 }}')
+               ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #
+               # Set array $FUNC=<field-3> or "Function" of XSTR.
+               ARRAY_NAME="FUNC"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $4 }}')
+               ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #
+               let ARRAY_NUM=$ARRAY_NUM+1
+            done < $TEMP_FILE
       #
       if [ -r $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
+      #
       unset TEMP_FILE XSTR  # Throw out this variable.
 } # End of f_menu_arrays.
 #
@@ -193,6 +195,7 @@ f_menu_arrays () {
 #          MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH.
 #
 f_server_arrays () {
+      #
       # Create arrays to handle mount-point names and server source directory names.
       #
       # Example:
@@ -221,12 +224,12 @@ f_server_arrays () {
       fi
       #
       while read XSTR
-      do
-            case $XSTR in
-                  \#@#*) echo $XSTR >>$TEMP_FILE
-                  ;;
-            esac
-      done < mountup_lib_gui.lib
+            do
+               case $XSTR in
+                       \#@#*) echo $XSTR >>$TEMP_FILE
+                    ;;
+               esac
+            done < mountup_lib_gui.lib
       #
       # Delete last line which is from the case statement pattern 
       # immediately above. 
@@ -240,13 +243,13 @@ f_server_arrays () {
       #
       MAX_LENGTH=0  # Initialize variable maximum string length.
       while read XSTR
-      do
-            X=$(echo $XSTR | awk -F "#@#" '{ print $2" "$3 }')
-            X_LENGTH=$(echo $X | wc --max-line-length)
-            if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
-               MAX_LENGTH=$X_LENGTH
-            fi
-      done < $TEMP_FILE
+            do
+               X=$(echo $XSTR | awk -F "#@#" '{ print $2" "$3 }')
+               X_LENGTH=$(echo $X | wc --max-line-length)
+               if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
+                  MAX_LENGTH=$X_LENGTH
+               fi
+            done < $TEMP_FILE
       #
       # Calculate number of lines or Menu Choices to find maximum menu lines
       # for Dialog or Whiptail.
@@ -255,53 +258,55 @@ f_server_arrays () {
       MAX_CHOICE_LENGTH=0
       #
       while read XSTR
-      do
-            # Since format of share-point directory is "//<SERVER_NAME>" the name is in <field-3> with delimiter "/".
-            NEXT_SERVER_NAME=$(echo $XSTR | awk -F "/" '{ if ( $3 ) { print $3 }}')
-            if [ "$SERVER_NAME" != "$NEXT_SERVER_NAME" ] ; then
-               SERVER_NAME=$NEXT_SERVER_NAME
-               let SERVER_NUM=$SERVER_NUM+1 # Increment server array index.
-               ARRAY_NUM=1                  # Different server so reset index for share-point ond mount-point arrays.
-            fi
-            SERVER[$SERVER_NUM]="$SERVER_NAME"
-            SRV[$SERVER_NUM]=${SERVER_NAME:0:3}  # SRV[n]=<the first 3-letters of the Server Name>
-            #echo "SRV[$SERVER_NUM]=${SRV[$SERVER_NUM]}"      # Test diagnostic line.
-            #
-            # Set array $SERVER_NAME_SP[SERVER_NUM]=<field-2> or "Shared directory" of XSTR.
-            ARRAY_NAME=$SERVER_NAME"_SP"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $2 }}')
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #echo "$ARRAY_NAME[$ARRAY_NUM]=${ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
-            #
-            # Calculate length of next Menu Option Choice string.
-            CHOICE_LENGTH=${#ARRAY_VALUE}
-            # Save the value of the longest length of the Menu Option.
-            if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
-               # Save new maximum string length.
-               MAX_CHOICE_LENGTH=$CHOICE_LENGTH
-            fi
-            #
-            # Set array $SERVER_NAME_MP[SERVER_NUM]=<field-3> of XSTR.
-            ARRAY_NAME=$SERVER_NAME"_MP"
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $3 }}')
-            #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
-            #echo "$ARRAY_NAME[$ARRAY_NUM]=${$ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #
-            # Set array $SERVER NAME DESC[SERVER_NUM]=<field-4> of XSTR.
-            ARRAY_NAME=$SERVER_NAME"_DESC"
-            #echo XSTR=$XSTR  # Test diagnostic line.
-            ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $4 }}')
-            ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
-            #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
-            eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-            #echo ${peapod_DESC[@]}  # Test diagnostic line.
-            #
-            let ARRAY_NUM=$ARRAY_NUM+1
-      done < $TEMP_FILE
+            do
+               # Since format of share-point directory is "//<SERVER_NAME>" the name is in <field-3> with delimiter "/".
+               NEXT_SERVER_NAME=$(echo $XSTR | awk -F "/" '{ if ( $3 ) { print $3 }}')
+               if [ "$SERVER_NAME" != "$NEXT_SERVER_NAME" ] ; then
+                  SERVER_NAME=$NEXT_SERVER_NAME
+                  let SERVER_NUM=$SERVER_NUM+1 # Increment server array index.
+                  ARRAY_NUM=1                  # Different server so reset index for share-point ond mount-point arrays.
+               fi
+               SERVER[$SERVER_NUM]="$SERVER_NAME"
+               SRV[$SERVER_NUM]=${SERVER_NAME:0:3}  # SRV[n]=<the first 3-letters of the Server Name>
+               #echo "SRV[$SERVER_NUM]=${SRV[$SERVER_NUM]}"      # Test diagnostic line.
+               #
+               # Set array $SERVER_NAME_SP[SERVER_NUM]=<field-2> or "Shared directory" of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_SP"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $2 }}')
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #echo "$ARRAY_NAME[$ARRAY_NUM]=${ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
+               #
+               # Calculate length of next Menu Option Choice string.
+               CHOICE_LENGTH=${#ARRAY_VALUE}
+               # Save the value of the longest length of the Menu Option.
+               if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
+                  # Save new maximum string length.
+                  MAX_CHOICE_LENGTH=$CHOICE_LENGTH
+               fi
+               #
+               # Set array $SERVER_NAME_MP[SERVER_NUM]=<field-3> of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_MP"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $3 }}')
+               #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
+               #echo "$ARRAY_NAME[$ARRAY_NUM]=${$ARRAY_NAME[$ARRAY_NUM]}" # Test diagnostic line.
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #
+               # Set array $SERVER NAME DESC[SERVER_NUM]=<field-4> of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_DESC"
+               #echo XSTR=$XSTR  # Test diagnostic line.
+               ARRAY_VALUE=$(echo $XSTR | awk -F "#@#" '{ if ( $3 ) { print $4 }}')
+               ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+               #echo ARRAY_VALUE=$ARRAY_VALUE  # Test diagnostic line.
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #echo ${peapod_DESC[@]}  # Test diagnostic line.
+               #
+               let ARRAY_NUM=$ARRAY_NUM+1
+            done < $TEMP_FILE
+      #
       if [ -r $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
+      #
       unset XSTR SERVER_NUM ARRAY_NUM SERVER_NAME NEXT_SERVER_NAME # Throw out this variable.
 } # End of f_server_arrays.
 #
@@ -363,7 +368,10 @@ f_test_connection () {
 # Outputs: SMBUSER, ERROR.
 #
 f_username() {
+      #
       TEMP_FILE=$THIS_FILE"_temp.txt"
+      ERROR=0
+      #
       case $1 in
            dialog | whiptail)
               $1 --title "User name for $3" --inputbox "Enter SMB mount-point user name:" 10 50 $2 2>$TEMP_FILE
@@ -387,13 +395,15 @@ f_username() {
          SMBUSER=$2
       fi
       #
-      if [ -r $TEMP_FILE ] ; then
-         rm $TEMP_FILE
-      fi
       case $ERROR in
            1) SMBUSER="" ;;   # <Cancel> button pressed.
            255) SMBUSER="" ;; # <ESC> key pressed.
       esac
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
 } # End of function f_username.
 #
 # +----------------------------------------+
@@ -406,7 +416,10 @@ f_username() {
 # Outputs: PASSWORD, ERROR.
 #
 f_password() {
+      #
+      TEMP_FILE=$THIS_FILE"_temp.txt"
       PASSWORD=""
+      #
       case $1 in
            dialog)
               $1 --title "Password for $2" --clear --insecure --passwordbox "Enter SMB mount-point password:" 10 70 2>$TEMP_FILE
@@ -425,14 +438,15 @@ f_password() {
               echo
            ;;
       esac
-      #
-      if [ -r  $TEMP_FILE ] ; then
-         rm  $TEMP_FILE
-      fi
       case $ERROR in
            1) PASSWORD="" ;;   # <Cancel> button pressed.
            255) PASSWORD="" ;; # <ESC> key pressed.
       esac
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
 } # End of function f_password.
 #
 # +----------------------------------------+
@@ -441,42 +455,45 @@ f_password() {
 #
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $THIS_FILE,
-#    Uses: X, Y, ERROR, temp.txt.
+#    Uses: X, Y, ERROR, $TEMP_FILE.
 # Outputs: None.
 #
 f_show_mount_points () {
-      date >temp.txt
-      echo >>temp.txt
+      #
+      TEMP_FILE=$THIS_FILE"_temp.txt"
+      date >$TEMP_FILE
+      echo >>$TEMP_FILE
       # Test if this version of "df" has these OPTIONS.
       df -h --type=cifs --output=source,avail,target >/dev/null 2>&1
       ERROR=$?
       if [ $ERROR -eq 1 ] ; then
          # Older version of "df" or nothing mounted, so use df with minimal OPTIONS.
-         df -h --type=cifs >>temp.txt
+         df -h --type=cifs >>$TEMP_FILE
          ERROR=$?
          if [ $ERROR -eq 1 ] ; then
-            echo >>temp.txt
-            echo " >>> Nothing is mounted <<<" >>temp.txt
-            echo "No mount-points are mounted." >>temp.txt
+            echo >>$TEMP_FILE
+            echo " >>> Nothing is mounted <<<" >>$TEMP_FILE
+            echo "No mount-points are mounted." >>$TEMP_FILE
          else
-            echo >>temp.txt
-            grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>temp.txt
+            echo >>$TEMP_FILE
+            grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>$TEMP_FILE
          fi
       else
-         df -h --type=cifs --output=source,avail,target >>temp.txt
-         echo >>temp.txt
-         grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>temp.txt
+         df -h --type=cifs --output=source,avail,target >>$TEMP_FILE
+         echo >>$TEMP_FILE
+         grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>$TEMP_FILE
       fi
       #
       if [ $ERROR -eq 1 ] ; then
-         f_message $1 "OK" "Nothing is mounted" temp.txt
+         f_message $1 "OK" "Nothing is mounted" $TEMP_FILE
       else
-         f_message $1 "OK" "Mount-points (use arrow keys to scroll up/down/side-ways)" temp.txt
+         f_message $1 "OK" "Mount-points (use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
       fi
       #
-      if [ -r temp.txt ] ; then
-         rm temp.txt
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
       fi
+      #
       unset X Y ERROR  # Throw out these variables.
 } # End of function f_show_mount_points.
 #
@@ -524,29 +541,29 @@ f_mount_or_dismount_all () {
       fi
       #
       while [ $EXITOUT -eq 0 ]
-      do
-            # eval allows indirection of array name.
-            # echo "\" tells echo to disreguard the first "$" to prevent parameter expansion before passing it to echo which creates the read array command.
-            SP=$(eval echo "\$\{$2_SP[$NUM]\}")   # Create command "${<server_name>_SP[$NUM]}" to read string of Shared directory      from array <Server name>_SP[n].
-            MP=$(eval echo "\$\{$2_MP[$NUM]\}")   # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
+            do
+               # eval allows indirection of array name.
+               # echo "\" tells echo to disreguard the first "$" to prevent parameter expansion before passing it to echo which creates the read array command.
+               SP=$(eval echo "\$\{$2_SP[$NUM]\}")   # Create command "${<server_name>_SP[$NUM]}" to read string of Shared directory      from array <Server name>_SP[n].
+               MP=$(eval echo "\$\{$2_MP[$NUM]\}")   # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
                                                   #
-            SP=$(eval echo $SP)                   # Read Shared directory from array <Server name>_SP[1].
-            if [ -n "$SP" ] ; then                # Does array element exist? (specifying Shared Directory).
-               MP=$(eval echo $MP)                # Read Mount-point directory from array <Server name>_MP[1].
-               if [ -n "$MP" ] ; then             # Does array element exist? (specifying Mount-Point Directory).
-                  if [ $3 = "mount" ] ; then
-                     f_mount $1 $SP $MP $SMBUSER $PASSWORD   # Now actually mount the shared directory at the mount-point on the local PC.
+               SP=$(eval echo $SP)                   # Read Shared directory from array <Server name>_SP[1].
+               if [ -n "$SP" ] ; then                # Does array element exist? (specifying Shared Directory).
+                  MP=$(eval echo $MP)                # Read Mount-point directory from array <Server name>_MP[1].
+                  if [ -n "$MP" ] ; then             # Does array element exist? (specifying Mount-Point Directory).
+                     if [ $3 = "mount" ] ; then
+                        f_mount $1 $SP $MP $SMBUSER $PASSWORD   # Now actually mount the shared directory at the mount-point on the local PC.
+                     else
+                        f_dismount $1 $MP        # Dismount the mount-point directory.
+                     fi
                   else
-                     f_dismount $1 $MP        # Dismount the mount-point directory.
+                     EXITOUT=1  # Array element MP does not exist so no more mount-points specified.
                   fi
                else
-                  EXITOUT=1  # Array element MP does not exist so no more mount-points specified.
+                  EXITOUT=1  # Array element SP does not exist so no more shared directories specified.
                fi
-            else
-               EXITOUT=1  # Array element SP does not exist so no more shared directories specified.
-            fi
-            NUM=$(($NUM+1))  #Increment NUM by 1.
-      done
+               NUM=$(($NUM+1))  #Increment NUM by 1.
+            done
       unset EXITOUT NUM SP MP
 } # End of function f_mount_or_dismount_all.
 #
@@ -559,10 +576,11 @@ f_mount_or_dismount_all () {
 #          $3=Mount-point.
 #          $4=SMBUSER  (smb username).
 #          $5=PASSWORD (smb password).
-#    Uses: QUIT, ERROR. temp.txt.
+#    Uses: QUIT, ERROR. $TEMP_FILE.
 # Outputs: None.
 #
 f_mount () {
+      #
       # mountpoint command 0=directory is a mountpoint (already mounted).
       #                    1=directory is not a mountpoint (not mounted).
       #
@@ -573,31 +591,35 @@ f_mount () {
       QUIT=0       # QUIT=1 quits until-loop, QUIT=0 until-loop
       SMBUSER=$4   # Set SMBUSER and PASSWORD since if fails to mount,
       PASSWORD=$5  # then user can change their value.
+      TEMP_FILE=$THIS_FILE"_temp.txt"
+      #
       until [ $QUIT -eq 1 ]  # Start loop.
-      do
-            # Is the shared directory mounted yet?
-            mountpoint $3 >/dev/null 2>temp.txt # Create file and write any error messages to file temp.txt.
-            ERROR=$?
-            if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
-               QUIT=1  # Quit loop.
-               if [ -s temp.txt ] ; then  # File temp.txt contains error message, so display it.
-                  #f_message $1 "OK" "Directory Previously Mounted" "Directory $3 already is mounted."
-                  f_message $1 "OK" "Directory Previously Mounted" temp.txt
+            do
+               # Is the shared directory mounted yet?
+               mountpoint $3 >/dev/null 2>$TEMP_FILE # Create file and write any error messages to file $TEMP_FILE.
+               ERROR=$?
+               if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
+                  QUIT=1  # Quit loop.
+                  if [ -s $TEMP_FILE ] ; then  # File $TEMP_FILE contains error message, so display it.
+                     #f_message $1 "OK" "Directory Previously Mounted" "Directory $3 already is mounted."
+                     f_message $1 "OK" "Directory Previously Mounted" $TEMP_FILE
+                  fi
+               else  # Directory is not mounted yet.
+                  if [ $QUIT -eq 0 ] ; then
+                     # Do not use $4 or $5 because f_test_mount updates $SMBUSER and $PASSWORD.
+                     f_mount2 $1 $2 $3 $SMBUSER $PASSWORD
+                     f_test_mount $1 $2 $3  # Output: QUIT=1/0.
+                                            #         SMBUSER.
+                                            #         PASSWORD.
+                  fi
                fi
-            else  # Directory is not mounted yet.
-               if [ $QUIT -eq 0 ] ; then
-                  # Do not use $4 or $5 because f_test_mount updates $SMBUSER and $PASSWORD.
-                  f_mount2 $1 $2 $3 $SMBUSER $PASSWORD
-                  f_test_mount $1 $2 $3  # Output: QUIT=1/0.
-                                         #         SMBUSER.
-                                         #         PASSWORD.
-               fi
-            fi
-            #
-            if [ -r temp.txt ] ; then
-               rm temp.txt
-            fi
-      done  # End loop.
+               #
+            done  # End loop.
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
       unset ERROR QUIT  # Throw out this variable.
 } # End of function f_mount.
 #
@@ -614,31 +636,44 @@ f_mount () {
 # Outputs: ERROR.
 #
 f_mount2 () {
-      sudo mount -o username=$4 -o password=$5 -t cifs $2 $3 2>temp.txt # Write any error messages to file temp.txt.
+      #
+      TEMP_FILE=$THIS_FILE"_temp.txt"
+      TEMP_FILE2=$THIS_FILE"_temp2.txt"
+      #
+      sudo mount -o username=$4 -o password=$5 -t cifs $2 $3 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
       ERROR=$?
       # echo "mount -o username=$4 -o password=$5 -t cifs $2 $3"  # Diagnostic line.
       if [ "$ERROR" -ne 0 ] ; then
-         echo >>temp.txt
-         echo "Failed to mount" >temp2.txt
-         echo "Share-point: $2" >>temp2.txt
-         echo "onto" >>temp2.txt
-         echo "Mount-point: $3" >>temp2.txt
-         echo >>temp2.txt
-         cat temp.txt >>temp2.txt
-         mv temp2.txt temp.txt
-         f_message $1 "OK" "Error Mounting Sharepoint" temp.txt
+         echo >>$TEMP_FILE
+         echo "Failed to mount" >$TEMP_FILE2
+         echo "Share-point: $2" >>$TEMP_FILE2
+         echo "onto" >>$TEMP_FILE2
+         echo "Mount-point: $3" >>$TEMP_FILE2
+         echo >>$TEMP_FILE2
+         cat $TEMP_FILE >>$TEMP_FILE2
+         mv $TEMP_FILE2 $TEMP_FILE
+         f_message $1 "OK" "Error Mounting Sharepoint" $TEMP_FILE
          # Check if host is a Raspberry Pi.
          # XX=$(lsb_release -a | grep -c Raspbian)
-         # Raspberry Pi Model 1 cannot use -o password option.
+         # Raspberry Pi Model 1 Raspian OS cannot use -o password option.
          # Omit the mount -o password flag.
          # if [ $XX ] ; then
-         #    sudo mount -o username=$4 -t cifs $2 $3 2>>temp.txt # Write any error messages to file temp.txt.
+         #    sudo mount -o username=$4 -t cifs $2 $3 2>>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
          #    ERROR=$?
          #   if [ $ERROR -eq 1 ] ; then
-         #      f_message $1 "OK" "Error Mounting Sharepoint" temp.txt
+         #      f_message $1 "OK" "Error Mounting Sharepoint" $TEMP_FILE
          #   fi
          # fi
       fi
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
+      if [ -r  $TEMP_FILE2 ] ; then
+         rm  $TEMP_FILE2
+      fi
+      #
 } # End of function f_mount2.
 #
 # +----------------------------------------+
@@ -649,23 +684,20 @@ f_mount2 () {
 #          $2=Share-point.
 #          $3=Mount-point.
 #    Uses: ERROR.
-# Outputs: QUIT, SMBUSER. temp.txt.
+# Outputs: QUIT, SMBUSER. $TEMP_FILE.
 f_test_mount () {
-      mountpoint $3 >/dev/null 2>temp.txt # Write any error messages to file temp.txt. Get status of mountpoint, mounted?.
+      #
+      TEMP_FILE=$THIS_FILE"_temp.txt"
+      #
+      mountpoint $3 >/dev/null 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
       if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
          QUIT=1  # Quit loop.
          # echo "Directory $3 is already mounted."  # Diagnostic line.
       else
          # Mount failed, Do you want to try again?
-         if [ $1 = "dialog" ] ; then
-            $1 --title "Failed to mount" --no-label "No, quit" --yesno "Failed to mount\nShare-point: $2\nonto\nMount-point: $3\n\nTry another password to mount $2?" 10 70
-            ERROR=$?
-         else
-            $1 --title "Failed to mount" --no-button "No, quit" --yesno "Failed to mount\nShare-point: $2\nonto\nMount-point: $3\n\nTry another password to mount $2?" 15 70
-            ERROR=$?
-         fi
-         if [ $ERROR -eq 0 ] ; then  # Outputs user response to $ERROR.
-            # ERROR status=0. Yes, try another SMB username and password to mount Share-point.
+         f_yn_question $1 "Y" "Failed to mount" "Failed to mount\nShare-point: $2\nonto\nMount-point: $3\n\nTry another password to mount $2?"
+         if [ $ANS -eq 0 ] ; then  # Outputs user response to $ANS.
+            # ANS=0. Yes, try another SMB username and password to mount Share-point.
             QUIT=0 # Try again to mount.
             f_username $1 $SMBUSER $3  # Set the default username to the SMB username entered previously.
             if [ $ERROR -ne 0 ] ; then
@@ -688,11 +720,16 @@ f_test_mount () {
             # fi
             #
          else
-            # ERROR status=1. No, do not try another password just return to previous menu. Exit loop.
+            # ANS=1. No, do not try another password just return to previous menu. Exit loop.
             QUIT=1  # Quit f_mount loop, return to previous menu.
             EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all.
          fi
       fi
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
 } # End of function f_test_mount.
 #
 # +----------------------------------------+
@@ -715,15 +752,15 @@ f_dismount () {
       mountpoint $2 >/dev/null
       ERROR=$?
       if [ $ERROR -eq 0 ] ; then  # mountpoint is mounted so now dismount.
-         sudo umount $2 2>temp.txt # Write any error messages to file temp.txt.
+         sudo umount $2 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
       fi
       # Was umount command successful?
-      if [ -s temp.txt ] ; then  # File temp.txt contains error message, so display it.
-         fmessage $1 "OK" "Error Unmounting" temp.txt
+      if [ -s $TEMP_FILE ] ; then  # File $TEMP_FILE contains error message, so display it.
+         fmessage $1 "OK" "Error Unmounting" $TEMP_FILE
       fi
       #
-      if [ -r temp.txt ] ; then
-         rm temp.txt
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
       fi
       # echo "Dismounted $2"  # Diagnostic line.
       unset ERROR
@@ -738,6 +775,7 @@ f_dismount () {
 # Outputs: None.
 #
 f_main_menu_txt () {
+      #
       CHOICE_SERVER=-1
       until [ $CHOICE_SERVER -eq 0 ]
             do
@@ -831,6 +869,7 @@ f_main_menu_txt () {
 # Outputs: None.
 #
 f_update_menu () {
+      #
       echo "#!/bin/bash" >$2
       echo "#" >>$2
       echo "VERSION=\"$VERSION\"" >>$2
@@ -912,14 +951,14 @@ f_update_menu () {
       ARRAY_NAME="SERVER"
       ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
       ARRAY_LEN=$(eval echo $ARRAY_LEN)
-            for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
-                do
-                   SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
-                   SERVER=$(eval echo $SERVER)
-                   if [ -n $SERVER ] ; then
-                       echo "                     \"$SERVER\" \"$SERVER fileserver.\" \\" >>$2
-                   fi
-                done
+      for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+          do
+             SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+             SERVER=$(eval echo $SERVER)
+             if [ -n $SERVER ] ; then
+                echo "                     \"$SERVER\" \"$SERVER fileserver.\" \\" >>$2
+             fi
+          done
       echo "               2>&1 >/dev/tty)" >>$2
       echo "               case \$CHOICE_SERVER in" >>$2
       echo "                    \"Quit\") break ;;" >>$2
@@ -930,14 +969,14 @@ f_update_menu () {
       ARRAY_NAME="SERVER"
       ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
       ARRAY_LEN=$(eval echo $ARRAY_LEN)
-            for (( XNUM=1; XNUM<${ARRAY_LEN}; XNUM++ ));
-                do
-                   SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
-                   SERVER=$(eval echo $SERVER)
-                   if [ -n $SERVER ] ; then
-                      echo "                    \"${SERVER[$XNUM]}\") f_action_menu_gui \$GUI $SERVER ;;" >>$2
-                   fi
-                done
+      for (( XNUM=1; XNUM<${ARRAY_LEN}; XNUM++ ));
+          do
+             SERVER=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+             SERVER=$(eval echo $SERVER)
+             if [ -n $SERVER ] ; then
+                echo "                    \"${SERVER[$XNUM]}\") f_action_menu_gui \$GUI $SERVER ;;" >>$2
+             fi
+          done
       echo "               esac" >>$2
       echo "       done" >>$2
       echo "       unset VERSION THIS_FILE CHOICE_SERVER MENU_TITLE  # Throw out this variable." >>$2
@@ -955,6 +994,7 @@ f_update_menu () {
 # Outputs: SMBUSER="".
 #
 f_action_menu_txt () {
+      #
       # Test connection to server.
       f_test_connection $GUI $1
       #
@@ -1040,6 +1080,7 @@ f_action_menu_txt () {
 # Outputs: None.
 #
 f_action_menu_gui () {
+      #
       # Invoke the file mountup_lib_gui.lib functions to display menu.
       . mountup_lib_gui.lib    # invoke the necessary files.
       #
@@ -1098,6 +1139,7 @@ f_action_menu_gui () {
 # Outputs: STATUS[XNUM], $2_DESC[XNUM].
 #
 f_pick_menu () {
+      #
       echo "#!/bin/bash" >$3
       echo "#" >>$3
       echo "VERSION=\"$VERSION\"" >>$3
@@ -1219,6 +1261,7 @@ f_pick_menu () {
 # Outputs: QUIT.
 #
 f_pick_match () {
+      #
       if [[ "$CHOICE_ACT" =~ "$2" ]] ; then  # Does CHOICE_ACT contain XNUM?
          # Yes, CHOICE_ACT contains XNUM so mount it.
          for MNT in $CHOICE_ACT  # for-loop to allow username and password to be asked more than once if needed.
