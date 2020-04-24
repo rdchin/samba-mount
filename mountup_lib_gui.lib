@@ -9,7 +9,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-04-14 01:36"
+VERSION="2020-04-23 21:12"
 THIS_FILE="mountup_lib_gui.lib"
 #
 #@ Brief Description
@@ -21,9 +21,9 @@ THIS_FILE="mountup_lib_gui.lib"
 #
 #@@Quit#@@Quit to command-line prompt.#@@break
 #@@Show#@@Show mounted directories.#@@f_show_mount_points
-#@@About#@@Version information of this script.#@@f_about
-#@@Code History#@@Display code change history of this script.#@@f_code_history
-#@@Help#@@Display help message.#@@f_help_message
+#@@About#@@Version information of this script.#@@f_about^$GUI
+#@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
+#@@Help#@@Display help message.#@@f_help_message^$GUI
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
@@ -145,7 +145,7 @@ f_menu_arrays () {
       #
       while read XSTR
             do
-               # Set array CHOICE[n] = <field-1> or "Choice Title" of XSTR.
+               # Set array CHOICE[n] = <field-2> or "Choice Title" of XSTR.
                ARRAY_NAME="CHOICE"
                ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $2 }}')
                ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
@@ -159,13 +159,13 @@ f_menu_arrays () {
                   MAX_CHOICE_LENGTH=$CHOICE_LENGTH
                fi
                #
-               # Set array SUMMARY[n]=<field-2> or "Summary" of XSTR.
+               # Set array SUMMARY[n]=<field-3> or "Summary" of XSTR.
                ARRAY_NAME="SUMMARY"
                ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $3 }}')
                ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
                eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
                #
-               # Set array $FUNC=<field-3> or "Function" of XSTR.
+               # Set array $FUNC=<field-4> or "Function" of XSTR.
                ARRAY_NAME="FUNC"
                ARRAY_VALUE=$(echo $XSTR | awk -F "#@@" '{ if ( $3 ) { print $4 }}')
                ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
@@ -314,6 +314,7 @@ f_server_arrays () {
 # |        Function f_test_connection      |
 # +----------------------------------------+
 #
+#     Rev: 2020-04-20
 #  Inputs: $1 - "text", "dialog" or "whiptail" The CLI GUI application in use.
 #          $2 Network name of server. 
 #    Uses: None.
@@ -322,54 +323,32 @@ f_server_arrays () {
 f_test_connection () {
       #
       # Check if there is an internet connection before doing a download.
-      case $1 in
-           whiptail | dialog)
-           ping -c 1 -q $2 >/dev/null # Ping server address.
-           ERROR=$?
-           if [ $ERROR -ne 0 ] ; then
-              f_message $1 "NOK" "Ping Test Internet Connection" " \n\Z1\Zb  No Internet connection, cannot get list of upgradable packages.\Zn"
-              else
-              f_message $1 "NOK" "Ping Test Internet Connection" "Internet connnection to $2 is good."
-           fi
-            #
-           clear # Blank the screen.
-           #
-           ;;
-           *)
-           # The only reason to have a separate message for GUI=text, is for red color fonts.
-           echo
-           echo "Test Internet Connection to $2"
-           echo
-           ping -c 1 -q $2  # Ping server address.
-           ERROR=$?
-           sleep 2
-           if [ $ERROR -ne 0 ] ; then
-              echo -n $(tput setaf 1) # Set font to color red.
-              echo -n $(tput bold)
-              f_message $1 "NOK" "Ping Test Internet Connecton" ">>> No Internet connection, cannot get list of upgradable packages. <<<"
-              echo -n $(tput sgr0)
-           else
-              f_message $1 "NOK" "Ping Test Internet Connecton" "Internet connnection to $2 is good."
-              echo
-              echo
-           fi
-           ;;
-      esac
+      ping -c 1 -q $2 >/dev/null # Ping server address.
+      ERROR=$?
+      if [ $ERROR -ne 0 ] ; then
+         f_message $1 "NOK" "Ping Test Internet Connection" " \n\Z1\Zb  No Internet connection, cannot get list of upgradable packages.\Zn"
+      else
+         f_message $1 "NOK" "Ping Test Internet Connection" "Internet connnection to $2 is good."
+      fi
+      #
+      clear # Blank the screen.
+      #
 } # End of function f_test_connection.
 #
 # +----------------------------------------+
 # |           Function f_username          |
 # +----------------------------------------+
 #
+#     Rev: 2020-04-20
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=USERNAME (default).
 #          $3=MP - Mount-point to display on --usernamebox.
-#    Uses: $TEMP_FILE.
+#    Uses: $TEMP_FILE, ANS.
 # Outputs: SMBUSER, ERROR.
 #
 f_username() {
       #
-      TEMP_FILE=$THIS_FILE"_temp.txt"
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       ERROR=0
       #
       case $1 in
@@ -410,6 +389,7 @@ f_username() {
 # |           Function f_password          |
 # +----------------------------------------+
 #
+#     Rev: 2020-04-20
 #  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
 #          $2=MP - Mount-point to display on --passwordbox.
 #    Uses: TEMP_FILE.
@@ -417,7 +397,7 @@ f_username() {
 #
 f_password() {
       #
-      TEMP_FILE=$THIS_FILE"_temp.txt"
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       PASSWORD=""
       #
       case $1 in

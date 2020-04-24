@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-VERSION="2017-08-08 22:44"
+VERSION="2020-04-12 20:30"
 THIS_FILE="mountup.sh"
 TEMP_FILE="mountup_temp.txt"
 #
@@ -88,23 +88,29 @@ TEMP_FILE="mountup_temp.txt"
 #
 # Format <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-#@@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
-#@@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
+# @@//hansolo/public#@@/mnt/hansolo/public#@@Hansolo Server Publicly shared files.
+# @@//hansolo/public/jobs#@@/mnt/hansolo/jobs#@@Hansolo Server Publicly shared job information.
 #
-#@@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
+# @@//chewbacca/photos#@@/mnt/chewbacca/photos#@@Chewbacca Server shared photos.
 #
-#@@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
+# @@//luke/school#@@/mnt/luke/school#@@Luke Server shared school files.
 #
-#@@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
+# @@//leia/music#@@/mnt/leia/music#@@Leia Server shared music.
 #
-#@@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
+# @@//yoda/public-no-backup#@@/mnt/yoda/public-no-backup#@@Yoda Server shared files not backed up.
 #
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
-#@@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekstuff#@@R2D2 Server shared geek stuff.
+# @@//r2d2/geekstuff#@@/mnt/r2d2/geekscripts#@@R2D2 Server shared geek scripts.
 #
 # @@//c3po/library#@@/mnt/c3po/library#@@C3PO Server shared Library.
 #
 # Add your actual data below:
+#@@//parsley/public#@@/mnt/parsley/public#@@Public files.
+#@@//parsley/public-no-backup#@@/mnt/parsley/public-no-backup#@@Public files but not backed up.
+#@@//parsley/robert#@@/mnt/parsley/robert#@@Roberts documents.
+#@@//scotty/public#@@/mnt/scotty/public#@@Public files.
+#@@//scotty/public-no-backup#@@/mnt/scotty/public-no-backup#@@Public files but not backed up.
+#@@//scotty/robert#@@/mnt/scotty/robert#@@Roberts documents.
 #
 #
 # +----------------------------------------+
@@ -711,88 +717,83 @@ f_dismount_txt () {
 # Outputs: None.
 #
 f_main_menu_txt () {
-      ARRAY_NAME="SERVER"
-      ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
-      ARRAY_LEN=$(eval echo $ARRAY_LEN)
       CHOICE_SERVER=-1
       until [ $CHOICE_SERVER -eq 0 ]
-      do
-            clear # Blank the screen.
-            echo -n $(tput bold)
-            echo "--- Server Menu ---"
-            echo -n $(tput sgr0)
-            echo
-            # Format of menu items: <item #> (<first 2-letters>) - <Server Name> file server.
-            echo "0 (Q/q) - Quit."
-            echo "1 (S/s) - Show mounted directories."
-            # Replaces echo -n "2 (" ; echo -n ${SERVER[1]} | head -c 2 ; echo ") - ${SERVER[1]} file server."
-            for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
-                do
-                   ARRAY_NAME="SERVER"
-                   ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
-                   ARRAY_LEN=$(eval echo $ARRAY_LEN)
-                   SERVER_NAME=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
-                   SERVER_NAME=$(eval echo $SERVER_NAME)
-                   if [ -n "$SERVER_NAME" ] ; then
-                      let X=$XNUM+1
-                      echo -n "$X (" ; echo ${SRV[$XNUM]}")  - $SERVER_NAME file server"
-                   fi
-                done
-            let X=$X+1
-            echo "$X (A/a) - About this script."
-            let Y=$X+1
-            echo "$Y (C/c) - Code History."
-            echo
-            echo -n $(tput bold)
-            echo -n "Please select letter or 0-$X (0): " ; read CHOICE_SERVER
-            echo -n $(tput sgr0)
-            echo
-            #
-            CHOICE_SRV=$CHOICE_SERVER  # Save original choice.
-            #
-            case $CHOICE_SERVER in
-                 0 | [Qq] | "") break ; CHOICE_SERVER=0
-                        ;;
-                 1 | [Ss]) f_show_mount_points_txt 1 ; CHOICE_SERVER=1
-                        ;;
-                 $X | [Aa]) f_about_txt ; CHOICE_SERVER=$X
-                        ;;
-                 $Y| [Cc]) f_code_history_txt ; CHOICE_SERVER=$Y
-                        ;;
-                 *) CHOICE_SERVER=-1
-                        ;;
-            esac
-            if [ $CHOICE_SERVER -eq -1 ] ; then 
+            do
                ARRAY_NAME="SERVER"
-               for (( YNUM=1; YNUM<=${ARRAY_LEN}; YNUM++ ));
-               do
-                   SERVER_NAME=$(eval "echo \$\{$ARRAY_NAME[$YNUM]\}") # Create command for getting Server Name from array.
-                   SERVER_NAME=$(eval echo $SERVER_NAME)               # eval command to get Server Name from array.
-                   let X=$YNUM+1                                       # X = menu item number.
-                   Y=$(eval echo ${SRV[$YNUM]})                        # Y = 2-letter abbreviation of Server Name.
-                   case $CHOICE_SRV in
-                        [2-9])
-                               if [ $CHOICE_SRV = "$X" ] ; then
-                                  YNUM=${ARRAY_LEN}
-                                  f_action_menu_txt $SERVER_NAME
-                               fi
-                               ;; 
-                        [1-9][0-9])
-                               if [ $CHOICE_SRV = "$X" ] ; then
-                                  YNUM=${ARRAY_LEN}
-                                  f_action_menu_txt $SERVER_NAME
-                               fi
-                               ;; 
-                        [a-z][a-z][a-z])
-                               if [ $CHOICE_SRV = "$Y" ] ; then
-                                  YNUM=${ARRAY_LEN}
-                                  f_action_menu_txt $SERVER_NAME
-                               fi
-                               ;;
-                   esac
-               done
-            fi
-      done
+               ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
+               ARRAY_LEN=$(eval echo $ARRAY_LEN)
+               clear # Blank the screen.
+               echo -n $(tput bold)
+               echo "--- Server Menu ---"
+               echo -n $(tput sgr0)
+               echo
+               # Format of menu items: <item #> (<first 3-letters>) - <Server Name> file server.
+               echo "0 (Q/q) - Quit."
+               echo "1 (S/s) - Show mounted directories."
+               echo "2 (A/a) - About this script."
+               echo "3 (C/c) - Code History."
+               echo "4 (H/h) - Help Message."
+               # Replaces echo -n "2 (" ; echo -n ${SERVER[1]} | head -c 2 ; echo ") - ${SERVER[1]} file server."
+               #
+               # Display menu items >5 with Server Names.
+               for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+                   do
+                      SERVER_NAME=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+                      SERVER_NAME=$(eval echo $SERVER_NAME)
+                      if [ -n "$SERVER_NAME" ] ; then
+                         let X=$XNUM
+                         # Force first item number to 5 with a +4 offset thereafter.
+                         let X=X+4
+                         # Display menu item of file server.
+                         # X (Ser) - server file server.
+                         echo -n "$X (" ; echo ${SRV[$XNUM]}")  - $SERVER_NAME file server."
+                      fi
+                   done
+               echo
+               echo -n $(tput bold)
+               echo -n "Please select letter or 0-$X (0): " ; read CHOICE_SERVER
+               echo -n $(tput sgr0)
+               echo
+               #
+               CHOICE_SRV=$CHOICE_SERVER  # Save original choice.
+               #
+               case $CHOICE_SERVER in
+                    0 | [Qq] | "")
+                       break ; CHOICE_SERVER=0
+                    ;;
+                    1 | [Ss])
+                       f_show_mount_points_txt 1
+                    ;;
+                    2 | [Aa])
+                       f_about_txt
+                    ;;
+                    3 | [Cc])
+                       f_code_history_txt
+                    ;;
+                    4 | [Hh])
+                       f_help_message
+                    ;;
+                    [5-9] | [1-9][0-9])
+                       let CHOICE_SERVER=$CHOICE_SERVER-4
+                       SERVER_NAME=$(eval "echo \$\{$ARRAY_NAME[$CHOICE_SERVER]\}") # Create command for getting Server Name from array.
+                       SERVER_NAME=$(eval echo $SERVER_NAME)                        # eval command to get Server Name from array.
+                       f_action_menu_txt $SERVER_NAME
+                    ;;
+                    [a-z][a-z][a-z])
+                       for (( YNUM=1; YNUM<=${ARRAY_LEN}; YNUM++ ));
+                           do
+                              SERVER_NAME=$(eval "echo \$\{$ARRAY_NAME[$YNUM]\}") # Create command for getting Server Name from array.
+                              SERVER_NAME=$(eval echo $SERVER_NAME)               # eval command to get Server Name from array.
+                              Y=$(eval echo ${SRV[$YNUM]})                        # Y = 3-letter abbreviation of Server Name.
+                              if [ $CHOICE_SRV = "$Y" ] ; then
+                                 YNUM=${ARRAY_LEN}
+                                 f_action_menu_txt $SERVER_NAME
+                              fi
+                           done
+                    ;;
+               esac
+            done
       unset X Y CHOICE CHOICEA XNUM YNUM ARRAY_LEN ARRAY_NAME SERVER_NAME  # Throw out this variable.
 }  # End of function f_main_menu_txt.
 #
@@ -982,6 +983,7 @@ f_help_message () {
       echo "If no argument is supplied, then a menu will displayed of"
       echo "Samba file servers for you to select."
       echo
+      read BLAH
 }  # End of function f_help_message.
 #
 # **************************************
