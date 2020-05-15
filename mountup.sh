@@ -6,11 +6,30 @@
 #        (not sh mountup.sh)
 #
 # +----------------------------------------+
+# |            Main Menu Options           |
+# +----------------------------------------+
+#
+# Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or cammand>
+#
+#@@Exit#@@Exit to command-line prompt.#@@break
+#
+#@@Mount-Unmount#@@Mount/Unmount Server Mount-points.#@@f_menu_server^$GUI
+#
+#@@Show#@@Show mounted directories.#@@f_show_mount_points^$GUI
+#
+#@@About#@@Version information of this script.#@@f_about^$GUI
+#
+#@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
+#
+#@@Help#@@Display help message.#@@f_help_message^$GUI
+#
+# +----------------------------------------+
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-04-28 23:11"
-THIS_FILE="mountup.sh"
+VERSION="2020-05-15 19:28"
+THIS_FILE="$0"
+      TEMP_FILE=$THIS_FILE"_temp.txt"
 #
 # +----------------------------------------+
 # |            Brief Description           |
@@ -60,6 +79,18 @@ THIS_FILE="mountup.sh"
 # +----------------------------------------+
 #
 ## Code Change History
+##
+## 2020-05-14 *Complete rewrite added file mountup_servers.lib.
+##            *f_yn_question fixed bug where temp file was undefined.
+##            *msg_ui_str_nok, f_msg_txt_str_nok changed wait time
+##             from 5 to 3 seconds.
+##            *f_message, f_msg_ui_file_box_size, f_msg_ui_str_box_size,
+##             f_ui_file_ok/nok, f_ui_str_ok/nok f_yn_question/defaults
+##             specified parameter passing.
+##            *f_menu_arrays, f_update_menu_txt/gui bug fixed to not unset
+##             TEMP_FILE variable since it is used globally.
+##
+## 2020-05-06 *f_msg_ui_file_box_size, f_msg_ui_file_ok bug fixed in display.
 ##
 ## 2020-04-28 *Main updated to latest standards.
 ##
@@ -374,6 +405,26 @@ f_press_enter_key_to_continue () { # Display message and wait for user input.
 } # End of function f_press_enter_key_to_continue.
 #
 # +----------------------------------------+
+# |         Function f_exit_script         |
+# +----------------------------------------+
+#
+#     Rev: 2020-05-14
+#  Inputs: $1=GUI.
+#    Uses: None.
+# Outputs: None.
+#
+f_exit_script() {
+      #
+      f_message $1 "NOK" "End of script" " \nExiting script."
+      #
+      # Blank the screen. Nicer ending especially if you chose custom colors for this script.
+      clear 
+      #
+      exit 0
+      #
+} # End of function f_exit_script
+#
+# +----------------------------------------+
 # |              Function f_abort          |
 # +----------------------------------------+
 #
@@ -413,7 +464,7 @@ f_abort () {
 f_about () {
       #
       # Specify $THIS_FILE name of any file containing the text to be displayed.
-      THIS_FILE="mountup.sh"
+      THIS_FILE="$0"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       # Set $VERSION according as it is set in the beginning of $THIS_FILE.
@@ -447,7 +498,7 @@ f_about () {
 f_code_history () {
       #
       # Specify $THIS_FILE name of any file containing the text to be displayed.
-      THIS_FILE="mountup.sh"
+      THIS_FILE="$0"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       # Set $VERSION according as it is set in the beginning of $THIS_FILE.
@@ -481,7 +532,7 @@ f_code_history () {
 f_help_message () {
       #
       # Specify $THIS_FILE name of any file containing the text to be displayed.
-      THIS_FILE="mountup.sh"
+      THIS_FILE="$0"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       # Set $VERSION according as it is set in the beginning of $THIS_FILE.
@@ -498,7 +549,7 @@ f_help_message () {
       # so it is not printed.
       sed -n 's/^#?//'p $THIS_DIR/$THIS_FILE >> $TEMP_FILE
       #
-      f_message $1 "OK" "Usage (use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
+      f_message $1 "OK" "Usage and Examples" $TEMP_FILE
       #
 } # End of f_help_message.
 #
@@ -535,33 +586,88 @@ f_msg_txt_file_nok () {
       #
 } # End of function f_msg_txt_file_nok
 #
+# +----------------------------------------+
+# |          Function f_menu_main          |
+# +----------------------------------------+
+#
+#     Rev: 2020-04-20
+#  Inputs: None.
+#    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
+# Outputs: None.
+#
+f_menu_main () { # Create and display the Main Menu.
+      #
+      THIS_FILE="mountup.sh"
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_data_generated.lib"
+      # Extract menu items from this file and insert them into the Generated file.
+      # This is required because f_menu_arrays cannot use mountup.sh and
+      # goes into an infinite loop.
+      grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
+      #
+      # Create arrays from data.
+      #ARRAY_FILE="$THIS_FILE"
+      ARRAY_FILE="$GENERATED_FILE"
+      f_menu_arrays $ARRAY_FILE
+      #
+      # Create generated menu script from array data.
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_generated.lib"
+      MENU_TITLE="Main_Menu"  # Menu title must substitute underscores for spaces
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_main_temp.txt"
+      #
+      f_create_show_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      #
+      THIS_FILE="mountup.sh"
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_data_generated.lib"
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_data_generated.lib"
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+} # End of function f_menu_main.
+#
 # **************************************
 # ***     Start of Main Program      ***
 # **************************************
 #
+if [ -e $TEMP_FILE ] ; then
+   rm $TEMP_FILE
+fi
+#
 clear  # Clear screen.
 #
-# If an error occurs, the f_abort_txt() function will be called.
-# trap 'f_abort_txt' 0
-# set -e
+echo "***********************************"
+echo "***  Running script $THIS_FILE  ***"
+echo "***   Rev. $VERSION     ***"
+echo "***********************************"
+echo
+sleep 1  # pause for 1 second automatically.
 #
-if [ -r mountup.lib ] ; then  # Does library file exist and is readable in the same directory as this script.
-   . mountup.lib  # Invoke library.
-   THIS_FILE="mountup.sh"
+clear  # Clear screen.
+#
+# Set THIS_DIR, SCRIPT_PATH to directory path of script.
+f_script_path
+#
+# Set Temporary file using $THIS_DIR from f_script_path.
+TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+#
+# Does library file exist and is readable in the same directory as this script?
+if [ -r /$THIS_DIR/mountup.lib ]&&[ -r/$THIS_DIR/mountup_servers.lib ] ; then
+   # Invoke library files 
+   . /$THIS_DIR/mountup.lib
+   . /$THIS_DIR/mountup_servers.lib
 else
-   echo "                     Missing a required file"
-   echo
-   echo "Missing a required file: \"mountup.lib\" from this directory."
-   echo
+   echo $(tput setaf 1) # Set font to color red.
+   echo "Required module file \"mountup.lib\" is missing."
    echo "Cannot continue, exiting program script."
    echo
    sleep 2
    exit 1
 fi
-#
-# Set THIS_DIR, SCRIPT_PATH to directory path of script.
-f_script_path
-MAINMENU_DIR=$SCRIPT_PATH
 #
 # Test for Optional Arguments.
 f_arguments $1  # Also sets variable GUI.
@@ -579,31 +685,11 @@ fi
 # Test for BASH environment.
 f_test_environment
 #
-GENERATED_FILE="mountup_server_menu_gui.lib"
-f_server_arrays
+f_menu_main
 #
-# The value of $MENU_TITLE determines which menu to display for Dialog/Whiptail.
-# If $MENU_TITLE="Main_Menu" then [OK] button only or any other title then [OK] or [Cancel] buttons.
-MENU_TITLE="Main_Menu"
-case $GUI in
-     dialog | whiptail)
-        f_update_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES
-        . $GENERATED_FILE  # Invoke Generated file.
-        # Function "f_server_menu_gui" is in $GENERATED_FILE.
-        f_server_menu $GUI
-     ;;
-     text)
-        f_main_menu_txt
-        #
-        clear   # Blank the screen.
-        #
-        f_show_mount_points_txt 0  # Display mount-points status.
-     ;;
-esac
-#
-if [ -r $GENERATED_FILE ] ; then
-   rm $GENERATED_FILE
-fi
+#if [ -r $GENERATED_FILE ] ; then
+#   rm $GENERATED_FILE
+#fi
 #
 clear  # Blank the screen.
 #

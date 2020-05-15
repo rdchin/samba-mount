@@ -1,0 +1,864 @@
+#!/bin/bash
+#
+# ©2020 Copyright 2020 Robert D. Chin
+#
+# Usage: bash mountup.sh
+#        (not sh mountup.sh)
+#
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# |             Customize Server Menu choice options below.                  |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+#
+#@@Quit#@@Quit to command line prompt.#@@break
+#
+#@@Show#@@Show mounted directories.#@@f_show_mount_points^$GUI
+#
+#@@Mount all#@@Mount all shared directories.#@@f_mount_all^$GUI^SERVER_NAME_GOES_HERE
+#
+#@@Dismount all#@@Dismount all shared directories.#@@f_dismount_all^$GUI^SERVER_NAME_GOES_HERE
+#
+#@@Pick#@@Pick shared directories to mount or dismount.#@@f_pick_mounts^$GUI^SERVER_NAME_GOES_HERE
+#
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# | Add additional source file servers, share-points, and mount-points here. |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+#
+# Format: <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
+#
+# #@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
+# #@#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
+#
+# #@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
+#
+# #@#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
+#
+# #@#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
+#
+# #@#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
+#
+# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
+# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+#
+# #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+#
+#
+# Add your actual data below:
+#@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
+#@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
+#@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+#@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+#
+#
+# MOUNT COMMAND RETURN CODES
+#       mount has the following return codes (the bits can be ORed):
+#
+#       0      success
+#
+#       1      incorrect invocation or permissions
+#
+#       2      system error (out of memory, cannot fork, no more loop devices)
+#
+#       4      internal mount bug
+#
+#       8      user interrupt
+#
+#       16     problems writing or locking /etc/mtab
+#
+#       32     mount failure
+#
+#       64     some mount succeeded
+#
+# +----------------------------------------+
+# |        Default Variable Values         |
+# +----------------------------------------+
+#
+VERSION="2020-05-15 19:28"
+THIS_FILE="mountup_servers.lib"
+#
+#@ Brief Description
+#@
+#@ Library of functions, mountup_servers.lib contains the Server Menu functions
+#@ used by script mountup.sh.
+#@
+#@ See script mountup.sh for Edit History.
+#
+# +----------------------------------------+
+# |       Function f_server_arrays         |
+# +----------------------------------------+
+#
+#  Inputs: $1=file of menu choice strings.
+#    Uses: XSTR, SERVER_NAME, NEXT_SERVER_NAME, SERVER_NUM, ARRAY_NUM.
+# Outputs: SERVER[$SERVER_NUM]=<Name of server>^<Description of shared directory>.
+#          SRV[$SERVER_NUM]=<1st 3-letters of server name for pattern matching in menu case statement>.
+#          SERVER_SP[SERVER_NUM]=<Server's shared directory to be mounted>.
+#          LOCAL_MP[SERVER_NUM]=<Mount-point of local PC>.
+#          SERVER_DESC[1]=<Description of Shared Directory contents>.
+#          MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH.
+#
+f_server_arrays () {
+      #
+      # Create arrays to handle mount-point names and server source directory names.
+      #
+      # Example:
+      # Server name is "hansolo"
+      # Shared directory to be mounted is "//hansolo/public/contacts"
+      # Local PC mount-point is "/mnt/hansolo/contacts"
+      #
+      #     SERVER[1]="hansolo"
+      #     SRV[1]="han" <1st 3-letters of server name for pattern matching in menu case statement>
+      #     hansolo_SP[1]="//hansolo/public/contacts  # Share-point on hansolo.
+      #     hansolo_MP[1]="/mnt/hansolo/contacts"     # Local mount-point on Local PC.
+      #     hansolo_DESC[1]="Shared_contact_list"  # Description of shared folder contents (substitute <underscore> for <space> characters).
+      #
+      SERVER_NUM=0 # Initialize.
+      SERVER_NAME="" # Initialize.
+      ARRAY_NUM=1
+      THIS_FILE="mountup_servers.lib"
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+      #
+      #        Field-1                                Field-2                                   Field-3                               Field-4
+      # Format of XSTR="<Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>"
+      # Read line of data having 3 delimiters and 4 fields. Save fields 2, 3, 4.
+      # echo $(awk -F "$DELIMITER" '{ if ( $3 ) { print $2 "^" $3 "^" $4; }}' $THIS_FILE)
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+      DELIM="#@#"
+      while read XSTR
+            do
+               case $XSTR in
+                    $DELIM*)
+                       echo $XSTR >>$TEMP_FILE
+                    ;;
+               esac
+            done < $1
+      #
+      # Calculate longest line length in TEMP_FILE to find maximum menu width
+      # for Dialog or Whiptail.
+      # The "Word Count" wc command output will not include the TEMP_FILE name
+      # when you redirect "<$TEMP_FILE" into wc.
+      MAX_LENGTH=0  # Initialize variable maximum string length.
+      while read XSTR
+            do
+               X=$(echo $XSTR | awk -F "$DELIM" '{ print $2" "$3 }')
+               X_LENGTH=$(echo $X | wc --max-line-length)
+               if [ $MAX_LENGTH -lt $X_LENGTH ] ; then
+                  MAX_LENGTH=$X_LENGTH
+               fi
+            done < $TEMP_FILE
+      #
+      # Calculate number of lines or Menu Choices to find maximum menu lines 
+      # for Dialog or Whiptail.
+      MAX_LINES=$(wc --lines <$TEMP_FILE)
+      #
+      MAX_CHOICE_LENGTH=0
+      #
+      while read XSTR
+            do
+               # Since format of share-point directory is "//<SERVER_NAME>" the name is in <field-3> with delimiter "/".
+               NEXT_SERVER_NAME=$(echo $XSTR | awk -F "/" '{ if ( $3 ) { print $3 }}')
+               if [ "$SERVER_NAME" != "$NEXT_SERVER_NAME" ] ; then
+                  SERVER_NAME=$NEXT_SERVER_NAME
+                  let SERVER_NUM=$SERVER_NUM+1 # Increment server array index.
+                  ARRAY_NUM=1                  # Different server so reset index for share-point ond mount-point arrays.
+               fi
+               SERVER[$SERVER_NUM]="$SERVER_NAME"
+               SRV[$SERVER_NUM]=${SERVER_NAME:0:3}  # SRV[n]=<the first 3-letters of the Server Name>
+               #echo "SRV[$SERVER_NUM]=${SRV[$SERVER_NUM]}"      # Diagnostic line.
+               #
+               # Set array $SERVER_NAME_SP[SERVER_NUM]=<field-2> or "Shared directory" of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_SP"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "$DELIM" '{ if ( $3 ) { print $2 }}')
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #echo "$ARRAY_NAME[$ARRAY_NUM]=${ARRAY_NAME[$ARRAY_NUM]}" # Diagnostic line.
+               #
+               # Calculate length of next Menu Option Choice string.
+               CHOICE_LENGTH=${#ARRAY_VALUE}
+               # Save the value of the longest length of the Menu Option Choice.
+               # This is for the text menu justification padding calculations.
+               if [ $MAX_CHOICE_LENGTH -lt $CHOICE_LENGTH ] ; then
+                  # Save new maximum string length.
+                  MAX_CHOICE_LENGTH=$CHOICE_LENGTH
+               fi
+               #
+               # Set array $SERVER_NAME_MP[SERVER_NUM]=<field-3> of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_MP"
+               ARRAY_VALUE=$(echo $XSTR | awk -F "$DELIM" '{ if ( $3 ) { print $3 }}')
+               #echo ARRAY_VALUE=$ARRAY_VALUE  # Diagnostic line.
+               #echo "$ARRAY_NAME[$ARRAY_NUM]=${$ARRAY_NAME[$ARRAY_NUM]}" # Diagnostic line.
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #
+               # Set array $SERVER NAME DESC[SERVER_NUM]=<field-4> of XSTR.
+               ARRAY_NAME=$SERVER_NAME"_DESC"
+               #echo XSTR=$XSTR  # Diagnostic line.
+               ARRAY_VALUE=$(echo $XSTR | awk -F "$DELIM" '{ if ( $3 ) { print $4 }}')
+               ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
+               #echo ARRAY_VALUE=$ARRAY_VALUE  # Diagnostic line.
+               eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
+               #echo ${scotty_DESC[@]}  # Diagnostic line.
+               #
+               let ARRAY_NUM=$ARRAY_NUM+1
+            done < $TEMP_FILE
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+      unset XSTR SERVER_NUM ARRAY_NUM SERVER_NAME NEXT_SERVER_NAME # Throw out this variable.
+} # End of f_server_arrays.
+#
+# +----------------------------------------+
+# |     Function f_mount_or_dismount_all   |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Server name.
+#          $3 "mount" or "dismount".
+#    Uses: ERROR, EXITOUT, NUM, SP, MP.
+# Outputs: None.
+#
+f_mount_or_dismount_all () {
+      #
+      # Example:
+      # Server name is "Server01"
+      # Shared directory to be mounted is "//server01/public/contacts"
+      # Local PC mount-point is "/mnt/server01/contacts"
+      #
+      # The arrays are <Server name>_SP=<Server_name>/<Shared directory>
+      #                Server01_SP[2]="//mnt/server01/
+      #                <Local PC name>_MP=<Local_PC_name>/<Mount-point directory>
+      #
+      # SERVER[1]="Server01"
+      # SERVER_SP[1]="//server01/public/contacts"
+      # LOCAL_MP[1]="/mnt/server01/contacts"
+      #
+      # f_server_arrays $THIS_FILE
+      #
+      EXITOUT=0
+      NUM=1
+      # When mounting, ask for a username and password once for all mount-points.
+      if [ $3 = "mount" ] ; then
+         f_username $1 "$USER" "All mount-points"  # Get user name.
+         if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+            EXITOUT=1
+         fi
+         if [ $EXITOUT -eq 0 ] ; then
+            f_password $1 $2        # Get password.
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               EXITOUT=1
+            fi
+         fi
+      fi
+      #
+      while [ $EXITOUT -eq 0 ]
+            do
+               # eval allows indirection of array name.
+               # echo "\" tells echo to disreguard the first "$" to prevent parameter expansion before passing it to echo which creates the read array command.
+               SP=$(eval echo "\$\{$2_SP[$NUM]\}")   # Create command "${<server_name>_SP[$NUM]}" to read string of Shared directory      from array <Server name>_SP[n].
+               MP=$(eval echo "\$\{$2_MP[$NUM]\}")   # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
+                                                  #
+               SP=$(eval echo $SP)                   # Read Shared directory from array <Server name>_SP[1].
+               if [ -n "$SP" ] ; then                # Does array element exist? (specifying Shared Directory).
+                  MP=$(eval echo $MP)                # Read Mount-point directory from array <Server name>_MP[1].
+                  if [ -n "$MP" ] ; then             # Does array element exist? (specifying Mount-Point Directory).
+                     if [ $3 = "mount" ] ; then
+                        f_mount $1 $SP $MP $SMBUSER $PASSWORD   # Now actually mount the shared directory at the mount-point on the local PC.
+                     else
+                        f_dismount $1 $MP        # Dismount the mount-point directory.
+                     fi
+                  else
+                     EXITOUT=1  # Array element MP does not exist so no more mount-points specified.
+                  fi
+               else
+                  EXITOUT=1  # Array element SP does not exist so no more shared directories specified.
+               fi
+               NUM=$(($NUM+1))  #Increment NUM by 1.
+            done
+      unset EXITOUT NUM SP MP
+} # End of function f_mount_or_dismount_all.
+#
+# +----------------------------------------+
+# |              Function f_mount          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Share-point.
+#          $3=Mount-point.
+#          $4=SMBUSER  (smb username).
+#          $5=PASSWORD (smb password).
+#    Uses: QUIT, ERROR. $TEMP_FILE.
+# Outputs: None.
+#
+f_mount () {
+      #
+      # mountpoint command 0=directory is a mountpoint (already mounted).
+      #                    1=directory is not a mountpoint (not mounted).
+      #
+      # Test if mounted already, if so, don't mount again or will get error.
+      # echo "Share-point="$2  # Diagnostic line.
+      # echo "Mount-point="$3  # Diagnostic line.
+      #
+      QUIT=0       # QUIT=1 quits until-loop, QUIT=0 until-loop
+      SMBUSER=$4   # Set SMBUSER and PASSWORD since if fails to mount,
+      PASSWORD=$5  # then user can change their value.
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+      #
+      until [ $QUIT -eq 1 ]  # Start loop.
+            do
+               # Is the shared directory mounted yet?
+               mountpoint $3 >/dev/null 2>$TEMP_FILE # Create file and write any error messages to file $TEMP_FILE.
+               ERROR=$?
+               if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
+                  QUIT=1  # Quit loop.
+                  if [ -s $TEMP_FILE ] ; then  # File $TEMP_FILE contains error message, so display it.
+                     #f_message $1 "OK" "Directory Previously Mounted" "Directory $3 already is mounted."
+                     f_message $1 "OK" "Directory Previously Mounted" $TEMP_FILE
+                  fi
+               else  # Directory is not mounted yet.
+                  if [ $QUIT -eq 0 ] ; then
+                     # Do not use $4 or $5 because f_test_mount updates $SMBUSER and $PASSWORD.
+                     f_mount2 $1 $2 $3 $SMBUSER $PASSWORD
+                     f_test_mount $1 $2 $3  # Output: QUIT=1/0.
+                                            #         SMBUSER.
+                                            #         PASSWORD.
+                  fi
+               fi
+               #
+            done  # End loop.
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
+      unset ERROR QUIT  # Throw out this variable.
+} # End of function f_mount.
+#
+# +----------------------------------------+
+# |             Function f_mount2          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Share-point.
+#          $3=Mount-point.
+#          $4=$SMBUSER  (smb username).
+#          $5=$PASSWORD (smb password).
+#    Uses: None.
+# Outputs: ERROR.
+#
+f_mount2 () {
+      #
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+      TEMP_FILE2=$THIS_DIR/$THIS_FILE"_temp2.txt"
+      #
+      sudo mount -o username=$4 -o password=$5 -t cifs $2 $3 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
+      ERROR=$?
+      # echo "mount -o username=$4 -o password=$5 -t cifs $2 $3"  # Diagnostic line.
+      if [ "$ERROR" -ne 0 ] ; then
+         echo >>$TEMP_FILE
+         echo "Failed to mount" >$TEMP_FILE2
+         echo "Share-point: $2" >>$TEMP_FILE2
+         echo "onto" >>$TEMP_FILE2
+         echo "Mount-point: $3" >>$TEMP_FILE2
+         echo >>$TEMP_FILE2
+         cat $TEMP_FILE >>$TEMP_FILE2
+         mv $TEMP_FILE2 $TEMP_FILE
+         f_message $1 "OK" "Error Mounting Sharepoint" $TEMP_FILE
+         # Check if host is a Raspberry Pi.
+         # XX=$(lsb_release -a | grep -c Raspbian)
+         # Raspberry Pi Model 1 Raspian OS cannot use -o password option.
+         # Omit the mount -o password flag.
+         # if [ $XX ] ; then
+         #    sudo mount -o username=$4 -t cifs $2 $3 2>>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
+         #    ERROR=$?
+         #   if [ $ERROR -eq 1 ] ; then
+         #      f_message $1 "OK" "Error Mounting Sharepoint" $TEMP_FILE
+         #   fi
+         # fi
+      fi
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
+      if [ -r  $TEMP_FILE2 ] ; then
+         rm  $TEMP_FILE2
+      fi
+      #
+} # End of function f_mount2.
+#
+# +----------------------------------------+
+# |          Function f_test_mount         |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Share-point.
+#          $3=Mount-point.
+#    Uses: ERROR.
+# Outputs: QUIT, SMBUSER. $TEMP_FILE.
+f_test_mount () {
+      #
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+      #
+      mountpoint $3 >/dev/null 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
+      if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
+         QUIT=1  # Quit loop.
+         # echo "Directory $3 is already mounted."  # Diagnostic line.
+      else
+         # Mount failed, Do you want to try again?
+         f_yn_question $1 "Y" "Failed to mount" "Failed to mount\nShare-point: $2\nonto\nMount-point: $3\n\nTry another password to mount $2?"
+         if [ $ANS -eq 0 ] ; then  # Outputs user response to $ANS.
+            # ANS=0. Yes, try another SMB username and password to mount Share-point.
+            QUIT=0 # Try again to mount.
+            f_username $1 $SMBUSER $3  # Set the default username to the SMB username entered previously.
+            if [ $ERROR -ne 0 ] ; then
+               QUIT=1  # Quit f_mount loop, return to previous menu.
+               EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all.
+            fi
+            #
+            if [ $ERROR -eq 0 ] ; then
+               f_password $1 $2
+               if [ $ERROR -ne 0 ] ; then
+                  QUIT=1 # Quit f_mount loop, return to previous menu.
+                  EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all.
+               fi
+            fi
+            #if [ $SMBUSER != $USER ] ; then
+            #   f_password $1 $2  # Force a new password if changing user name.
+            #fi
+            # if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+            #    QUIT=1  # Quit loop.
+            # fi
+            #
+         else
+            # ANS=1. No, do not try another password just return to previous menu. Exit loop.
+            QUIT=1  # Quit f_mount loop, return to previous menu.
+            EXITOUT=1  # Exit loop of next share/mount-point to mount in f_mount_or_dismount_all.
+         fi
+      fi
+      #
+      if [ -r  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
+      fi
+      #
+} # End of function f_test_mount.
+#
+# +----------------------------------------+
+# |           Function f_dismount          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Mount-point.
+#    Uses: ERROR.
+# Outputs: None.
+#
+f_dismount () {
+      #
+      # mountpoint command 0=directory is a mountpoint (already mounted).
+      #                    1=directory is not a mountpoint (not mounted).
+      # Test if unmounted already,
+      # if so then don't unmount again or will get mount error.
+      #
+      #
+      mountpoint $2 >/dev/null
+      ERROR=$?
+      if [ $ERROR -eq 0 ] ; then  # mountpoint is mounted so now dismount.
+         sudo umount $2 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE.
+      fi
+      # Was umount command successful?
+      if [ -s $TEMP_FILE ] ; then  # File $TEMP_FILE contains error message, so display it.
+         fmessage $1 "OK" "Error Unmounting" $TEMP_FILE
+      fi
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      # echo "Dismounted $2"  # Diagnostic line.
+      unset ERROR
+} # End of function f_dismount.
+#
+# +----------------------------------------+
+# |         Function f_menu_action         |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI
+#          $2=Server name.
+#    Uses: CHOICE_ACT, ANS XNUM.
+# Outputs: SMBUSER="".
+#
+f_menu_action () {
+      #
+      # Test connection to server.
+      f_test_connection $1 $2
+      #
+      if [ $ERROR -eq 0 ] ; then
+         THIS_FILE="mountup_servers.lib"
+         #TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_action_generated.lib"
+         #
+         # Build Server Arrays for f_menu_action_txt/gui to (dis)mount servers.
+         ARRAY_FILE=$THIS_DIR/$THIS_FILE
+         f_server_arrays $ARRAY_FILE
+         #
+         case $1 in
+              "text" | "whiptail")
+                 f_menu_server_action_txt $2
+              ;;
+              "dialog")
+                 f_menu_server_action_gui $1 $2
+              ;;
+         esac
+         #
+      fi
+}  # End of function f_menu_action
+#
+# +----------------------------------------+
+# |    Function f_menu_server_action_txt   |
+# +----------------------------------------+
+#
+#  Inputs: $1=Server name.
+#    Uses: CHOICE_ACT, ANS XNUM.
+# Outputs: SMBUSER="".
+#
+f_menu_server_action_txt () {
+      #
+      CHOICE_ACT=-1
+      until [ $CHOICE_ACT = "0" ]
+      do
+            SMBUSER=""  # Set to null to force entry of a new SMB user name.
+            clear # Blank the screen.
+            echo -n $(tput bold)
+            echo "--- Mount/Dismount $1 Server Menu ---"
+            echo -n $(tput sgr0)
+            echo
+            echo "0 (Q/q) - Quit to previous menu."
+            echo "1 (S/s) - Show mounted directories."
+            echo "2 (M/m) - Mount   all shared directories."
+            echo "3 (D/d) - Disount all shared directories."
+            ARRAY_NAME=$1"_DESC"
+            ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
+            ARRAY_LEN=$(eval echo $ARRAY_LEN)
+            for (( XNUM=0; XNUM<=${ARRAY_LEN}; XNUM++ ));
+                do
+                   MOUNT_POINT_DESC=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+                   MOUNT_POINT_DESC=$(eval echo $MOUNT_POINT_DESC)
+                   MOUNT_POINT_DESC=$(echo $MOUNT_POINT_DESC | tr '_' ' ')
+                   if [ -n "$MOUNT_POINT_DESC" ] ; then
+                      let X=$XNUM+3
+                      echo "$X ($X""D/""$X""M) - (Dis)Mount $MOUNT_POINT_DESC"
+                   fi
+                done
+            echo
+            echo -n $(tput bold)
+            echo -n "Please select letter or 0-$X (0): " ; read CHOICE_ACT
+            echo -n $(tput sgr0)
+            #
+            case $CHOICE_ACT in
+                 0 | [Qq] | "") break ; CHOICE_ACT=0
+                           ;;
+                 1 | [Ss]) f_show_mount_points $GUI
+                           CHOICE_ACT=1
+                           ;;
+                 2 | [Mm]) f_mount_or_dismount_all $GUI $1 "mount"
+                           f_show_mount_points $GUI
+                           CHOICE_ACT=2
+                           ;;
+                 3 | [Dd]) f_mount_or_dismount_all $GUI $1 "dismount"
+                           f_show_mount_points $GUI
+                           CHOICE_ACT=3
+                           ;;
+                   [4-9][Mm] | [1-9][0-9][Mm]) 
+                           XNUM=$(echo $CHOICE_ACT |  tr -d 'Mm')  # Strip off trailing "M" or "m".
+                           CHOICE_ACT=$XNUM
+                           let XNUM=XNUM-3
+                           SP=$(eval echo "\$\{$1_SP[$XNUM]\}")   # Create command "${<server_name>_SP[$NUM]}" to read string of Shared directory      from array <Server name>_SP[n].
+                           SP=$(eval echo $SP)
+                           MP=$(eval echo "\$\{$1_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
+                           MP=$(eval echo $MP)
+                           f_username $GUI $USER $SP
+                           f_password $GUI $SP
+                           f_mount $GUI $SP $MP $SMBUSER $PASSWORD
+                           f_show_mount_points $GUI
+                           ;;
+                   [4-9][Dd] | [1-9][0-9][Dd])
+                           XNUM=$(echo $CHOICE_ACT |  tr -d 'Dd')  # Strip off trailing "D" or "d".
+                           CHOICE_ACT=$XNUM
+                           let XNUM=XNUM-3
+                           MP=$(eval echo "\$\{$1_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
+                           MP=$(eval echo $MP)
+                           f_dismount $GUI $MP
+                           f_show_mount_points $GUI
+                           ;;
+            esac
+      done
+      unset CHOICE_ACT ANS XNUM # Throw out this variable.
+}  # End of function f_menu_server_action_txt
+#
+# +----------------------------------------+
+# |    Function f_menu_server_action_gui   |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Server name.
+#    Uses: CHOICE_ACT, PASSWORD, MENU_TITLE.
+# Outputs: None.
+#
+f_menu_server_action_gui () {
+      #
+      THIS_FILE="mountup_servers.lib"
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_data_generated.lib"
+      #
+      # Find data in this file and write to $GENERATED_FILE.
+      grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
+      #
+      # Substitute actual file server name for "SERVER-NAME_GOES_HERE" place-holder.
+      sed -i "s/\SERVER_NAME_GOES_HERE/$2/g" $GENERATED_FILE
+      #
+      # Create arrays from data.
+      ARRAY_FILE="$GENERATED_FILE"
+      f_menu_arrays $ARRAY_FILE
+      #
+      # Create generated menu script from array data.
+      THIS_FILE="mountup_servers.lib"
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
+      MENU_TITLE="Mount-Dismount_File_Server_Menu"  # Menu title must substitute underscores for spaces
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_temp.txt"
+      SERVER_NAME=$2
+      #
+      # Create generated menu script from array data.
+      f_create_show_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      #
+      THIS_FILE="mountup_servers.lib"
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_data_generated.lib"
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+} # End of function f_menu_server_action_gui.
+#
+# +----------------------------------------+
+# |          Function f_mount_all          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
+#          $2=Server name.
+#    Uses: None.
+# Outputs: None.
+#
+f_mount_all () {
+      #
+      f_mount_or_dismount_all $1 $2 "mount"
+      f_show_mount_points $1
+} # End of function f_mount_all.
+#
+# +----------------------------------------+
+# |         Function f_dismount_all        |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
+#          $2=Server name.
+#    Uses: None.
+# Outputs: None.
+#
+f_dismount_all () {
+      #
+      f_mount_or_dismount_all $1 $2 "dismount"
+      f_show_mount_points $1
+} # End of function f_dismount_all.
+#
+# +----------------------------------------+
+# |          Function f_pick_mounts        |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
+#          $2=Server name.
+#    Uses: None.
+# Outputs: None.
+#
+f_pick_mounts () {
+      #
+      THIS_FILE="mountup_servers.lib"
+      f_menu_pick $1 $2 $THIS_FILE"_mount-dismount_menu_generated.lib"
+      f_show_mount_points $1
+      #
+      THIS_FILE="mountup_servers.lib"
+      GENERATED_FILE=$THIS_FILE"_mount-dismount_menu_generated.lib"
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+} # End of function f_pick_mounts.
+#
+
+
+# +----------------------------------------+
+# |          Function f_menu_pick          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=SERVER NAME.
+#          $3=GENERATED_FILE.
+#    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC, QUIT.
+# Outputs: STATUS[XNUM], $2_DESC[XNUM].
+#
+f_menu_pick () {
+      #
+      echo "#!/bin/bash" >$3
+      echo "#" >>$3
+      echo "VERSION=\"$VERSION\"" >>$3
+      echo "#" >>$3
+      echo "#***********************************CAUTION***********************************" >>$3
+      echo "# Any edits made to this code will be lost since this code is" >>$3
+      echo "# automatically generated and updated by running the function," >>$3
+      echo "# \"f_action_update_gui\" within the library script \"mountup.lib\"" >>$3
+      echo "# which is called by script \"mountup.sh\"." >>$3
+      echo "#***********************************CAUTION***********************************" >>$3
+      echo "#" >>$3
+      echo "# +----------------------------------------+" >>$3
+      echo "# |        Function f_checklist_mp_gui     |" >>$3
+      echo "# +----------------------------------------+" >>$3
+      echo "#" >>$3
+      echo "#  Inputs: \$1=Server name." >>$3
+      echo "#    Uses: None." >>$3
+      echo "# Outputs: CHOICE_ACT." >>$3
+      echo "#" >>$3
+      echo "f_checklist_mp_gui () {" >>$3
+      #f_server_arrays $THIS_FILE
+      f_server_arrays mountup_servers.lib
+      ARRAY_NAME="$2_DESC"
+      ARRAY_LEN=$(eval "echo \$\{#\$ARRAY_NAME[@]\}")
+      ARRAY_LEN=$(eval echo $ARRAY_LEN)
+      #
+      for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+          do
+             MP=$(eval echo "\$\{$2_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" from array <Server name>_MP[n].
+             MP=$(eval echo $MP)
+             #
+             mountpoint $MP >/dev/null  # Get status of mountpoint, mounted?.
+             ERROR=$?
+             if [ $ERROR -eq 1 ] ; then  # Directory is not mounted.
+                STATUS[$XNUM]="off" # Create STATUS array entry to indicate whether directory is not mounted for f_checklist_mp_gui.
+                # echo "$MP is not mounted."  # Diagnostic line.
+             else                        # Directory is mounted.
+                STATUS[$XNUM]="on"  # Create STATUS array entry to indicate whether directory is mounted for f_checklist_mp_gui.
+                # echo "$MP is mounted."  # Diagnostic line.
+             fi
+             #
+          done
+      #
+      echo "#" >>$3
+      echo "# CHOICE_ACT contains in a string the user's choices output by the \"dialog --checklist\" command generated below." >>$3
+      echo "# Below are the initial  \"On/Off\" states of each menu item when the menu is first started." >>$3
+      echo "# This generated menu is not regenerated every time you change your selection of menu items." >>$3
+      echo "#" >>$3
+      #
+      # Find number of menu items.
+      Y_LIST=$(grep -c ^\#@\#//$2 $THIS_FILE)
+      let Y_MAX=$Y_LIST+7
+      # Y_MAX=Menu height, $MAX_LENGTH=Menu width from f_server_arrays, $Y_LIST=Number of Menu items.
+      echo "CHOICE_ACT=\$($1 --checklist \"Choose $2 shared directory:\" $Y_MAX $MAX_LENGTH $Y_LIST \\" >>$3
+      #
+      for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+          do
+             MOUNT_POINT_DESC=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
+             MOUNT_POINT_DESC=$(eval echo $MOUNT_POINT_DESC)
+             MOUNT_POINT_DESC=$(echo $MOUNT_POINT_DESC | tr '_' ' ')  #Substitute <underscores> to <spaces>.
+             echo "$XNUM '$MOUNT_POINT_DESC' ${STATUS[$XNUM]} \\" >>$3
+          done
+      echo "2>&1 >/dev/tty)" >>$3
+      echo "} # End of function f_checklist_mp_gui." >>$3
+      #
+      # Invoke the file $3 which contains the function, f_checklist_mp.
+      . $3
+      f_checklist_mp_gui $2
+      ERROR=$?
+      # echo "Exit code ERROR=$ERROR"  # Diagnostic line.
+      # echo "CHOICE_ACT=$CHOICE_ACT"  # Diagnostic line.
+      # f_press_enter_key_to_continue  # Diagnostic line.
+      #
+      QUIT=0
+      if [ $ERROR = 0 ] ; then  # If <Cancel> button was not pressed.
+         if [  -n "$SMBUSER" ] ; then  # if SMBUSER is not null, already set then confirm SMBUSER as the username.
+            f_username $1 $SMBUSER $4
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu.
+            fi
+         else
+            f_username $1 $USER $4   # if SMBUSER is null, so not yet set, then use $USER as the default username.
+                                     # $USER is a System variable equivalent to your login username.
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu.
+            fi
+         fi
+         #
+         if [ $QUIT -eq 0 ] ; then
+            f_password $1 $2
+            if [ $ERROR -ne 0 ] ; then  # <Cancel> button was pressed.
+               QUIT=1  # Quit out of loop in f_pick_menu.
+            fi
+         fi
+         #
+         if [ $QUIT -eq 0 ] ; then
+            for (( XNUM=1; XNUM<=${ARRAY_LEN}; XNUM++ ));
+                do
+                   SP=$(eval echo "\$\{$2_SP[$XNUM]\}")   # Create command "${<server_name>_SP[$NUM]}" from array <Server name>_SP[n].
+                   SP=$(eval echo $SP)
+                   #
+                   MP=$(eval echo "\$\{$2_MP[$XNUM]\}")   # Create command "${<server_name>_MP[$NUM]}" from array <Server name>_MP[n].
+                   MP=$(eval echo $MP)
+                   #
+                   # echo "XNUM=$XNUM"  # Diagnostic line.
+                   # echo "SP=$SP"      # Diagnostic line.
+                   # echo "MP=$MP"      # Diagnostic line.
+                   # echo "CHOICE_ACT=$CHOICE_ACT" # Diagnostic line.
+                   # echo "f_pick_match $1 $XNUM $SP $MP"  # Diagnostic line.
+                   #
+                   f_pick_match $1 $XNUM $SP $MP  # CHOICE_ACT cannot be passed as a parameter because string contains <spaces>.
+                   #
+                   # f_press_enter_key_to_continue  # Diagnostic line.
+                   # echo  # Diagnostic line.
+                done
+         fi
+      fi
+}  # End of function f_menu_pick
+#
+# +----------------------------------------+
+# |         Function f_pick_match          |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=XNUM
+#          $3=SP Share-point.
+#          $4=MP Mount-point.
+#          CHOICE_ACT
+#    Uses: MNT.
+# Outputs: QUIT.
+#
+f_pick_match () {
+      #
+      if [[ "$CHOICE_ACT" =~ "$2" ]] ; then  # Does CHOICE_ACT contain XNUM?
+         # Yes, CHOICE_ACT contains XNUM so mount it.
+         for MNT in $CHOICE_ACT  # for-loop to allow username and password to be asked more than once if needed.
+             do
+                if [[ $MNT =~ $2 ]] ; then  # Does MNT contain XNUM?
+                   # Yes, MNT contains XNUM so mount it. 
+                   # echo "Mount $3 on $4"  # Diagnostic line.
+                   f_mount $1 $3 $4 $SMBUSER $PASSWORD  # Yes, so mount it.
+                fi
+            done
+      else  # No CHOICE_ACT does not contain XNUM, so unmount it.
+         # echo "Unmount $4 from $3"  # Diagnostic line.
+         f_dismount $1 $4
+      fi
+      unset MNT
+}  # End of function f_pick_match
