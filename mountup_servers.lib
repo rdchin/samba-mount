@@ -46,11 +46,11 @@
 # #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
 #
-# Add your actual data below:
-#@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
-#@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
-#@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
-#@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+# Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
+#
+#@#//scotty/public#@#/mnt/scotty/public#@#Scotty Server - Publicly shared files.
+#@#//scotty/public-no-backup#@#/mnt/scotty/public-no-backup#@#Scotty Server - Publicly shared files not backed-up.
+#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -76,7 +76,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-05-15 19:28"
+VERSION="2020-06-22 15:01"
 THIS_FILE="mountup_servers.lib"
 #
 #@ Brief Description
@@ -190,18 +190,13 @@ f_server_arrays () {
                # Set array $SERVER_NAME_MP[SERVER_NUM]=<field-3> of XSTR.
                ARRAY_NAME=$SERVER_NAME"_MP"
                ARRAY_VALUE=$(echo $XSTR | awk -F "$DELIM" '{ if ( $3 ) { print $3 }}')
-               #echo ARRAY_VALUE=$ARRAY_VALUE  # Diagnostic line.
-               #echo "$ARRAY_NAME[$ARRAY_NUM]=${$ARRAY_NAME[$ARRAY_NUM]}" # Diagnostic line.
                eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
                #
                # Set array $SERVER NAME DESC[SERVER_NUM]=<field-4> of XSTR.
                ARRAY_NAME=$SERVER_NAME"_DESC"
-               #echo XSTR=$XSTR  # Diagnostic line.
                ARRAY_VALUE=$(echo $XSTR | awk -F "$DELIM" '{ if ( $3 ) { print $4 }}')
                ARRAY_VALUE=$(echo $ARRAY_VALUE | tr ' ' '_')
-               #echo ARRAY_VALUE=$ARRAY_VALUE  # Diagnostic line.
                eval $ARRAY_NAME[$ARRAY_NUM]=$ARRAY_VALUE
-               #echo ${scotty_DESC[@]}  # Diagnostic line.
                #
                let ARRAY_NUM=$ARRAY_NUM+1
             done < $TEMP_FILE
@@ -237,8 +232,6 @@ f_mount_or_dismount_all () {
       # SERVER[1]="Server01"
       # SERVER_SP[1]="//server01/public/contacts"
       # LOCAL_MP[1]="/mnt/server01/contacts"
-      #
-      # f_server_arrays $THIS_FILE
       #
       EXITOUT=0
       NUM=1
@@ -501,7 +494,7 @@ f_menu_action () {
          #TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_action_generated.lib"
          #
          # Build Server Arrays for f_menu_action_txt/gui to (dis)mount servers.
-         ARRAY_FILE=$THIS_DIR/$THIS_FILE
+         ARRAY_FILE=$THIS_DIR/"mountup_servers.lib"
          f_server_arrays $ARRAY_FILE
          #
          case $1 in
@@ -733,8 +726,8 @@ f_menu_pick () {
       echo "# Outputs: CHOICE_ACT." >>$3
       echo "#" >>$3
       echo "f_checklist_mp_gui () {" >>$3
-      #f_server_arrays $THIS_FILE
-      f_server_arrays mountup_servers.lib
+      #
+      f_server_arrays $THIS_DIR/"mountup_servers.lib"
       ARRAY_NAME="$2_DESC"
       ARRAY_LEN=$(eval "echo \$\{#\$ARRAY_NAME[@]\}")
       ARRAY_LEN=$(eval echo $ARRAY_LEN)
