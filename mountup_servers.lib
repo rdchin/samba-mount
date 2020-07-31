@@ -76,8 +76,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-06-22 15:01"
-THIS_FILE="mountup_servers.lib"
+VERSION="2020-07-30 23:04"
 #
 #@ Brief Description
 #@
@@ -487,7 +486,7 @@ f_dismount () {
 f_menu_action () {
       #
       # Test connection to server.
-      f_test_connection $1 $2
+      f_test_connection $1 $2 1
       #
       if [ $ERROR -eq 0 ] ; then
          THIS_FILE="mountup_servers.lib"
