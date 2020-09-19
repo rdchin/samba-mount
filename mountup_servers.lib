@@ -48,9 +48,9 @@
 #
 # Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
 #
-#@#//scotty/public#@#/mnt/scotty/public#@#Scotty Server - Publicly shared files.
-#@#//scotty/public-no-backup#@#/mnt/scotty/public-no-backup#@#Scotty Server - Publicly shared files not backed-up.
-#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
+#@#//file_server_name1/shared_directory#@#/mnt/local_mount_point_directory/files#@#File Server 01 - Public shared files.
+#@#//file_server_name2/shared_directory#@#/mnt/local_mount_point_directory/files#@#File Server 02 - Restricted shared files.
+#@#//file_server_name3/shared_directory#@#/mnt/local_mount_point_directory/files#@#File Server 03 - Group shared files.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -76,7 +76,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-07-30 23:04"
+VERSION="2020-09-19 18:13"
 #
 #@ Brief Description
 #@
@@ -398,6 +398,7 @@ f_test_mount () {
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       mountpoint $3 >/dev/null 2>$TEMP_FILE # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
+      ERROR=$?
       if [ $ERROR -eq 0 ] ; then  # Directory is already mounted.
          QUIT=1  # Quit loop.
          # echo "Directory $3 is already mounted."  # Diagnostic line.

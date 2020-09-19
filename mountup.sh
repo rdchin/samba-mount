@@ -21,15 +21,17 @@
 #
 #@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
 #
+#@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
+#
 #@@Help#@@Display help message.#@@f_help_message^$GUI
 #
 # +----------------------------------------+
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-07-30 23:04"
+VERSION="2020-09-19 18:13"
 THIS_FILE="$0"
-      TEMP_FILE=$THIS_FILE"_temp.txt"
+TEMP_FILE=$THIS_FILE"_temp.txt"
 #
 # +----------------------------------------+
 # |            Brief Description           |
@@ -79,6 +81,16 @@ THIS_FILE="$0"
 # +----------------------------------------+
 #
 ## Code Change History
+##
+## 2020-09-19 *Updated to latest standards.
+##
+## 2020-09-15 *f_check_version added to compare and update version of this
+##             script if necessary.
+##             *Main Menu added new entry "Version Update". 
+##
+## 2020-09-09 *Updated to latest standards.
+##
+## 2020-08-18 *f_test_mount fixed error checking.
 ##
 ## 2020-07-30 *f_menu_action altered f_test_connection to have 1 s delay.
 ##
@@ -225,81 +237,39 @@ THIS_FILE="$0"
 ##             which (dis)mounted one or more shared directories on a server.
 ##            *(Dis)mount all shared directories of any given file-server.
 #
-# +------------------------------------+
-# |          Function f_about          |
-# +------------------------------------+
-#
-#     Rev: 2020-06-27
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          THIS_DIR, THIS_FILE, VERSION.
-#    Uses: DELIM.
-# Outputs: None.
-#
-f_about () {
-      #
-      # Display text (all lines beginning ("^") with "#& " but do not print "#& ").
-      # sed substitutes null for "#& " at the beginning of each line
-      # so it is not printed.
-      DELIM="^#&"
-      f_display_common $1 $DELIM
-      #
-} # End of f_about.
-#
-# +------------------------------------+
-# |      Function f_code_history       |
-# +------------------------------------+
-#
-#     Rev: 2020-06-27
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          THIS_DIR, THIS_FILE, VERSION.
-#    Uses: DELIM.
-# Outputs: None.
-#
-f_code_history () {
-      #
-      # Display text (all lines beginning ("^") with "##" but do not print "##").
-      # sed substitutes null for "##" at the beginning of each line
-      # so it is not printed.
-      DELIM="^##"
-      f_display_common $1 $DELIM
-      #
-} # End of function f_code_history.
-#
-# +------------------------------------+
-# |      Function f_help_message       |
-# +------------------------------------+
-#
-#     Rev: 2020-06-27
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          THIS_DIR, THIS_FILE, VERSION.
-#    Uses: DELIM.
-# Outputs: None.
-#
-f_help_message () {
-      #
-      # Display text (all lines beginning ("^") with "#?" but do not print "#?").
-      # sed substitutes null for "#?" at the beginning of each line
-      # so it is not printed.
-      DELIM="^#?"
-      f_display_common $1 $DELIM
-      #
-} # End of f_help_message.
-#
-# +------------------------------------+
-# |     Function f_display_common      |
-# +------------------------------------+
-#
-#     Rev: 2020-06-27
+#     Rev: 2020-08-07
 #  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
 #          $2=Delimiter of text to be displayed.
+#          $3="NOK", "OK", or null [OPTIONAL] to control display of "OK" button.
+#          $4=Pause $4 seconds [OPTIONAL]. If "NOK" then pause to allow text to be read.
 #          THIS_DIR, THIS_FILE, VERSION.
 #    Uses: X.
 # Outputs: None.
 #
+# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
+#              THIS FUNCTION INTO ANY SCRIPT WHICH DEPENDS ON THE
+#              LIBRARY FILE "common_bash_function.lib".
+#
+# +-----------------------------------+
+# |     Function f_display_common     |
+# +-----------------------------------+
+#
 f_display_common () {
       #
-      # Specify $THIS_FILE name of any file containing the text to be displayed.
-      THIS_FILE="mountup.sh"
+      # Specify $THIS_FILE name of the file containing the text to be displayed.
+      # $THIS_FILE may be re-defined inadvertently when a library file defines it
+      # so when the command, source [ LIBRARY_FILE.lib ] is used, $THIS_FILE is
+      # redefined to the name of the library file, LIBRARY_FILE.lib.
+      # For that reason, all library files now have the line
+      # THIS_FILE="[LIBRARY_FILE.lib]" deleted.
+      #
+      #================================================================================
+      # EDIT THE LINE BELOW TO DEFINE $THIS_FILE AS THE ACTUAL FILE NAME WHERE THE 
+      # ABOUT, CODE HISTORY, AND HELP MESSAGE TEXT IS LOCATED.
+      #================================================================================
+                                           #
+      THIS_FILE="mountup.sh"  # <<<--- INSERT ACTUAL FILE NAME HERE.
+                                           #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       # Set $VERSION according as it is set in the beginning of $THIS_FILE.
@@ -316,18 +286,28 @@ f_display_common () {
       # so it is not printed.
       sed -n "s/$2//"p $THIS_DIR/$THIS_FILE >> $TEMP_FILE
       #
-      f_message $1 "OK" "Code History (use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
+      case $3 in
+           "NOK" | "nok")
+              f_message $1 "NOK" "Message" $TEMP_FILE $4
+           ;;
+           *)
+              f_message $1 "OK" "(use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
+           ;;
+      esac
       #
-} # End of function f_code_history.
+} # End of function f_display_common.
 #
 # +----------------------------------------+
 # |          Function f_menu_main          |
 # +----------------------------------------+
 #
-#     Rev: 2020-06-04
-#  Inputs: None.
+#     Rev: 2020-09-18
+#  Inputs: $1=GUI.
 #    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
 # Outputs: None.
+#
+# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
+#              THIS FUNCTION INTO THE MAIN SCRIPT WHICH WILL CALL IT.
 #
 f_menu_main () { # Create and display the Main Menu.
       #
@@ -346,11 +326,17 @@ f_menu_main () { # Create and display the Main Menu.
          # going into an infinite loop.
          grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
          #
-         # Specify file name with data.
+         # Specify file name with menu item data.
          ARRAY_FILE="$GENERATED_FILE"
       else
-         # Specify file name with data.
-         ARRAY_FILE="[UNUSED_FILENAME_GOES_HERE]"
+         #
+         #================================================================================
+         # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME (LIBRARY)
+         # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
+         #================================================================================
+         #
+         # Specify library file name with menu item data.
+         ARRAY_FILE="[FILENAME_GOES_HERE]"
       fi
       #
       # Create arrays from data.
@@ -361,13 +347,22 @@ f_menu_main () { # Create and display the Main Menu.
       let MAX_LENGTH=$MAX_CHOICE_LENGTH+$MAX_SUMMARY_LENGTH
       #
       # Create generated menu script from array data.
-      MENU_TITLE="Main_Menu"  # Menu title must substitute underscores for spaces
+      #
+      # Note: ***If Menu title contains spaces,
+      #       ***the size of the menu window will be too narrow.
+      #
+      # Menu title MUST use underscores instead of spaces.
+      MENU_TITLE="Mountup_Main_Menu"  # Menu title must substitute underscores for spaces
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_main_temp.txt"
       #
-      f_create_show_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
       #
       if [ -r $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
+      fi
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
       fi
       #
 } # End of function f_menu_main.
@@ -496,6 +491,9 @@ if [ -z $GUI ] ; then
    f_detect_ui
 fi
 #
+# Show Brief Description message.
+f_about $GUI "NOK" 1
+#
 #GUI="whiptail"  # Diagnostic line.
 #GUI="dialog"    # Diagnostic line.
 #GUI="text"      # Diagnostic line.
@@ -503,7 +501,7 @@ fi
 # Test for BASH environment.
 f_test_environment
 #
-f_menu_main
+f_menu_main $GUI
 #
 #if [ -r $GENERATED_FILE ] ; then
 #   rm $GENERATED_FILE
