@@ -12,14 +12,19 @@
 # +--------------------------------------------------------------------------+
 #
 #@@Exit#@@Return to previous menu.#@@break
-#@@Scotty#@@Scotty back-up file server.#@@f_menu_action^$GUI^scotty
-#@@Parsley#@@Parsley file server.#@@f_menu_action^$GUI^parsley
+#@@hansolo#@@Hansolo Server publicly shared files.#@@f_menu_action^$GUI^hansolo
+#@@chewbacca#@@Chewbacca Server shared photos.#@@f_menu_action^$GUI^chewbacca
+#@@luke#@@Luke Server shared school files.#@@f_menu_action^$GUI^luke
+#@@leia#@@Leia Server shared music.#@@f_menu_action^$GUI^leia
+#@@yoda#@@Yoda Server shared department files.#@@f_menu_action^$GUI^yoda
+#@@r2d2#@@R2D2 Server shared geek stuff.#@@f_menu_action^$GUI^r2d2
+#@@c3po#@@C3PO Server shared Reference Library.#@@f_menu_action^$GUI^c3po
 #
 # +----------------------------------------+
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-09-19 18:13"
+VERSION="2020-12-09 20:23"
 #
 #@ Brief Description
 #@
@@ -47,7 +52,7 @@ f_menu_server () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Server_Menu"  # Menu title must substitute underscores for spaces
+      MENU_TITLE="Server_Menu"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_temp.txt"
       #
       #================================================================================
@@ -89,6 +94,7 @@ f_show_mount_points () {
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       date >$TEMP_FILE
       echo >>$TEMP_FILE
+      echo "Remote Server             Space    Local Mount-Point" >>$TEMP_FILE
       # Test if this version of "df" has these OPTIONS.
       df -h --type=cifs --output=source,avail,target >/dev/null 2>&1
       ERROR=$?
@@ -98,8 +104,8 @@ f_show_mount_points () {
          ERROR=$?
          if [ $ERROR -eq 1 ] ; then
             echo >>$TEMP_FILE
-            echo " >>> Nothing is mounted <<<" >>$TEMP_FILE
-            echo "No mount-points are mounted." >>$TEMP_FILE
+            echo " >>> No Samba shared directories are mounted <<<" >>$TEMP_FILE
+            echo "    No Samba smb://[mount-points] are mounted." >>$TEMP_FILE
          else
             echo >>$TEMP_FILE
             grep "//" /etc/mtab | awk -F "," '{ print $1,$5 }' | awk '{ print $5,"mounted",$1}' >>$TEMP_FILE
@@ -111,83 +117,16 @@ f_show_mount_points () {
       fi
       #
       if [ $ERROR -eq 1 ] ; then
-         f_message $1 "OK" "Nothing is mounted" $TEMP_FILE
+         f_message $1 "OK" "No Samba shared directories are mounted\n   No Samba mount-points are mounted." $TEMP_FILE
       else
-         f_message $1 "OK" "Mount-points (use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
+         f_message $1 "OK" "(use arrow keys to scroll up/down/side-ways)" $TEMP_FILE
       fi
       #
       if [ -r $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
       #
-      unset X Y ERROR  # Throw out these variables.
+      # Throw out these variables.
+      unset X Y ERROR
 } # End of function f_show_mount_points.
-#
-# +----------------------------------------+
-# |        Function f_check_version        |
-# +----------------------------------------+
-#
-#     Rev: 2020-09-19
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#    Uses: SERVER_DIR, MP_DIR, TARGET_DIR, TARGET_FILE, VERSION, TEMP_FILE, ERROR.
-# Outputs: $1=GUI.
-#          $2=Samba File server Directory
-#          $3=Local Mount Point (Directory)
-#          $4=File server Target Directory.
-#          $5=File server File Name to compare.
-#          $6=Version of file to compare. String$
-#          $7=Temporary file name with list of files to be upgraded.
-#          ERROR
-#
-# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
-#              THIS FUNCTION INTO ANY SCRIPT WHICH DEPENDS ON THE
-#              LIBRARY FILE "common_bash_function.lib".
-#
-f_check_version_TEMPLATE () {
-      #
-      #=================================================================
-      # EDIT THE LINES BELOW TO DEFINE THE LAN FILE SERVER DIRECTORY AND
-      # SHARED MOUNTPOINT DIRECTORY, LOCAL TARGET DIRECTORY AND FILE. 
-      #=================================================================
-      #
-      # LAN File Server shared directory.
-      SERVER_DIR="[ FILE SERVER DIRECTORY NAME GOES HERE ]"
-      #
-      # Local PC mount-point directory.
-      MP_DIR="[ LOCAL MOUNT-POINT DIRECTORY NAME GOES HERE ]"
-      #
-      # Local PC target directory, sub-directory below mount-point directory.
-      TARGET_DIR="[ LOCAL MOUNT-POINT DIRECTORY/REPOSITORY SUB-DIRECTORY PATH GOES HERE ]"
-      #
-      # Local PC file name to compare.
-      FILE_TO_COMPARE="[ LOCAL FILE NAME ]"
-      #
-      # Each file script contains the string "VERSION=[ YYYY-MM-DD HH:MM ]"
-      # i.e. VERSION="2020-12-31 23:59"
-      #
-      # Version of TARGET_FILE.
-      VERSION=$(grep --max-count=1 "VERSION" $FILE_TO_COMPARE)
-      #
-      FILE_LIST=$THIS_DIR/$THIS_FILE"_file_temp.txt"
-      ERROR=0
-      #
-      #=================================================================
-      # UNCOMMENT AND EDIT THE LINES BELOW TO SPECIFY THE FILE NAMES.
-      # FILE NAMES TO UPDATE INCLUDE ALL DEPENDENT LIBRARIES.
-      #=================================================================
-      #
-      # Create list of files to update and write to temporary file, FILE_LIST.
-      #
-      echo "mountup.sh"           > $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
-      echo "mountup.lib"         >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
-      echo "mountup_servers.lib" >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
-      #echo "[ FILE NAME4 GOES HERE ]" >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
-      #
-      f_version_compare $1 $SERVER_DIR $MP_DIR $TARGET_DIR $FILE_TO_COMPARE "$VERSION" $FILE_LIST
-      #
-      if [ -r  $FILE_LIST ] ; then
-         rm  $FILE_LIST
-      fi
-      #
-}  # End of function f_check_version_TEMPLATE.
 #

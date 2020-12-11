@@ -21,7 +21,7 @@
 #
 #@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
 #
-#@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
+# COMMENTED OUT, FOR USE BY DEVELOPMENT VERSION ONLY #@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
 #
 #@@Help#@@Display help message.#@@f_help_message^$GUI
 #
@@ -29,7 +29,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-09-19 18:13"
+VERSION="2020-12-09 20:23"
 THIS_FILE="$0"
 TEMP_FILE=$THIS_FILE"_temp.txt"
 #
@@ -82,11 +82,26 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 #
 ## Code Change History
 ##
-## 2020-09-19 *Updated to latest standards.
+## 2020-12-08 *Updated to latest standards for format of comments.
+##            *f_mount_or_dismount_all rewrote username-password section
+##             so they would only be requested once for any combination
+##             of mount-points.
+##            *f_show_mount_points improved messages.
+##
+## 2020-12-07 *f_menu_pick rewrote username-password section so they 
+##             would only be requested once for any combination
+##             of mount-points.
+##
+## 2020-12-06 *f_menu_pick padded width of GUI menu to display properly.
+##            *f_mount1 was renamed from f_mount which had the same name
+##             as a different function in common_bash_function.lib.
+##
+## 2020-09-28 *Pick Menu added new entry in developer's version.
 ##
 ## 2020-09-15 *f_check_version added to compare and update version of this
-##             script if necessary.
-##             *Main Menu added new entry "Version Update". 
+##             script if necessary in developer's version.
+##             *Main Menu added new entry "Version Update" in developer's
+##              version.
 ##
 ## 2020-09-09 *Updated to latest standards.
 ##
@@ -108,24 +123,25 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ## 2020-05-23 *Updated to latest standards.
 ##
 ## 2020-05-15 *Complete rewrite added file mountup_servers.lib.
-##            *f_test_connection changed message from "Internet" to "Network".
+##            *f_test_connection changed text from "Internet" to "Network".
 ##            *f_main_menu, f_create_show_menu, f_update_menu_txt/gui added
 ##             unique TEMP_FILE name to prevent over-writing.
 ##            *f_update_menu_txt/gui changed f_menu_txt/gui to be unique
-##             with each file $GENERATED_FILE so you can have several sub-menus
-##             open simultaneously each with a unique f_menu_txt/gui function names.
+##             with each file $GENERATED_FILE so you can have several
+##             sub-menus open simultaneously each with a unique
+##             f_menu_txt/gui function names.
 ##
 ## 2020-05-14 *f_yn_question fixed bug where temp file was undefined.
 ##            *msg_ui_str_nok, f_msg_txt_str_nok changed wait time
 ##             from 5 to 3 seconds.
-##            *f_exit_script to latest standard; clean-up temp files on exit.
+##            *f_exit_script to latest standard; clean-up temp files.
 ##            *f_message, f_msg_ui_file_box_size, f_msg_ui_str_box_size,
 ##             f_ui_file_ok/nok, f_ui_str_ok/nok f_yn_question/defaults
 ##             specified parameter passing.
 ##            *f_menu_arrays, f_update_menu_txt/gui bug fixed to not unset
 ##             TEMP_FILE variable since it is used globally.
 ##
-## 2020-05-06 *f_msg_ui_file_box_size, f_msg_ui_file_ok bug fixed in display.
+## 2020-05-06 *f_msg_ui_file_box_size, f_msg_ui_file_ok display bug fixed.
 ##
 ## 2020-04-28 *Main updated to latest standards.
 ##
@@ -146,9 +162,9 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ## 2020-04-06 *Rewritten to be more Whiptail compatible.
 ##            *f_message, f_arguments, f_help_message added.
 ##
-## 2017-12-26 *Changed conditions script-wide so that if asked for username
-##             or password and the "Cancel" button is selected, then 
-##             exit out completely from that menu choice.
+## 2017-12-26 *Changed conditions script-wide so that if asked for
+##             username or password and the "Cancel" button is selected,
+##             then exit out completely from that menu choice.
 ##
 ## 2017-12-25 *Function f_mount_or_dismount_all_gui added call to ask
 ##             for password. It used to just ask for user name.
@@ -157,7 +173,7 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##             New behavior asks for both user name and password upfront.  
 ##
 ## 2017-11-23 *f_username_gui prevented a null username.
-##            *f_test_mount_gui changed when to ask for a username/password.
+##            *f_test_mount_gui changed when asking username/password.
 ##            *f_pick_menu_gui added username dialog.
 ##            Deleted any trailing <spaces> in the source code.
 ##
@@ -168,7 +184,7 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##            *f_test_mount_gui added checks for SMB username, password.
 ##            *f_pick_match added checks for SMB username, password.
 ##
-## 2017-04-20 *mountup_gui.sh added f_detect_ui and check if the file exists
+## 2017-04-20 *mountup_gui.sh added f_detect_ui, check if the file exists
 ##             and is readable, mountup_lib_gui.lib. Cleaned up comments.
 ##
 ## 2017-01-07 *f_action_menu_gui bug fixed, check network connection when
@@ -188,13 +204,13 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##             arrays of servers, share/mountpoints are refreshed before
 ##             (dis)mounting of any share-points.
 ##            *mountup_gui.sh can still be run by itself if there are
-##             changes in the list of file servers (no additions/deletions).
+##             changes in the list of file servers.
 ##
 ## 2016-05-05 *Script works but after (dis)mounting it returns to Main Menu
 ##             which is annoying.
-##            *I tried to force the script flow so that if (dis)mounting in
-##             the sub-menu then force it not display the Main Menu again
-##             but instead simply regenerate the sub-menu and re-display it.
+##            *I tried to force the script flow so that if (dis)mounting
+##             in the sub-menu then force it not display the Main Menu
+##             again  but simply regenerate the sub-menu and re-display it.
 ##            *Unfortunately I could not force it so once any selection in
 ##             the sub-menu is made, script flow exits to the Main Menu
 ##             which I found annoying.
@@ -212,9 +228,9 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##            *Script now has a fully extensible Main Menu with menu items
 ##             easily added in comment lines beginning with "##@".
 ##            *Script now has a fully extensible directory sub-menu with
-##             menu items easily added in comment lines beginning with "##@".
+##             menu items added in the comment lines starting with "##@".
 ##            *These scripts are together:
-##             mountup_lib_gui.lib provides functions used by other scripts.
+##             mountup_lib_gui.lib has functions used by other scripts.
 ##             mountup_update_gui.sh generates and updates mountup_gui.sh.
 ##             mountup_update_gui.sh is the actual Server Menu.
 ##
@@ -227,15 +243,19 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##
 ## 2016-02-09 *f_code_history_gui allow maximized textbox.
 ##
-## 2015-12-24 *f_mount_text added a mount command with no option -o password
+## 2015-12-24 *f_mount_text added mount command with no option -o password
 ##             for Raspberry Pi Model 1.
 ##
-## 2015-12-21 *f_mount_gui added a mount command with no option -o password
+## 2015-12-21 *f_mount_gui added mount command with no option -o password
 ##             for Raspberry Pi Model 1.
 ##
 ## 2015-12-01 *Created new script. Based this script on script, peapodup.sh
-##             which (dis)mounted one or more shared directories on a server.
-##            *(Dis)mount all shared directories of any given file-server.
+##             which (dis)mounted shared directories on a server.
+##            *(Dis)mount all shared directories on any given server.
+#
+# +------------------------------------+
+# |     Function f_display_common      |
+# +------------------------------------+
 #
 #     Rev: 2020-08-07
 #  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
@@ -249,10 +269,6 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 # PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
 #              THIS FUNCTION INTO ANY SCRIPT WHICH DEPENDS ON THE
 #              LIBRARY FILE "common_bash_function.lib".
-#
-# +-----------------------------------+
-# |     Function f_display_common     |
-# +-----------------------------------+
 #
 f_display_common () {
       #
@@ -391,7 +407,8 @@ f_download_library () { # Create and display the Main Menu.
          echo
          echo "Cannot continue, exiting program script."
          sleep 3
-         exit 1  # Exit with error.
+         # Exit with error.
+         exit 1
       fi
       #
       # Make downloaded file executable.
@@ -420,9 +437,11 @@ echo " *** Running script ***"
 echo "      $THIS_FILE"
 echo "Revision $VERSION"
 echo
-sleep 1  # pause for 3 seconds automatically.
+# pause for 1 second automatically.
+sleep 1
 #
-clear # Blank the screen.
+# Blank the screen.
+clear
 #
 # Invoke common BASH function library.
 FILE_DEPENDENCY="common_bash_function.lib"
@@ -448,7 +467,8 @@ else
            echo "Error with required file:"
            echo "\"$FILE_DEPENDENCY\""
            sleep 3
-           exit 1  # Exit with error.
+           # Exit with error.
+           exit 1
            ;;
    esac
    #
@@ -458,7 +478,7 @@ fi
 f_script_path
 #
 # Invoke any other libraries required for this script.
-for FILE_DEPENDENCY in mountup.lib mountup_servers.lib
+for FILE_DEPENDENCY in mountup.lib mountup_servers.lib # COMMENTED OUT, FOR USE BY DEVELOPMENT VERSION ONLY mountup_ver.lib 
     do
        if [ ! -x "$THIS_DIR/$FILE_DEPENDENCY" ] ; then
           f_message "text" "OK" "File Error"  "Error with required file:\n\"$THIS_DIR/$FILE_DEPENDENCY\"\n\n\Z1\ZbFile is missing or file is not executable.\n\n\ZnCannot continue, exiting program script." 3
@@ -469,21 +489,12 @@ for FILE_DEPENDENCY in mountup.lib mountup_servers.lib
        fi
     done
 #
-# Test for files required for this script.
-#for FILE_DEPENDENCY in FILE0 FILE1 FILE2
-#    do
-#       if [ ! -x "$FILE_DEPENDENCY" ] ; then
-#          f_message "text" "OK" "File Error"  "Error with required file:\n\"$FILE_DEPENDENCY\"\n\n\Z1\ZbFile is missing or file is not executable.\n\n\ZnCannot continue, exiting program script." 3
-#          echo
-#          f_abort text
-#       fi
-#    done
-#
 # Set Temporary file using $THIS_DIR from f_script_path.
 TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
 #
 # Test for Optional Arguments.
-f_arguments $1 $2 # Also sets variable GUI.
+# Also sets variable GUI.
+f_arguments $1 $2
 #
 # If command already specifies GUI, then do not detect GUI i.e. "bash mountup.sh dialog" or "bash mountup.sh whiptail".
 if [ -z $GUI ] ; then
@@ -503,13 +514,12 @@ f_test_environment
 #
 f_menu_main $GUI
 #
-#if [ -r $GENERATED_FILE ] ; then
-#   rm $GENERATED_FILE
-#fi
+# Blank the screen.
+clear
 #
-clear  # Blank the screen.
+exit 0
+# This cleanly closes the process generated by #!bin/bash. 
+# Otherwise every time this script is run, another instance of
+# process /bin/bash is created using up resources.
 #
-exit 0  # This cleanly closes the process generated by #!bin/bash. 
-        # Otherwise every time this script is run, another instance of
-        # process /bin/bash is created using up resources.
 # all dun dun noodles.
