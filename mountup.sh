@@ -1,9 +1,24 @@
 #!/bin/bash
 #
-# ©2020 Copyright 2020 Robert D. Chin
+# ©2021 Copyright 2021 Robert D. Chin
+# Email: RDevChin@Gmail.com
 #
 # Usage: bash mountup.sh
 #        (not sh mountup.sh)
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 # +----------------------------------------+
 # |            Main Menu Options           |
@@ -11,17 +26,19 @@
 #
 # Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or cammand>
 #
-#@@Exit#@@Exit to command-line prompt.#@@break
+#@@Exit#@@Exit this menu.#@@break
 #
-#@@Mount-Unmount#@@Mount/Unmount Server Mount-points.#@@f_menu_server^$GUI
+#@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_server^$GUI
 #
 #@@Show#@@Show mounted directories.#@@f_show_mount_points^$GUI
+#
+#@@File Managers#@@Manage files/folders#@@f_file_manager^$GUI
 #
 #@@About#@@Version information of this script.#@@f_about^$GUI
 #
 #@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
 #
-# COMMENTED OUT, FOR USE BY DEVELOPMENT VERSION ONLY #@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
+#@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
 #
 #@@Help#@@Display help message.#@@f_help_message^$GUI
 #
@@ -29,9 +46,64 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-12-09 20:23"
-THIS_FILE="$0"
+VERSION="2021-04-21 19:54"
+THIS_FILE=$(basename $0)
+FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
+GENERATED_FILE=$THIS_FILE"_menu_generated.lib"
+#
+#
+#================================================================
+# EDIT THE LINES BELOW TO SET REPOSITORY SERVERS AND DIRECTORIES
+# AND TO INCLUDE ALL DEPENDENT SCRIPTS AND LIBRARIES TO DOWNLOAD.
+#================================================================
+#
+#
+#--------------------------------------------------------------
+# Set variables to mount the Local Repository to a mount-point.
+#--------------------------------------------------------------
+#
+# LAN File Server shared directory.
+# SERVER_DIR="[FILE_SERVER_DIRECTORY_NAME_GOES_HERE]"
+  SERVER_DIR="//file_server/public"
+#
+# Local PC mount-point directory.
+# MP_DIR="[LOCAL_MOUNT-POINT_DIRECTORY_NAME_GOES_HERE]"
+  MP_DIR="/mnt/file_server/public"
+#
+# Local PC mount-point with LAN File Server Local Repository full directory path.
+# Example: 
+#                   File server shared directory is "//file_server/public".
+# Repostory directory under the shared directory is "scripts/BASH/Repository".
+#                 Local PC Mount-point directory is "/mnt/file_server/public".
+#
+# LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
+  LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
+#
+#
+#=================================================================
+# EDIT THE LINES BELOW TO SPECIFY THE FILE NAMES TO UPDATE.
+# FILE NAMES INCLUDE ALL DEPENDENT SCRIPTS LIBRARIES.
+#=================================================================
+#
+#
+# --------------------------------------------
+# Create a list of all dependent library files
+# and write to temporary file, FILE_LIST.
+# --------------------------------------------
+#
+# Temporary file FILE_LIST contains a list of file names of dependent
+# scripts and libraries.
+#
+FILE_LIST=$THIS_FILE"_file_temp.txt"
+#
+# Format: [File Name]^[Local/Web]^[Local repository directory]^[web repository directory]
+echo "mountup.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup.lib"                  > $FILE_LIST
+echo "mountup_servers.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup_servers.lib" >> $FILE_LIST
+echo "common_bash_function.lib^Web^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/BASH_function_library/master/"       >> $FILE_LIST
+#
+# Create a name for a temporary file which will have a list of files which need to be downloaded.
+FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #
 # +----------------------------------------+
 # |            Brief Description           |
@@ -48,39 +120,144 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 #& Format: <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>
 #&        /<Mount-point on local PC>
 #&
-#& Required scripts: mountup.lib.
+#& Required scripts: mountup.sh
+#&                   mountup.lib
+#&                   mountup_servers.lib
+#&                   common_bash_function.lib
 #&
 #& Usage: bash mountup.sh
 #&        (not sh mountup.sh)
 #&
-#& After each edit made, please update Code History and VERSION.
+#&    This program is free software: you can redistribute it and/or modify
+#&    it under the terms of the GNU General Public License as published by
+#&    the Free Software Foundation, either version 3 of the License, or
+#&    (at your option) any later version.
+#&
+#&
+#&    This program is distributed in the hope that it will be useful,
+#&    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#&    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#&    GNU General Public License for more details.
+#&
+#&    You should have received a copy of the GNU General Public License
+#&    along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 # +----------------------------------------+
 # |             Help and Usage             |
 # +----------------------------------------+
 #
-#? Usage: bash mountup.sh [OPTION]
+#? Usage: bash mountup.sh [OPTION(S)]
+#?
 #? Examples:
 #?
-#? bash mountup.sh dialog     # Use Dialog   user-interface
-#?                 whiptail   # Use Whiptail user-interface
+#?                            Force display to use a different UI.
+#? bash mountup.sh text       Use Cmd-line user-interface (80x24 minimum).
+#?                 dialog     Use Dialog   user-interface.
+#?                 whiptail   Use Whiptail user-interface.
 #?
-#? bash mountup.sh --help     # Displays this help message.
+#? bash mountup.sh --help     Displays this help message.
 #?                 -?
 #?
-#? bash mountup.sh --about    # Displays script version.
+#? bash mountup.sh --about    Displays script version.
 #?                 --version
 #?                 --ver
 #?                 -v
 #?
-#? bash mountup.sh --history  # Displays script code history.
+#? bash mountup.sh --history  Displays script code history.
 #?                 --hist
+#?
+#? Examples using 2 arguments:
+#?
+#? bash mountup.sh --hist text
+#?                 --ver dialog
+#
+# +----------------------------------------+
+# |                Code Notes              |
+# +----------------------------------------+
+#
+# To disable the [ OPTION ] --update -u to update the script:
+#    1) Comment out the call to function fdl_download_missing_scripts in
+#       Section "Start of Main Program".
+#
+# To completely delete the [ OPTION ] --update -u to update the script:
+#    1) Delete the call to function fdl_download_missing_scripts in
+#       Section "Start of Main Program".
+#    2) Delete all functions beginning with "f_dl"
+#    3) Delete instructions to update script in Section "Help and Usage".
+#
+# To disable the Main Menu:
+#    1) Comment out the call to function f_menu_main under "Run Main Code"
+#       in Section "Start of Main Program".
+#    2) Add calls to desired functions under "Run Main Code"
+#       in Section "Start of Main Program".
+#
+# To completely remove the Main Menu and its code:
+#    1) Delete the call to function f_menu_main under "Run Main Code" in
+#       Section "Start of Main Program".
+#    2) Add calls to desired functions under "Run Main Code"
+#       in Section "Start of Main Program".
+#    3) Delete the function f_menu_main.
+#    4) Delete "Menu Choice Options" in this script located under
+#       Section "Customize Menu choice options below".
+#       The "Menu Choice Options" lines begin with "#@@".
 #
 # +----------------------------------------+
 # |           Code Change History          |
 # +----------------------------------------+
 #
 ## Code Change History
+##
+## (After each edit made, please update Code History and VERSION.)
+##
+## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2021-04-21 *Section "Default Variable Values" added GitHub repository
+##             URLs for this project.
+##
+## 2021-04-18 *f_run_app added to run application "mc" or any app you want.
+##            *Section "Main Menu Options" added "File Managers".
+##            *f_file_manager, f_install_app added.
+##
+## 2021-04-01 *Section "Code Notes" added. Improved comments.
+##
+## 2021-03-28 *Comment cleanup. Move the appended comments to start on the
+##             previous line to improve readability.
+##
+## 2021-03-25 *f_check_version updated to add a second optional argument.
+##             so a single copy in dropfsd_module_main.lib can replace the
+##             customized versions in fsds.sh, and fsdt.sh.
+##             Rewrote to eliminate comparing the version of a hard-coded
+##             script or file name in favor of passing any script or file
+##             name as an argument whose version is then compared to
+##             determine whether or not to upgrade.
+##            *Section "Main Program" detect UI before detecting arguments.
+##            *Comment cleanup. Move the appended comments to start on the
+##             previous line to improve readability.
+##            *fdl_source bug ERROR not initialized fixed.
+##            *Section "Default Variable Values" defined FILE_TO_COMPARE and
+##             defined THIS_FILE=$(basename $0) to reduce maintenance.
+##
+## 2021-03-12 *Updated to latest standards and improved comments.
+##            *fdl_download_missing_scripts added 2 arguments for file names
+##             as arguments.
+##
+## 2021-02-13 *Changed menu item wording from "Exit to command-line" prompt.
+##                                         to "Exit this menu."
+##
+## 2021-02-09 *Updated to latest standards.
+##
+## 2021-01-20 *Main added functionality to download any dependent file or
+##             library from this script.
+##            *f_choose_dl_source, f_source, f_choose_download_source, 
+##             f_dwnld_library_from_local_repository, f_mount_local,
+##             f_dwnld_library_from_web_site, added to give user a choice
+##             between downloading file and library dependencies from a
+##             local or a web repository when missing or need updating.
+##             These functions use CLI text UI (no Dialog or Whiptail)
+##             since they download common_bash_function.lib which provides.
+##             Dialog and Whiptail UI support.
+##
+## 2021-01-19 *f_check_version updated to latest standards.
 ##
 ## 2020-12-08 *Updated to latest standards for format of comments.
 ##            *f_mount_or_dismount_all rewrote username-password section
@@ -96,12 +273,11 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 ##            *f_mount1 was renamed from f_mount which had the same name
 ##             as a different function in common_bash_function.lib.
 ##
-## 2020-09-28 *Pick Menu added new entry in developer's version.
+## 2020-09-28 *Pick Menu added new entry "jw.org".
 ##
 ## 2020-09-15 *f_check_version added to compare and update version of this
-##             script if necessary in developer's version.
-##             *Main Menu added new entry "Version Update" in developer's
-##              version.
+##             script if necessary.
+##             *Main Menu added new entry "Version Update". 
 ##
 ## 2020-09-09 *Updated to latest standards.
 ##
@@ -257,8 +433,8 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 # |     Function f_display_common      |
 # +------------------------------------+
 #
-#     Rev: 2020-08-07
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
+#     Rev: 2021-03-25
+#  Inputs: $1=UI - "text", "dialog" or "whiptail" the preferred user-interface.
 #          $2=Delimiter of text to be displayed.
 #          $3="NOK", "OK", or null [OPTIONAL] to control display of "OK" button.
 #          $4=Pause $4 seconds [OPTIONAL]. If "NOK" then pause to allow text to be read.
@@ -266,9 +442,9 @@ TEMP_FILE=$THIS_FILE"_temp.txt"
 #    Uses: X.
 # Outputs: None.
 #
-# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
-#              THIS FUNCTION INTO ANY SCRIPT WHICH DEPENDS ON THE
-#              LIBRARY FILE "common_bash_function.lib".
+# Summary: Display lines of text beginning with a given comment delimiter.
+#
+# Dependencies: f_message.
 #
 f_display_common () {
       #
@@ -279,13 +455,15 @@ f_display_common () {
       # For that reason, all library files now have the line
       # THIS_FILE="[LIBRARY_FILE.lib]" deleted.
       #
+      #
       #================================================================================
-      # EDIT THE LINE BELOW TO DEFINE $THIS_FILE AS THE ACTUAL FILE NAME WHERE THE 
+      # EDIT THE LINE BELOW TO DEFINE $THIS_FILE AS THE ACTUAL FILE NAME WHERE THE
       # ABOUT, CODE HISTORY, AND HELP MESSAGE TEXT IS LOCATED.
       #================================================================================
-                                           #
+      #
+      #
       THIS_FILE="mountup.sh"  # <<<--- INSERT ACTUAL FILE NAME HERE.
-                                           #
+      #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
       #
       # Set $VERSION according as it is set in the beginning of $THIS_FILE.
@@ -300,7 +478,7 @@ f_display_common () {
       # Display text (all lines beginning ("^") with $2 but do not print $2).
       # sed substitutes null for $2 at the beginning of each line
       # so it is not printed.
-      sed -n "s/$2//"p $THIS_DIR/$THIS_FILE >> $TEMP_FILE
+      sed --silent "s/$2//p" $THIS_DIR/$THIS_FILE >> $TEMP_FILE
       #
       case $3 in
            "NOK" | "nok")
@@ -317,17 +495,21 @@ f_display_common () {
 # |          Function f_menu_main          |
 # +----------------------------------------+
 #
-#     Rev: 2020-09-18
-#  Inputs: $1=GUI.
+#     Rev: 2021-03-07
+#  Inputs: $1 - "text", "dialog" or "whiptail" the preferred user-interface.
 #    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
 # Outputs: None.
 #
-# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
-#              THIS FUNCTION INTO THE MAIN SCRIPT WHICH WILL CALL IT.
+# Summary: Display Main-Menu.
+#          This Main Menu function checks its script for the Main Menu
+#          options delimited by "#@@" and if it does not find any, then
+#          it it defaults to the specified library script.
 #
-f_menu_main () { # Create and display the Main Menu.
+# Dependencies: f_menu_arrays, f_create_show_menu.
+#
+f_menu_main () {
       #
-      THIS_FILE="mountup.sh"
+      # Create and display the Main Menu.
       GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_generated.lib"
       #
       # Does this file have menu items in the comment lines starting with "#@@"?
@@ -346,13 +528,16 @@ f_menu_main () { # Create and display the Main Menu.
          ARRAY_FILE="$GENERATED_FILE"
       else
          #
+         #
          #================================================================================
          # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME (LIBRARY)
          # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
          #================================================================================
          #
+         #
          # Specify library file name with menu item data.
-         ARRAY_FILE="[FILENAME_GOES_HERE]"
+         # ARRAY_FILE="[FILENAME_GOES_HERE]"
+           ARRAY_FILE="$THIS_DIR/mountup_dummy_file.lib"
       fi
       #
       # Create arrays from data.
@@ -368,7 +553,7 @@ f_menu_main () { # Create and display the Main Menu.
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Mountup_Main_Menu"  # Menu title must substitute underscores for spaces
+      MENU_TITLE="Mount/Dismount_Menu"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_main_temp.txt"
       #
       f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
@@ -384,58 +569,421 @@ f_menu_main () { # Create and display the Main Menu.
 } # End of function f_menu_main.
 #
 # +----------------------------------------+
-# |       Function f_download_library      |
+# |  Function fdl_dwnld_file_from_web_site |
 # +----------------------------------------+
 #
-#     Rev: 2020-06-23
+#     Rev: 2021-03-08
 #  Inputs: $1=GitHub Repository
 #          $2=file name to download.
-#    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
+#    Uses: None.
 # Outputs: None.
 #
-# PLEASE NOTE: This function needs to be inserted into each script
-#              which depends on the library "common_bash_function.lib".
+# Summary: Download a list of file names from a web site.
+#          Cannot be dependent on "common_bash_function.lib" as this library
+#          may not yet be available and may need to be downloaded.
 #
-f_download_library () { # Create and display the Main Menu.
+# Dependencies: wget.
+#
+#
+fdl_dwnld_file_from_web_site () {
       #
+      # $1 ends with a slash "/" so can append $2 immediately after $1.
+      echo
+      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<"
+      echo ">>> Download file from Web Repository <<<"
+      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<"
+      echo
       wget --show-progress $1$2
       ERROR=$?
       if [ $ERROR -ne 0 ] ; then
-         echo
-         echo "!!! wget download failed !!!"
-         echo "from GitHub.com for file: $2"
-         echo
-         echo "Cannot continue, exiting program script."
-         sleep 3
-         # Exit with error.
-         exit 1
+            echo
+            echo ">>>>>>>>>>>>>><<<<<<<<<<<<<<"
+            echo ">>> wget download failed <<<"
+            echo ">>>>>>>>>>>>>><<<<<<<<<<<<<<"
+            echo
+            echo "Error copying from Web Repository file: \"$2.\""
+            echo
+      else
+         # Make file executable (useable).
+         chmod +x $2
+         #
+         if [ -x $2 ] ; then
+            # File is good.
+            ERROR=0
+         else
+            echo
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo ">>> File Error after download from Web Repository <<<"
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo
+            echo "$2 is missing or file is not executable."
+            echo
+         fi
       fi
       #
       # Make downloaded file executable.
       chmod 755 $2
       #
-      echo
-      echo ">>> Please run program again after download. <<<"
-      echo 
-      # Delay to read messages on screen.
-      echo -n "Press \"Enter\" key to continue" ; read X
-      exit 0
-      #
-} # End of function f_download_library.
+} # End of function fdl_dwnld_file_from_web_site.
 #
+# +-----------------------------------------------+
+# | Function fdl_dwnld_file_from_local_repository |
+# +-----------------------------------------------+
+#
+#     Rev: 2021-03-08
+#  Inputs: $1=Local Repository Directory.
+#          $2=File to download.
+#    Uses: TEMP_FILE.
+# Outputs: ERROR.
+#
+# Summary: Copy a file from the local repository on the LAN file server.
+#          Cannot be dependent on "common_bash_function.lib" as this library
+#          may not yet be available and may need to be downloaded.
+#
+# Dependencies: None.
+#
+fdl_dwnld_file_from_local_repository () {
+      #
+      echo
+      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<"
+      echo ">>> File Copy from Local Repository <<<"
+      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<"
+      echo
+      eval cp -p $1/$2 .
+      ERROR=$?
+      #
+      if [ $ERROR -ne 0 ] ; then
+         echo
+         echo ">>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"
+         echo ">>> File Copy Error from Local Repository <<<"
+         echo ">>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"
+         echo
+         echo -e "Error copying from Local Repository file: \"$2.\""
+         echo
+         ERROR=1
+      else
+         # Make file executable (useable).
+         chmod +x $2
+         #
+         if [ -x $2 ] ; then
+            # File is good.
+            ERROR=0
+         else
+            echo
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo ">>> File Error after copy from Local Repository <<<"
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo
+            echo -e "File \"$2\" is missing or file is not executable."
+            echo
+            ERROR=1
+         fi
+      fi
+      #
+      if [ $ERROR -eq 0 ] ; then
+         echo
+         echo -e "Successful Update of file \"$2\" to latest version.\n\nScript must be re-started to use the latest version."
+         echo "____________________________________________________"
+      fi
+      #
+} # End of function fdl_dwnld_file_from_local_repository.
+#
+# +-------------------------------------+
+# |       Function fdl_mount_local      |
+# +-------------------------------------+
+#
+#     Rev: 2021-03-10
+#  Inputs: $1=Server Directory.
+#          $2=Local Mount Point Directory
+#          TEMP_FILE
+#    Uses: TARGET_DIR, UPDATE_FILE, ERROR, SMBUSER, PASSWORD.
+# Outputs: ERROR.
+#
+# Summary: Mount directory using Samba and CIFS and echo error message.
+#          Cannot be dependent on "common_bash_function.lib" as this library
+#          may not yet be available and may need to be downloaded.
+#
+# Dependencies: Software package "cifs-utils" in the Distro's Repository.
+#
+fdl_mount_local () {
+      #
+      # Mount local repository on mount-point.
+      # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
+      mountpoint $2 >/dev/null 2>$TEMP_FILE
+      ERROR=$?
+      if [ $ERROR -ne 0 ] ; then
+         # Mount directory.
+         # Cannot use any user prompted read answers if this function is in a loop where file is a loop input.
+         # The read statements will be treated as the next null parameters in the loop without user input.
+         # To solve this problem, specify input from /dev/tty "the keyboard".
+         #
+         echo
+         read -p "Enter user name: " SMBUSER < /dev/tty
+         echo
+         read -s -p "Enter Password: " PASSWORD < /dev/tty
+         echo sudo mount -t cifs $1 $2
+         sudo mount -t cifs -o username="$SMBUSER" -o password="$PASSWORD" $1 $2
+         #
+         # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
+         mountpoint $2 >/dev/null 2>$TEMP_FILE
+         ERROR=$?
+         #
+         if [ $ERROR -ne 0 ] ; then
+            echo
+            echo ">>>>>>>>>><<<<<<<<<<<"
+            echo ">>> Mount failure <<<"
+            echo ">>>>>>>>>><<<<<<<<<<<"
+            echo
+            echo -e "Directory mount-point \"$2\" is not mounted."
+            echo
+            echo -e "Mount using Samba failed. Are \"samba\" and \"cifs-utils\" installed?"
+            echo "------------------------------------------------------------------------"
+            echo
+         fi
+         unset SMBUSER PASSWORD
+      fi
+      #
+} # End of function fdl_mount_local.
+#
+# +------------------------------------+
+# |        Function fdl_source         |
+# +------------------------------------+
+#
+#     Rev: 2021-03-25
+#  Inputs: $1=File name to source.
+# Outputs: ERROR.
+#
+# Summary: Source the provided library file and echo error message.
+#          Cannot be dependent on "common_bash_function.lib" as this library
+#          may not yet be available and may need to be downloaded.
+#
+# Dependencies: None.
+#
+fdl_source () {
+      #
+      # Initialize ERROR.
+      ERROR=0
+      #
+      if [ -x "$1" ] ; then
+         # If $1 is a library, then source it.
+         case $1 in
+              *.lib)
+                 source $1
+                 ERROR=$?
+                 #
+                 if [ $ERROR -ne 0 ] ; then
+                    echo
+                    echo ">>>>>>>>>><<<<<<<<<<<"
+                    echo ">>> Library Error <<<"
+                    echo ">>>>>>>>>><<<<<<<<<<<"
+                    echo
+                    echo -e "$1 cannot be sourced using command:\n\"source $1\""
+                    echo
+                 fi
+              ;;
+         esac
+         #
+      fi
+      #
+} # End of function fdl_source.
+#
+# +----------------------------------------+
+# |  Function fdl_download_missing_scripts |
+# +----------------------------------------+
+#
+#     Rev: 2021-03-11
+#  Inputs: $1 - File containing a list of all file dependencies.
+#          $2 - File name of generated list of missing file dependencies.
+# Outputs: ANS.
+#
+# Summary: This function can be used when script is first run.
+#          It verifies that all dependencies are satisfied. 
+#          If any are missing, then any missing required dependencies of
+#          scripts and libraries are downloaded from a LAN repository or
+#          from a repository on the Internet.
+#
+#          This function allows this single script to be copied to any
+#          directory and then when it is executed or run, it will download
+#          automatically all other needed files and libraries, set them to be
+#          executable, and source the required libraries.
+#          
+#          Cannot be dependent on "common_bash_function.lib" as this library
+#          may not yet be available and may need to be downloaded.
+#
+# Dependencies: None.
+#
+fdl_download_missing_scripts () {
+      #
+      # Delete any existing temp file.
+      if [ -r  $2 ] ; then
+         rm  $2
+      fi
+      #
+      # ****************************************************
+      # Create new list of files that need to be downloaded.
+      # ****************************************************
+      #
+      # While-loop will read the file names listed in FILE_LIST (list of
+      # script and library files) and detect which are missing and need 
+      # to be downloaded and then put those file names in FILE_DL_LIST.
+      #
+      while read LINE
+            do
+               FILE=$(echo $LINE | awk -F "^" '{ print $1 }')
+               if [ ! -x $FILE ] ; then
+                  # File needs to be downloaded or is not executable.
+                  # Write any error messages to file $TEMP_FILE.
+                  chmod +x $FILE 2>$TEMP_FILE
+                  ERROR=$?
+                  #
+                  if [ $ERROR -ne 0 ] ; then
+                     # File needs to be downloaded. Add file name to a file list in a text file.
+                     # Build list of files to download.
+                     echo $LINE >> $2
+                  fi
+               fi
+            done < $1
+      #
+      # If there are files to download (listed in FILE_DL_LIST), then mount local repository.
+      if [ -s "$2" ] ; then
+         echo
+         echo "There are missing file dependencies which must be downloaded from"
+         echo "the local repository or web repository."
+         echo
+         echo "Missing files:"
+         while read LINE
+               do
+                  echo $LINE | awk -F "^" '{ print $1 }'
+               done < $2
+         echo
+         echo "You will need to present credentials."
+         echo
+         echo -n "Press '"Enter"' key to continue." ; read X ; unset X
+         #
+         #----------------------------------------------------------------------------------------------
+         # From list of files to download created above $FILE_DL_LIST, download the files one at a time.
+         #----------------------------------------------------------------------------------------------
+         #
+         while read LINE
+               do
+                  # Get Download Source for each file.
+                  DL_FILE=$(echo $LINE | awk -F "^" '{ print $1 }')
+                  DL_SOURCE=$(echo $LINE | awk -F "^" '{ print $2 }')
+                  TARGET_DIR=$(echo $LINE | awk -F "^" '{ print $3 }')
+                  DL_REPOSITORY=$(echo $LINE | awk -F "^" '{ print $4 }')
+                  #
+                  # Initialize Error Flag.
+                  ERROR=0
+                  #
+                  # If a file only found in the Local Repository has source changed
+                  # to "Web" because LAN connectivity has failed, then do not download.
+                  if [ -z DL_REPOSITORY ] && [ $DL_SOURCE = "Web" ] ; then
+                     ERROR=1
+                  fi
+                  #
+                  case $DL_SOURCE in
+                       Local)
+                          # Download from Local Repository on LAN File Server.
+                          # Are LAN File Server directories available on Local Mount-point?
+                          fdl_mount_local $SERVER_DIR $MP_DIR
+                          #
+                          if [ $ERROR -ne 0 ] ; then
+                             # Failed to mount LAN File Server directory on Local Mount-point.
+                             # So download from Web Repository.
+                             fdl_dwnld_file_from_web_site $DL_REPOSITORY $DL_FILE
+                          else
+                             # Sucessful mount of LAN File Server directory. 
+                             # Continue with download from Local Repository on LAN File Server.
+                             fdl_dwnld_file_from_local_repository $TARGET_DIR $DL_FILE
+                             #
+                             if [ $ERROR -ne 0 ] ; then
+                                # Failed to download from Local Repository on LAN File Server.
+                                # So download from Web Repository.
+                                fdl_dwnld_file_from_web_site $DL_REPOSITORY $DL_FILE
+                             fi
+                          fi
+                       ;;
+                       Web)
+                          # Download from Web Repository.
+                          fdl_dwnld_file_from_web_site $DL_REPOSITORY $DL_FILE
+                          if [ $ERROR -ne 0 ] ; then
+                             # Failed so mount LAN File Server directory on Local Mount-point.
+                             fdl_mount_local $SERVER_DIR $MP_DIR
+                             #
+                             if [ $ERROR -eq 0 ] ; then
+                                # Successful mount of LAN File Server directory.
+                                # Continue with download from Local Repository on LAN File Server.
+                                fdl_dwnld_file_from_local_repository $TARGET_DIR $DL_FILE
+                             fi
+                          fi
+                       ;;
+                  esac
+               done < $2
+         #
+         if [ $ERROR -ne 0 ] ; then
+            echo
+            echo
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo ">>> Download failed. Cannot continue, exiting program. <<<"
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo
+         else
+            echo
+            echo
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo ">>> Download is good. Re-run required, exiting program. <<<"
+            echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo
+         fi
+         #
+      fi
+      #
+      # Source each library.
+      #
+      while read LINE
+            do
+               FILE=$(echo $LINE | awk -F "^" '{ print $1 }')
+               # Invoke any library files.
+               fdl_source $FILE
+               if [ $ERROR -ne 0 ] ; then
+                  echo
+                  echo ">>>>>>>>>><<<<<<<<<<<"
+                  echo ">>> Library Error <<<"
+                  echo ">>>>>>>>>><<<<<<<<<<<"
+                  echo
+                  echo -e "$1 cannot be sourced using command:\n\"source $1\""
+                  echo
+               fi
+            done < $1
+      if [ $ERROR -ne 0 ] ; then
+         echo
+         echo
+         echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+         echo ">>> Invoking Libraries failed. Cannot continue, exiting program. <<<"
+         echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+         echo
+      fi
+      #
+} # End of function fdl_download_missing_scripts.
+#
+#
+# **************************************
 # **************************************
 # ***     Start of Main Program      ***
 # **************************************
+# **************************************
+#     Rev: 2021-03-11
+#
 #
 if [ -e $TEMP_FILE ] ; then
    rm $TEMP_FILE
 fi
 #
-clear  # Blank the screen.
+# Blank the screen.
+clear
 #
-echo " *** Running script ***" 
-echo "      $THIS_FILE"
-echo "Revision $VERSION"
+echo "Running script $THIS_FILE"
+echo "***   Rev. $VERSION   ***"
 echo
 # pause for 1 second automatically.
 sleep 1
@@ -443,83 +991,119 @@ sleep 1
 # Blank the screen.
 clear
 #
-# Invoke common BASH function library.
-FILE_DEPENDENCY="common_bash_function.lib"
-if [ -x "$FILE_DEPENDENCY" ] ; then
-   source $FILE_DEPENDENCY
-else
-   echo "File Error"
-   echo
-   echo "Error with required file:"
-   echo "\"$FILE_DEPENDENCY\""
-   echo
-   echo "File is missing or file is not executable."
-   echo
-   echo "Do you want to download the file: $FILE_DEPENDENCY"
-   echo -n "from GitHub.com? (Y/n): " ; read ANS
-   case $2 in
-        "" | [Yy] | [Yy][Ee][Ss])
-           f_download_library "https://raw.githubusercontent.com/rdchin/BASH_function_library/master/" "common_bash_function.lib"
-           ;;
-        *)
-           echo
-           echo "Cannot continue, exiting program script."
-           echo "Error with required file:"
-           echo "\"$FILE_DEPENDENCY\""
-           sleep 3
-           # Exit with error.
-           exit 1
-           ;;
-   esac
+#-------------------------------------------------------
+# Detect and download any missing scripts and libraries.
+#-------------------------------------------------------
+#
+#----------------------------------------------------------------
+# Variables FILE_LIST and FILE_DL_LIST are defined in the section
+# "Default Variable Values" at the beginning of this script.
+#----------------------------------------------------------------
+#
+# Are any files/libraries missing?
+fdl_download_missing_scripts $FILE_LIST $FILE_DL_LIST
+#
+# Are there any problems with the download/copy of missing scripts?
+if [ -r  $FILE_DL_LIST ] || [ $ERROR -ne 0 ] ; then
+   # Yes, there were missing files or download/copy problems so exit program.
    #
+   # Delete temporary files.
+   if [ -e $TEMP_FILE ] ; then
+      rm $TEMP_FILE
+   fi
+   #
+   if [ -r  $FILE_LIST ] ; then
+      rm  $FILE_LIST
+   fi
+   #
+   if [ -r  $FILE_DL_LIST ] ; then
+      rm  $FILE_DL_LIST
+   fi
+   #
+   exit 0  # This cleanly closes the process generated by #!bin/bash.
+           # Otherwise every time this script is run, another instance of
+           # process /bin/bash is created using up resources.
 fi
+#
+#***************************************************************
+# Process Any Optional Arguments and Set Variables THIS_DIR, GUI
+#***************************************************************
 #
 # Set THIS_DIR, SCRIPT_PATH to directory path of script.
 f_script_path
 #
-# Invoke any other libraries required for this script.
-for FILE_DEPENDENCY in mountup.lib mountup_servers.lib # COMMENTED OUT, FOR USE BY DEVELOPMENT VERSION ONLY mountup_ver.lib 
-    do
-       if [ ! -x "$THIS_DIR/$FILE_DEPENDENCY" ] ; then
-          f_message "text" "OK" "File Error"  "Error with required file:\n\"$THIS_DIR/$FILE_DEPENDENCY\"\n\n\Z1\ZbFile is missing or file is not executable.\n\n\ZnCannot continue, exiting program script." 3
-          echo
-          f_abort text
-       else
-          source "$THIS_DIR/$FILE_DEPENDENCY"
-       fi
-    done
-#
 # Set Temporary file using $THIS_DIR from f_script_path.
 TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
 #
-# Test for Optional Arguments.
-# Also sets variable GUI.
-f_arguments $1 $2
-#
-# If command already specifies GUI, then do not detect GUI i.e. "bash mountup.sh dialog" or "bash mountup.sh whiptail".
+# If command already specifies GUI, then do not detect GUI.
+# i.e. "bash dropfsd.sh dialog" or "bash dropfsd.sh text".
 if [ -z $GUI ] ; then
    # Test for GUI (Whiptail or Dialog) or pure text environment.
    f_detect_ui
 fi
 #
-# Show Brief Description message.
-f_about $GUI "NOK" 1
-#
+# Final Check of Environment
 #GUI="whiptail"  # Diagnostic line.
 #GUI="dialog"    # Diagnostic line.
 #GUI="text"      # Diagnostic line.
 #
+# Test for Optional Arguments.
+# Also sets variable GUI.
+f_arguments $1 $2
+#
+# Delete temporary files.
+if [ -r  $FILE_LIST ] ; then
+   rm  $FILE_LIST
+fi
+#
+if [ -r  $FILE_DL_LIST ] ; then
+   rm  $FILE_DL_LIST
+fi
+#
+# Test for X-Windows environment. Cannot run in CLI for LibreOffice.
+# if [ x$DISPLAY = x ] ; then
+#    f_message text "OK" "\Z1\ZbCannot run LibreOffice without an X-Windows environment.\ni.e. LibreOffice must run in a terminal emulator in an X-Window.\Zn"
+# fi
+#
 # Test for BASH environment.
-f_test_environment
+f_test_environment $1
+#
+# If an error occurs, the f_abort() function will be called.
+# trap 'f_abort' 0
+# set -e
+#
+#********************************
+# Show Brief Description message.
+#********************************
+#
+f_about $GUI "NOK" 1
+#
+#***************
+# Run Main Code.
+#***************
 #
 f_menu_main $GUI
 #
+# Delete temporary files.
+#
+if [ -e $TEMP_FILE ] ; then
+   rm $TEMP_FILE
+fi
+#
+if [ -e  $FILE_LIST ] ; then
+   rm  $FILE_LIST
+fi
+#
+if [ -e  $FILE_DL_LIST ] ; then
+   rm  $FILE_DL_LIST
+fi
+#
+# Nicer ending especially if you chose custom colors for this script.
 # Blank the screen.
 clear
 #
-exit 0
-# This cleanly closes the process generated by #!bin/bash. 
-# Otherwise every time this script is run, another instance of
-# process /bin/bash is created using up resources.
-#
-# all dun dun noodles.
+exit 0  # This cleanly closes the process generated by #!bin/bash.
+        # Otherwise every time this script is run, another instance of
+        # process /bin/bash is created using up resources.
+        #
+# All dun dun noodles.

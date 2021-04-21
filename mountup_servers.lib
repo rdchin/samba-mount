@@ -1,9 +1,70 @@
 #!/bin/bash
 #
-# ©2020 Copyright 2020 Robert D. Chin
+# ©2021 Copyright 2021 Robert D. Chin
+# Email: RDevChin@Gmail.com
 #
-# Usage: bash mountup.sh
-#        (not sh mountup.sh)
+# Usage: source mountup_servers.lib
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |        Default Variable Values         |
+# +----------------------------------------+
+#
+VERSION="2021-04-21 19:54"
+#
+# Commented out THIS_FILE since it will conflict other scripts which
+# use this library.
+#THIS_FILE=$(basename $0)
+#
+# +----------------------------------------+
+# |            Brief Description           |
+# +----------------------------------------+
+#
+#& Brief Description
+#&
+#& Library of BASH functions, mountup_servers.lib is a child dependency
+#& used by the following scripts.
+#&
+#& Parent script: mountup.sh.
+#&
+#& See script mountup.sh for Edit History.
+#&
+#& Usage: source mountup_servers.lib
+#&
+#&    This program is free software: you can redistribute it and/or modify
+#&    it under the terms of the GNU General Public License as published by
+#&    the Free Software Foundation, either version 3 of the License, or
+#&    (at your option) any later version.
+#&
+#&
+#&    This program is distributed in the hope that it will be useful,
+#&    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#&    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#&    GNU General Public License for more details.
+#&
+#&    You should have received a copy of the GNU General Public License
+#&    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |           Code Change History          |
+# +----------------------------------------+
+#
+## Code Change History
+##
+## (Please see script "mountup.sh" for Code History information.)
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
@@ -33,24 +94,29 @@
 #
 # Format: <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-#@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
-#@#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
+# #@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
+# #@#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
 #
-#@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
+# #@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
 #
-#@#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
+# #@#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
 #
-#@#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
+# #@#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
 #
-#@#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
+# #@#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
 #
-#@#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
-#@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
+# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
 #
-#@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+# #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
 #
 # Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
+#
+#@#//scotty/files#@#/mnt/scotty/files#@#Scotty Server - Restricted shared files.
+#@#//scotty/public-no-backup#@#/mnt/scotty/public-no-backup#@#Scotty Server - Publicly shared files not backed-up.
+#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
+#@#//scotty/jw.org#@#/mnt/scotty/jw.org#@#Scotty Server - JW.org files.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -76,7 +142,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2020-12-09 20:23"
+VERSION="2021-02-09 00:32"
 #
 #@ Brief Description
 #@

@@ -1,9 +1,70 @@
 #!/bin/bash
 #
-# ©2020 Copyright 2020 Robert D. Chin
+# ©2021 Copyright 2021 Robert D. Chin
+# Email: RDevChin@Gmail.com
 #
-# Usage: bash mountup.sh
-#        (not sh mountup.sh)
+# Usage: source mountup.lib
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |        Default Variable Values         |
+# +----------------------------------------+
+#
+VERSION="2021-04-21 19:54"
+#
+# Commented out THIS_FILE since it will conflict other scripts which
+# use this library.
+#THIS_FILE=$(basename $0)
+#
+# +----------------------------------------+
+# |            Brief Description           |
+# +----------------------------------------+
+#
+#& Brief Description
+#&
+#& Library of BASH functions, mountup.lib is a child dependency
+#& used by the following scripts.
+#&
+#& Parent script: mountup.sh.
+#&
+#& See script mountup.sh for Edit History.
+#&
+#& Usage: source mountup.lib
+#&
+#&    This program is free software: you can redistribute it and/or modify
+#&    it under the terms of the GNU General Public License as published by
+#&    the Free Software Foundation, either version 3 of the License, or
+#&    (at your option) any later version.
+#&
+#&
+#&    This program is distributed in the hope that it will be useful,
+#&    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#&    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#&    GNU General Public License for more details.
+#&
+#&    You should have received a copy of the GNU General Public License
+#&    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |           Code Change History          |
+# +----------------------------------------+
+#
+## Code Change History
+##
+## (Please see script "mountup.sh" for Code History information.)
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
@@ -12,26 +73,98 @@
 # +--------------------------------------------------------------------------+
 #
 #@@Exit#@@Return to previous menu.#@@break
-#@@hansolo#@@Hansolo Server publicly shared files.#@@f_menu_action^$GUI^hansolo
-#@@chewbacca#@@Chewbacca Server shared photos.#@@f_menu_action^$GUI^chewbacca
-#@@luke#@@Luke Server shared school files.#@@f_menu_action^$GUI^luke
-#@@leia#@@Leia Server shared music.#@@f_menu_action^$GUI^leia
-#@@yoda#@@Yoda Server shared department files.#@@f_menu_action^$GUI^yoda
-#@@r2d2#@@R2D2 Server shared geek stuff.#@@f_menu_action^$GUI^r2d2
-#@@c3po#@@C3PO Server shared Reference Library.#@@f_menu_action^$GUI^c3po
+#@@Scotty#@@Scotty back-up file server.#@@f_menu_action^$GUI^scotty
+#@@Parsley#@@Parsley file server.#@@f_menu_action^$GUI^parsley
 #
 # +----------------------------------------+
-# |        Default Variable Values         |
+# |        Function f_check_version        |
 # +----------------------------------------+
 #
-VERSION="2020-12-09 20:23"
+#     Rev: 2021-03-25
+#  Inputs: $1 - UI "dialog" or "whiptail" or "text".
+#          $2 - [OPTIONAL] File name to compare.
+#          FILE_TO_COMPARE.
+#    Uses: SERVER_DIR, MP_DIR, TARGET_DIR, TARGET_FILE, VERSION, TEMP_FILE, ERROR.
+# Outputs: ERROR.
 #
-#@ Brief Description
-#@
-#@ Library of functions, mountup.lib contains the Main Menu functions
-#@ used by script mountup.sh.
-#@
-#@ See script mountup.sh for Edit History.
+# Summary: Check the version of a single, local file or script,
+#          FILE_TO_COMPARE with the version of repository file.
+#          If the repository file has latest version, then copy all 
+#          dependent files and libraries from the repository to local PC.
+#
+# TO DO enhancement: If local (LAN) repository is unavailable, then
+#          connect to repository on the web if available.
+#
+# Dependencies: f_version_compare.
+#
+f_check_version () {
+      #
+      #
+      #=================================================================
+      # EDIT THE LINES BELOW TO DEFINE THE LAN FILE SERVER DIRECTORY,
+      # LOCAL MOUNTPOINT DIRECTORY, LOCAL REPOSITORY DIRECTORY AND
+      # FILE TO COMPARE BETWEEN THE LOCAL PC AND (LAN) LOCAL REPOSITORY.
+      #=================================================================
+      #
+      #
+      # LAN File Server shared directory.
+      # SERVER_DIR="[FILE_SERVER_DIRECTORY_NAME_GOES_HERE]"
+        SERVER_DIR="//file_server/public"
+      #
+      # Local PC mount-point directory.
+      # MP_DIR="[LOCAL_MOUNT-POINT_DIRECTORY_NAME_GOES_HERE]"
+        MP_DIR="/mnt/file_server/public"
+      #
+      # Local PC mount-point with LAN File Server Local Repository full directory path.
+      # Example: 
+      #                   File server shared directory is "//file_server/public".
+      # Repository directory under the shared directory is "scripts/BASH/Repository".
+      #                 Local PC Mount-point directory is "/mnt/file_server/public".
+      #
+      # Local PC mount-point with LAN File Server Local Repository full directory path.
+      # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
+        LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
+      #
+      # Local PC file to be compared.
+      if [ $# -eq 2 ] ; then
+         # There are 2 arguments that have been passed to this function.
+         # $2 contains the file name to compare.
+         FILE_TO_COMPARE=$2
+      else
+         # $2 is null, so specify file name.
+         if [ -z "$FILE_TO_COMPARE" ] ; then
+            # FILE_TO_COMPARE is undefined so specify file name.
+            FILE_TO_COMPARE=$(basename $0)
+         fi
+      fi
+      #
+      # Version of Local PC file to be compared.
+      VERSION=$(grep --max-count=1 "VERSION" $FILE_TO_COMPARE)
+      #
+      FILE_LIST=$THIS_DIR/$THIS_FILE"_file_temp.txt"
+      ERROR=0
+      #
+      #
+      #=================================================================
+      # EDIT THE LINES BELOW TO SPECIFY THE FILE NAMES TO UPDATE.
+      # FILE NAMES INCLUDE ALL DEPENDENT SCRIPTS AND LIBRARIES.
+      #=================================================================
+      #
+      #
+      # Create list of files to update and write to temporary file, FILE_LIST.
+      #
+      echo "mountup.sh"                > $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
+      echo "mountup.lib"              >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
+      echo "mountup_servers.lib"      >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
+      echo "common_bash_function.lib" >> $FILE_LIST  # <<<--- INSERT ACTUAL FILE NAME HERE.
+      #
+      f_version_compare $1 $SERVER_DIR $MP_DIR $LOCAL_REPO_DIR $FILE_TO_COMPARE "$VERSION" $FILE_LIST
+      #
+      if [ -r  $FILE_LIST ] ; then
+         rm  $FILE_LIST
+      fi
+      #
+}  # End of function f_check_version.
 #
 # +----------------------------------------+
 # |          Function f_menu_server        |
@@ -55,10 +188,12 @@ f_menu_server () {
       MENU_TITLE="Server_Menu"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_temp.txt"
       #
+      #
       #================================================================================
       # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME (LIBRARY)
       # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
       #================================================================================
+      #
       #
       # Specify library file name with menu item data.
       ARRAY_FILE="$THIS_DIR/mountup.lib"
@@ -129,4 +264,164 @@ f_show_mount_points () {
       # Throw out these variables.
       unset X Y ERROR
 } # End of function f_show_mount_points.
+#
+# +----------------------------------------+
+# |          Function f_install_app        |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          $2=Application to execute.
+#          THIS_DIR, THIS_FILE.
+#    Uses: None.
+# Outputs: RUNAPP.
+#
+# Summary: Run an executable application.
+#
+# Dependencies: apt, f_message, f_bad_sudo_password.
+#
+f_install_app () {
+      #
+      # Does app exist and is executable?
+      if [ -x $2 ] ; then
+         # Yes, execute application.
+         eval $2
+         #
+         # Set flag RUNAPP to indicate app was run.
+         RUNAPP=1
+      else
+         # No, app is not executable or is missing.
+         #
+         # Set flag RUNAPP to indicate app not run.
+         RUNAPP=0
+         #
+         # Clear screen.
+         clear
+         #
+         case $1 in
+              whiptail | dialog)
+                 # Temporary file has \Z commands embedded for red bold font.
+                 #
+                 # \Z commands are used by Dialog to change font attributes
+                 # such as color, bold/normal.
+                 #
+                 # A single string is used with echo -e \Z1\Zb\Zn commands
+                 # and output as a single line of string wit \Zn commands embedded.
+                 #
+                 # Single string is neccessary because \Z commands will not be
+                 # recognized in a temp file containing <CR><LF> multiple lines also.
+                 #
+                 X="\n\Z1\ZbScript \"$2\" either is missing\nor needs execute (chmod +x) permissions.\n\n\ZnInstall $2 using \"apt install $2\" from the command line."
+                 f_message $1 "NOK" "Installing $2" "$X"
+                 #
+                 # Clear screen.
+                 clear
+                 #
+                 # Run a sudo command to catch bad sudo passwords.
+                 sudo --validate
+                 ERROR=$?
+                 if [ $ERROR -eq 0 ] ; then
+                    sudo apt install $2
+                    ERROR=$?
+                    if [ $ERROR -neq 0 ] ; then
+                       echo -n $(tput sgr0) # Set font to normal color.
+                       sleep 5
+                    fi
+                 else
+                    f_bad_sudo_password $1
+                 fi
+                 #
+                 # Clear screen.
+                 clear
+                 #
+              ;;
+              *)
+                 # Create temporary file containing message.
+                 X="\n\Z1\ZbScript \"$2\" either is missing\nor needs execute (chmod +x) permissions.\n\n\ZnInstall $2 using \"apt install $2\" from the command line."
+                 f_message $1 "NOK" "Installing $2" "$X"
+                 #
+                 # Clear screen.
+                 clear
+                 #
+                 # Run a sudo command to catch bad sudo passwords.
+                 sudo --validate
+                 ERROR=$?
+                 if [ $ERROR -eq 0 ] ; then
+                    sudo apt install $2
+                    ERROR=$?
+                    if [ $ERROR -neq 0 ] ; then
+                       sleep 5
+                    fi
+                 else
+                    f_bad_sudo_password $1
+                 fi
+                 #
+                 # Clear screen.
+                 clear
+                 #
+              ;;
+         esac
+         #
+         # Execute application that was just installed.
+         chmod 755 $2
+         eval $2
+         #
+         # Set flag RUNAPP to indicate app was run.
+         RUNAPP=1
+      fi
+      #
+}  # End of function f_install_app.
+#
+# +----------------------------------------+
+# |          Function file_manager         |
+# +----------------------------------------+
+#
+#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
+#          THIS_DIR, THIS_FILE.
+#    Uses: RUNAPP, FILE_MANAGER.
+# Outputs: None.
+#
+# Summary: Run an executable script or script
+#
+# Dependencies: apt, f_message, f_bad_sudo_password.
+#
+f_file_manager () {
+      #
+      # RUNAPP=1 when app is run, so that For-loop will not run other apps.
+      # Initialize variable.
+      RUNAPP=0
+      #
+      # Detect installed file manager (in order of preference GUI file managers before CLI file managers).
+      for FILE_MANAGER in mc ranger lfm
+          do
+             if [ "$RUNAPP" -eq 0 ] ; then
+                # Test if $FILE_MANAGER application is installed.
+                type $FILE_MANAGER >/dev/null 2>&1
+                ERROR=$?
+                if [ "$ERROR" -eq 0 ] ; then
+                   # Message "Opening text editor to allow editing."
+                   eval $FILE_MANAGER
+                   RUNAPP=1
+                fi
+             fi
+          done
+      #
+      if [ "$RUNAPP" -eq 0 ] ; then
+         # File Manager (listed in the For-loop) was not automatically detected.
+         # A file manager of your choice needs to be installed and run.
+         #
+         #
+         #================================================================================
+         # EDIT THE LINE BELOW TO DEFINE THE PREFERRED FILE MANAGER APPLICATION.
+         #================================================================================
+         #
+         #
+         FILE_MANAGER="mc"
+         #
+         # None of the applications are installed so install the preferred app and then run it.
+         f_install_app $1 $FILE_MANAGER
+      fi
+      #
+      unset RUNAPP FILE_MANAGER
+      #
+}  # End of function f_file_manager.
 #
