@@ -113,10 +113,6 @@ VERSION="2021-04-21 19:54"
 #
 # Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
 #
-#@#//scotty/files#@#/mnt/scotty/files#@#Scotty Server - Restricted shared files.
-#@#//scotty/public-no-backup#@#/mnt/scotty/public-no-backup#@#Scotty Server - Publicly shared files not backed-up.
-#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
-#@#//scotty/jw.org#@#/mnt/scotty/jw.org#@#Scotty Server - JW.org files.
 #
 #
 # MOUNT COMMAND RETURN CODES

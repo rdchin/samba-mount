@@ -73,9 +73,13 @@ VERSION="2021-04-21 19:54"
 # +--------------------------------------------------------------------------+
 #
 #@@Exit#@@Return to previous menu.#@@break
-#@@Scotty#@@Scotty back-up file server.#@@f_menu_action^$GUI^scotty
-#@@Parsley#@@Parsley file server.#@@f_menu_action^$GUI^parsley
-#
+#@@hansolo#@@Hansolo Server publicly shared files.#@@f_menu_action^$GUI^hansolo
+#@@chewbacca#@@Chewbacca Server shared photos.#@@f_menu_action^$GUI^chewbacca
+#@@luke#@@Luke Server shared school files.#@@f_menu_action^$GUI^luke
+#@@leia#@@Leia Server shared music.#@@f_menu_action^$GUI^leia
+#@@yoda#@@Yoda Server shared department files.#@@f_menu_action^$GUI^yoda
+#@@r2d2#@@R2D2 Server shared geek stuff.#@@f_menu_action^$GUI^r2d2
+#@@c3po#@@C3PO Server shared Reference Library.#@@f_menu_action^$GUI^c3po#
 # +----------------------------------------+
 # |        Function f_check_version        |
 # +----------------------------------------+
