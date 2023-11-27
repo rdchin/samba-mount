@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ©2021 Copyright 2021 Robert D. Chin
+# ©2023 Copyright 2023 Robert D. Chin
 # Email: RDevChin@Gmail.com
 #
 # Usage: bash mountup.sh
@@ -24,15 +24,39 @@
 # |            Main Menu Options           |
 # +----------------------------------------+
 #
+#                 >>> !!!Warning!!! <<<
+#
+# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
+# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
+#
+# Forbidden characters include ; : * ' " - & > < / \
+#
+# These characters will compromise the creation of arrays which
+# in turn creates the menu.
+#
+# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
+#
+# Format of <Corresponding function or action or command> when using f_create_a_menu
+#        f_create_menu^"text", "dialog", or "whiptail"^menu_generated.lib^Menu Name^Temporary File Name^Library name containing menu entries
+#
+# List of inputs for f_create_a_menu.
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface application in use.
+#          $2 - GENERATED_FILE (The name of a temporary library file containing the suggested phrase "generated.lib" which contains the code to display the sub-menu).
+#          $3 - MENU_TITLE (Title of the sub-menu)
+#          $4 - TEMP_FILE (Temporary file).
+#          $5 - ARRAY_FILE (Temporary file) includes menu items imported from $ARRAY_SOURCE_FILE of a single menu.
+#          $6 - ARRAY_SOURCE_FILE (Not a temporay file) includes menu items from multiple menus.
+#
 # Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or cammand>
 #
 #@@Exit#@@Exit this menu.#@@break
 #
 #@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_server^$GUI
 #
-#@@Show#@@Show mounted directories.#@@f_show_mount_points^$GUI
+#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
-#@@File Managers#@@Manage files/folders#@@f_file_manager^$GUI
+#@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
 #
 #@@About#@@Version information of this script.#@@f_about^$GUI
 #
@@ -46,7 +70,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2021-04-21 19:54"
+VERSION="2023-11-26 12:31"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -65,20 +89,20 @@ GENERATED_FILE=$THIS_FILE"_menu_generated.lib"
 #
 # LAN File Server shared directory.
 # SERVER_DIR="[FILE_SERVER_DIRECTORY_NAME_GOES_HERE]"
-  SERVER_DIR="//file_server/public"
+  SERVER_DIR="//scotty/files"
 #
 # Local PC mount-point directory.
 # MP_DIR="[LOCAL_MOUNT-POINT_DIRECTORY_NAME_GOES_HERE]"
-  MP_DIR="/mnt/file_server/public"
+  MP_DIR="/mnt/scotty/files"
 #
 # Local PC mount-point with LAN File Server Local Repository full directory path.
-# Example: 
+# Example:
 #                   File server shared directory is "//file_server/public".
 # Repostory directory under the shared directory is "scripts/BASH/Repository".
 #                 Local PC Mount-point directory is "/mnt/file_server/public".
 #
 # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
-  LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
+  LOCAL_REPO_DIR="$MP_DIR/LIBRARY/PC-stuff/PC-software/BASH_Scripting_Projects/Repository"
 #
 #
 #=================================================================
@@ -100,7 +124,8 @@ FILE_LIST=$THIS_FILE"_file_temp.txt"
 # Format: [File Name]^[Local/Web]^[Local repository directory]^[web repository directory]
 echo "mountup.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup.lib"                  > $FILE_LIST
 echo "mountup_servers.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup_servers.lib" >> $FILE_LIST
-echo "common_bash_function.lib^Web^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/BASH_function_library/master/"       >> $FILE_LIST
+echo "mountup_local.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup_servers.lib"   >> $FILE_LIST
+echo "common_bash_function.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/BASH_function_library/master/"     >> $FILE_LIST
 #
 # Create a name for a temporary file which will have a list of files which need to be downloaded.
 FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
@@ -122,6 +147,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #&
 #& Required scripts: mountup.sh
 #&                   mountup.lib
+#&                   mountup_local.lib
 #&                   mountup_servers.lib
 #&                   common_bash_function.lib
 #&
@@ -211,6 +237,152 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
 ##
+## 2023-11-26 *Section "Customize Server Menu choice options" in mountup.lib
+##             bug fixed by deleting an extraneous space after the function
+##             names preventing functions from running.
+##
+## 2023-11-25 *f_menu_action renamed to f_server_menu_action .
+##            *f_select_local_device_menu included code from f_menu_generic
+##             and updated code to current standards.
+##
+## 2023-11-23 *f_show_mount_points moved to common_bash_function.lib.
+##            *Section Main Menu, Server Menu, Server Action Menu, Local
+##             Action Menu reworded menu item to "Show Local/LAN drives".
+##            *Section Variable Default Values in script mountup_servers.lib
+##             deleted as redundant.
+##            *Section Local Action Menu bug fixed causing generated
+##             script to fail by adding double-quotes around the parameter
+##             which specified the directory.
+##             The forward slashes caused the syntax error.
+##             Affected menu items were "Mount", "Dismount".
+##
+## 2023-11-22 *Sections Main Menu, Custom Local Action Menu bug fixed
+##             causing generated script to fail  by adding double-quotes
+##             around the parameter which specified the directory.
+##             The forward slashes caused the syntax error.
+##             Affected menu items was "File Managers".
+##
+##             Details of error message:
+##             mountup.sh_menu_main_generated.lib:
+##             line 49: syntax error.
+##             `robert                    "Exit") break  ;;'
+##
+##             Change from: #@@f_file_manager_select^$GUI^/home/robert^2
+##               Change to: #@@f_file_manager_select^$GUI^"/home/robert"^2
+##
+##            *f_show_mount_points changed display for "md" RAID devices
+##             to show under "local mounted block devices" rather than
+##             under "remote file servers".
+##
+## 2023-11-20 *f_select_local_device_radiolist and
+##             f_select_local_devices_checklist resized box according to
+##             contents. Allow (dis)mounting of RAID "md" devices. Excluded
+##             RAID member drives from the Mount, Choose local drive menu.
+##            *f_select_local_device_radiolist fixed display to auto-resize
+##             radiolist for as small as a 80x24 window.
+##
+## 2023-11-13 *f_show_mount_points changed options for lsblk command
+##             to improve display of RAID member devices.
+##
+## 2023-11-10 *f_show_mount_points added "FSTYPE" on local starage drives
+##             when displaying the information for the local drives.
+##             This indicates the local drives which are part of a RAID.
+##
+## 2023-11-09 *mountup_servers.lib Section "Add additional source file
+##             servers, share-points, and mount-points here" changed names
+##             of shared directories on PC Scotty file server.
+##
+## 2023-11-05 *f_show_mount_points added "Used" MB/GB on local storage
+##             drives when displaying the information for the local drives.
+##
+## 2023-10-10 *Improved comments to be more consistent.
+##
+## 2023-09-15 *f_mount_local_usb_drive_2, f_dismount_local_usb_drive_2
+##             added to simplify code.
+##            *f_mount_local_usb_drive_2, f_dismount_local_usb_drive_2
+##             added deletion of temp file as a bug fix of the generated
+##             script to create a menu where temp file text was unserted
+##             into the code of the menu.
+##
+## 2023-09-14 *f_mount_or_dismount_local_usb_drive_2 added error message
+##             when trying to mount a non-existent 'sd' device.
+##
+## 2023-05-08 *f_show_mount_points changed user message for clarity.
+##
+## 2023-05-06 *f_show_mount_points changed parameters for lsblk command
+##             to specify the columns displayed in a list of devices.
+##
+## 2022-10-05 *Section "Main Program" updated comments.
+##            *f_display_common updated to latest standards.
+##
+## 2022-06-24 *Section "Main Program" deleted temporary files.
+##             f_select_local_devices_checklist deleted temporary file.
+##
+## 2022-06-15 *f_file_manager_select added an optional parameter to pass to
+##             f_file_manager to run a file manager in the background.
+##
+## 2022-06-03 *Section "Main Program" added code to delete temporary files.
+##            *f_select_local_device_menu added code to delete temporary
+##             files. Added code to pass parameters to f_menu_generic.
+##            *f_menu_generic rewritten and simplified code.
+##
+## 2022-04-28 *f_select_local_device_radiolist
+##            *f_select_local_devices_checklist corrected comments in the
+##             generated temporary file.
+##
+## 2022-04-20 *fdl_download_missing_scripts fixed bug to prevent downloading
+##             from the remote repository if the local repository was
+##             unavailable and the script was only in the local repository.
+##
+## 2022-04-14 *f_show_mount_points added optional parameters to application
+##             "df" --all --human-readable. Also added notes on application
+##             "findmnt" versus "df" and the pros and cons.
+##
+## 2022-04-02 *f_mount_or_dismount_local_usb_drive_2, f_select_mount_point,
+##             f_select_local_device_radiolist,
+##             f_select_local_devices_checklist changed default mount-point
+##             changed from: /media/robert/usb1
+##             changed   to: /media/usb-dev1
+##
+## 2022-04-01 *f_select_local_device_radiolist bug fixed in device name.
+##             Improved comments.
+##            *f_mount_or_dismount_local_usb_drive_2 improved comments.
+##            *f_select_local_devices_checklist changed default to no
+##             devices selected from all devices selected.
+##
+## 2022-03-31 *f_select_local_device, f_select_multiple_local_devices added
+##             code to delete temporary files.
+##            *f_mount_or_dismount_local_usb_drive_2 added code to exit if
+##             no local device was selected to mount.
+##            *f_select_local_device_radiolist added.
+##
+## 2022-03-30 *f_select_local_device added.
+##            *f_mount_or_dismount_local_usb_drive_2 simplified.
+##
+## 2022-03-29 *f_mount_or_dismount_local_usb_drive_2 enhanced mount device
+##             instructions when asking for the mount command parameters.
+##
+## 2022-03-28 *f_mount_or_dismount_local_usb_drive changed from using the
+##             Dialog --radiolist to using the standard menu with the menu
+##             options in a separate file mountup_local.lib.
+##            *f_file_manager_select bug fixed to use ERROR flag properly.
+##            *f_show_mount_points made info prettier, more understandable,
+##             and added information from lsblk command.
+##
+## 2022-03-07 *f_mount_or_dismount_local_usb_drive bug fixed to show
+##             radio list menu when using script men.sh.
+##
+## 2022-03-06 *f_show_mount_points bug fix to hide df errors in testing.
+##            *f_mount_or_dismount_local_usb_drive added Dialog
+##             radio list menu.
+##
+## 2022-03-02 *Section "Server Menu" added menu item "Local".
+##            *f_mount_or_dismount_local_usb_drive added.
+##
+## 2022-02-25 *f_file_manager_select added to call f_file_manager in the
+##             common_bash_function.lib.
+##             *f_check_version replaced template directories with real.
+##
 ## 2021-04-21 *Section "Default Variable Values" added GitHub repository
 ##             URLs for this project.
 ##
@@ -248,7 +420,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##
 ## 2021-01-20 *Main added functionality to download any dependent file or
 ##             library from this script.
-##            *f_choose_dl_source, f_source, f_choose_download_source, 
+##            *f_choose_dl_source, f_source, f_choose_download_source,
 ##             f_dwnld_library_from_local_repository, f_mount_local,
 ##             f_dwnld_library_from_web_site, added to give user a choice
 ##             between downloading file and library dependencies from a
@@ -265,7 +437,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##             of mount-points.
 ##            *f_show_mount_points improved messages.
 ##
-## 2020-12-07 *f_menu_pick rewrote username-password section so they 
+## 2020-12-07 *f_menu_pick rewrote username-password section so they
 ##             would only be requested once for any combination
 ##             of mount-points.
 ##
@@ -277,7 +449,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##
 ## 2020-09-15 *f_check_version added to compare and update version of this
 ##             script if necessary.
-##             *Main Menu added new entry "Version Update". 
+##             *Main Menu added new entry "Version Update".
 ##
 ## 2020-09-09 *Updated to latest standards.
 ##
@@ -346,7 +518,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##             for password. It used to just ask for user name.
 ##             Old behavior allowed for anonymous mounts first, and if any
 ##             mounting failed, then it would ask for a password.
-##             New behavior asks for both user name and password upfront.  
+##             New behavior asks for both user name and password up front.
 ##
 ## 2017-11-23 *f_username_gui prevented a null username.
 ##            *f_test_mount_gui changed when asking username/password.
@@ -433,7 +605,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 # |     Function f_display_common      |
 # +------------------------------------+
 #
-#     Rev: 2021-03-25
+#     Rev: 2021-03-31
 #  Inputs: $1=UI - "text", "dialog" or "whiptail" the preferred user-interface.
 #          $2=Delimiter of text to be displayed.
 #          $3="NOK", "OK", or null [OPTIONAL] to control display of "OK" button.
@@ -448,18 +620,22 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #
 f_display_common () {
       #
-      # Specify $THIS_FILE name of the file containing the text to be displayed.
-      # $THIS_FILE may be re-defined inadvertently when a library file defines it
-      # so when the command, source [ LIBRARY_FILE.lib ] is used, $THIS_FILE is
-      # redefined to the name of the library file, LIBRARY_FILE.lib.
+      # Set $THIS_FILE to the file name containing the text to be displayed.
+      #
+      # WARNING: Do not define $THIS_FILE within a library script.
+      #
+      # This prevents $THIS_FILE being inadvertently re-defined and set to
+      # the file name of the library when the command:
+      # "source [ LIBRARY_FILE.lib ]" is used.
+      #
       # For that reason, all library files now have the line
-      # THIS_FILE="[LIBRARY_FILE.lib]" deleted.
+      # THIS_FILE="[LIBRARY_FILE.lib]" commented out or deleted.
       #
       #
-      #================================================================================
-      # EDIT THE LINE BELOW TO DEFINE $THIS_FILE AS THE ACTUAL FILE NAME WHERE THE
-      # ABOUT, CODE HISTORY, AND HELP MESSAGE TEXT IS LOCATED.
-      #================================================================================
+      #==================================================================
+      # EDIT THE LINE BELOW TO DEFINE $THIS_FILE AS THE ACTUAL FILE NAME
+      # CONTAINING THE BRIEF DESCRIPTION, CODE HISTORY, AND HELP MESSAGE.
+      #==================================================================
       #
       #
       THIS_FILE="mountup.sh"  # <<<--- INSERT ACTUAL FILE NAME HERE.
@@ -797,7 +973,7 @@ fdl_source () {
 # Outputs: ANS.
 #
 # Summary: This function can be used when script is first run.
-#          It verifies that all dependencies are satisfied. 
+#          It verifies that all dependencies are satisfied.
 #          If any are missing, then any missing required dependencies of
 #          scripts and libraries are downloaded from a LAN repository or
 #          from a repository on the Internet.
@@ -806,7 +982,7 @@ fdl_source () {
 #          directory and then when it is executed or run, it will download
 #          automatically all other needed files and libraries, set them to be
 #          executable, and source the required libraries.
-#          
+#
 #          Cannot be dependent on "common_bash_function.lib" as this library
 #          may not yet be available and may need to be downloaded.
 #
@@ -824,7 +1000,7 @@ fdl_download_missing_scripts () {
       # ****************************************************
       #
       # While-loop will read the file names listed in FILE_LIST (list of
-      # script and library files) and detect which are missing and need 
+      # script and library files) and detect which are missing and need
       # to be downloaded and then put those file names in FILE_DL_LIST.
       #
       while read LINE
@@ -877,7 +1053,7 @@ fdl_download_missing_scripts () {
                   #
                   # If a file only found in the Local Repository has source changed
                   # to "Web" because LAN connectivity has failed, then do not download.
-                  if [ -z DL_REPOSITORY ] && [ $DL_SOURCE = "Web" ] ; then
+                  if [ -z $DL_REPOSITORY ] && [ $DL_SOURCE = "Web" ] ; then
                      ERROR=1
                   fi
                   #
@@ -892,7 +1068,7 @@ fdl_download_missing_scripts () {
                              # So download from Web Repository.
                              fdl_dwnld_file_from_web_site $DL_REPOSITORY $DL_FILE
                           else
-                             # Sucessful mount of LAN File Server directory. 
+                             # Sucessful mount of LAN File Server directory.
                              # Continue with download from Local Repository on LAN File Server.
                              fdl_dwnld_file_from_local_repository $TARGET_DIR $DL_FILE
                              #
@@ -1036,7 +1212,7 @@ f_script_path
 TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
 #
 # If command already specifies GUI, then do not detect GUI.
-# i.e. "bash dropfsd.sh dialog" or "bash dropfsd.sh text".
+# i.e. "bash mountup.sh dialog" or "bash mountup.sh text".
 if [ -z $GUI ] ; then
    # Test for GUI (Whiptail or Dialog) or pure text environment.
    f_detect_ui
@@ -1091,11 +1267,38 @@ if [ -e $TEMP_FILE ] ; then
 fi
 #
 if [ -e  $FILE_LIST ] ; then
-   rm  $FILE_LIST
+   rm $FILE_LIST
 fi
 #
 if [ -e  $FILE_DL_LIST ] ; then
-   rm  $FILE_DL_LIST
+   rm $FILE_DL_LIST
+fi
+#
+if [ -e $THIS_DIR/$THIS_FILE"_temp.txt" ] ; then
+   rm $THIS_DIR/$THIS_FILE"_temp.txt"
+fi
+#
+if [ -e $THIS_DIR/mountup.sh_temp.txt ] ; then
+   rm $THIS_DIR/mountup.sh_temp.txt
+fi
+#
+if [ -e mountup.lib_temp.txt_device_menu.txt ] ; then
+   rm mountup.lib_temp.txt_device_menu.txt
+fi
+#
+if [ -e mountup.sh_temp.txt_device_menu.txt ] ; then
+   rm mountup.sh_temp.txt_device_menu.txt
+fi
+#
+if [ -e mountup_servers.lib_temp.txt_device_menu.txt ] ; then
+   rm mountup_servers.lib_temp.txt_device_menu.txt
+fi
+#
+if [ -e mountup_servers.lib_temp.txt_device_menu.txt ] ; then
+   rm mountup_servers.lib_temp.txt_device_menu.txt
+fi
+if [ -e mountup_servers.lib_temp.txt_device_menu_out.txt ] ; then
+   rm mountup_servers.lib_temp.txt_device_menu_out.txt
 fi
 #
 # Nicer ending especially if you chose custom colors for this script.

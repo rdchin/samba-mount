@@ -1,0 +1,768 @@
+#!/bin/bash
+#
+# ©2023 Copyright 2023 Robert D. Chin
+# Email: RDevChin@Gmail.com
+#
+# Usage: source mountup.lib
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |        Default Variable Values         |
+# +----------------------------------------+
+#
+VERSION="2023-11-26 12:31"
+#
+# Commented out THIS_FILE since it will conflict other scripts which
+# use this library.
+#THIS_FILE=$(basename $0)
+#
+# +----------------------------------------+
+# |            Brief Description           |
+# +----------------------------------------+
+#
+#& Brief Description
+#&
+#& Library of BASH functions, mountup.lib is a child dependency
+#& used by the following scripts.
+#&
+#& Parent script: mountup.sh.
+#&
+#& See script mountup.sh for Edit History.
+#&
+#& Usage: source mountup.lib
+#&
+#&    This program is free software: you can redistribute it and/or modify
+#&    it under the terms of the GNU General Public License as published by
+#&    the Free Software Foundation, either version 3 of the License, or
+#&    (at your option) any later version.
+#&
+#&
+#&    This program is distributed in the hope that it will be useful,
+#&    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#&    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#&    GNU General Public License for more details.
+#&
+#&    You should have received a copy of the GNU General Public License
+#&    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# +----------------------------------------+
+# |           Code Change History          |
+# +----------------------------------------+
+#
+## Code Change History
+##
+## (Please see script "mountup.sh" for Code History information.)
+#
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# |           Customize Local Action Menu choice options below.             |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+#
+#@@Exit#@@Return to previous menu.#@@break
+#
+#@@Mount#@@Mount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^mount^"/dev/sdb1"
+#
+#@@Dismount#@@Dismount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount^"/dev/sdb1"
+#
+#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#
+#@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
+#
+# +------------------------------------------------+
+# |   Function f_detect_state_of_local_usb_drive   |
+# +------------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: ERROR.
+#
+# Summary: Detect USB drive(s) available and whether it is mounted.
+#          If unmounted, then mount. If mounted, then dismount or mount to another mount-point.
+#
+# Dependencies: apt, f_message, f_ask_question.
+#
+f_detect_state_of_local_usb_drive () {
+      #
+      # Mount USB device.
+      #
+      # Check if there are any 'sd' devices available to be mounted.
+      lsblk --output "NAME,MOUNTPOINT" --list | grep -e ^sd -e ^md[0-9] >/dev/null
+      ERROR=$?
+      # Are there any "sd" and/or "md" devices available to be mounted?
+      if [ $ERROR -ne 0 ] ; then
+         # No, there are no "sd" nor "md" devices available to be mounted.
+         ANS=""
+         f_message $1 "NOK" "No 'sd' or 'md' devices" "There are no 'sd' or 'md' devices to select."
+         # Quit out of this function.
+         return 1
+      fi
+      #
+      # Check if there are any 'sd' or 'md' devices mounted.
+      df -hT | grep -e /sd -e /md[0-9] >/dev/null
+      ERROR=$?
+      # Are there any "sd" and/or "md" devices mounted?
+      if [ $ERROR -ne 0 ] ; then
+         # No, there are no "sd" or "md" devices mounted.
+         # Choose the "sd" and or "md" devices available to be mounted.
+         f_mount_or_dismount_local_usb_drive_2 "$1" "mount" "/dev/sdb1"
+       else
+         # Yes, there are "sd" devices already mounted.
+         # Select an "sd" device and choose to either dismount or mount to an additional mount-point.
+         # Display the menu to mount or dismount.
+         f_mount_or_dismount_local_usb_drive "$1"
+       fi
+      #
+}  # End of function f_detect_state_of_local_usb_drive
+#
+# +----------------------------------------------+
+# | Function f_mount_or_dismount_local_usb_drive |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: None.
+#
+# Dependencies: f_menu_arrays, f_create_show_menu.
+#
+f_mount_or_dismount_local_usb_drive () {
+      #
+      # Use Dialog --menu
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib"
+      #
+      # Create generated menu script from array data.
+      #
+      # Note: ***If Menu title contains spaces,
+      #       ***the size of the menu window will be too narrow.
+      #
+      # Menu title MUST use underscores instead of spaces.
+      MENU_TITLE="Local_Storage_Action_Menu"
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_temp.txt"
+      #
+      #
+      #================================================================================
+      # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME (LIBRARY)
+      # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
+      #================================================================================
+      #
+      #
+      # Specify library file name with menu item data.
+      ARRAY_FILE="$THIS_DIR/mountup_local.lib"
+      #
+      #
+      # Create arrays from data.
+      f_menu_arrays $ARRAY_FILE
+      #
+      # Create generated menu script from array data.
+      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      #
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+      if [ -r $TEMP_FILE ] ; then
+                 rm $TEMP_FILE
+      fi
+      #
+}  # End of function f_mount_or_dismount_local_usb_drive.
+#
+# +------------------------------------------------+
+# | Function f_mount_or_dismount_local_usb_drive_2 |
+# +------------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 -  "mount" or "dismount".
+#    Uses: None.
+# Outputs: ERROR.
+#
+# Dependencies: apt, f_message, f_ask_question.
+#
+f_mount_or_dismount_local_usb_drive_2 () {
+      #
+      if [ -r $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+      if [ $2 = "mount" ] ; then
+         f_mount_local_usb_drive_2 $1 $2
+      else
+         f_dismount_local_usb_drive_2 $1 $2
+      fi
+      # Show file shares and mount-points.
+      f_show_mount_points $1
+      #
+}  # End of function f_mount_or_dismount_local_usb_drive_2.
+#
+# +------------------------------------------------+
+# |       Function f_mount_local_usb_drive_2       |
+# +------------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - "mount" or "dismount".
+#    Uses: None.
+# Outputs: ERROR.
+#
+# Summary: Mount a local USB device.
+#
+# Dependencies: apt, f_message, f_ask_question.
+#
+f_mount_local_usb_drive_2 () {
+      #
+      # Mount USB device.
+      #
+      # Check if there are any 'sd' devices available to be mounted.
+      lsblk --output "NAME,MOUNTPOINT" --list | grep -e sd -e md[0-9] >/dev/null
+      ERROR=$?
+      # Are there any "sd" and/or "md" devices available to be mounted?
+      if [ $ERROR -ne 0 ] ; then
+         # No, there are no "sd" and/or "md" devices available to be mounted.
+         ANS=""
+         f_message $1 "NOK" "No 'sd' and/or 'md' devices" "There are no 'sd' and/or 'md' devices to select."
+         # Quit out of this function.
+         return 1
+      fi
+      #
+      # Select the local device to mount.
+      #
+      case $1 in
+           whiptail | text)
+              # Select one local device to mount using a menu.
+              f_select_local_device_menu $1
+           ;;
+           dialog)
+              # Select one local device to mount using a radiolist.
+              f_select_local_device_radiolist $1
+           ;;
+      esac
+      #
+      # Was a local device to mount selected?
+      if [ -z "$ANS" ] ; then
+         # No, exit this function
+         f_message $1 "NOK" "Error mounting" "No mount command specified."
+         return 1
+      fi
+      #
+      LOCAL_DEVICE=$ANS
+      LOCAL_SERVER_NAME=$(cat /etc/hostname)
+      #
+      case $LOCAL_DEVICE in
+           /dev/md*)
+           # If local device is a RAID disk array.
+           DEFAULT_MP="/mnt/$LOCAL_SERVER_NAME/RAID/"
+           ;;
+           *)
+           # If local device is a USB drive.
+           DEFAULT_MP="/media/$LOCAL_SERVER_NAME/"
+           ;;
+      esac
+      # Select the mount-point.
+      f_select_mount_point $1 "$DEFAULT_MP"
+      #
+      if [ -z "$ANS" ] ; then
+         f_message $1 "NOK" "Error mounting" "No mount command specified."
+      else
+         MOUNT_POINT=$ANS
+         #
+         # Format the Question text in the $TEMP_FILE
+         # for use by f_ask_question.
+         echo >>$TEMP_FILE
+         echo "Enter entire mount command i.e. sudo mount /dev/sdb1 /media/server-name/usb1" >>$TEMP_FILE
+         #
+         # Now the entire question text is contained in TEMP_FILE.
+         #
+         # Were the local device and mount-point specified?
+         if [ -n "$LOCAL_DEVICE" ] && [ -n "$MOUNT_POINT" ] ; then
+            # Yes, use it in the mount command.
+            f_ask_question $1 "Mount device" "$TEMP_FILE" "sudo mount $LOCAL_DEVICE $MOUNT_POINT"
+         fi
+         #
+         if [ -n "$ANS" ] ; then
+            eval $ANS
+            ERROR=$?
+            #
+            if [ $ERROR -eq 0 ] ; then
+               f_message $1 "NOK" "Mount OK" "The mount command was successful.\nCommand: $ANS"
+            else
+               f_message $1 "OK" "Error mounting" "The mount command failed. Error Code $ERROR.\nCommand: $ANS"
+            fi
+         else
+            f_message $1 "NOK" "Error mounting" "No mount command specified."
+         fi
+         #
+         # Delete temporary file.
+         if [ -e $TEMP_FILE ] ; then
+            rm $TEMP_FILE
+         fi
+      fi
+      #
+}  # End of function f_mount_local_usb_drive_2.
+#
+# +------------------------------------------------+
+# |     Function f_dismount_local_usb_drive_2      |
+# +------------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 -  "mount" or "dismount".
+#    Uses: None.
+# Outputs: ERROR.
+#
+# Summary: Dismount a local USB device.
+#
+# Dependencies: apt, f_message, f_ask_question.
+#
+f_dismount_local_usb_drive_2 () {
+      #
+      # Dismount USB device.
+      #
+      # Check if there are any 'sd' and/or 'md' devices mounted.
+      df -hT | grep -e /sd -e /md[0-9] >/dev/null
+      ERROR=$?
+      # Are there any "sd" and/or "md" devices mounted?
+      if [ $ERROR -ne 0 ] ; then
+         # No, there are no "sd" and/or "md" devices mounted.
+         ANS=""
+         f_message $1 "NOK" "No 'sd' and/or 'md' devices" "There are no 'sd' and/or 'md' devices to select."
+         # Quit out of this function.
+         return 1
+      fi
+      #
+      # Get list of all mounted devices.
+      df -hT | grep -e /sd -e /md[0-9] | awk '{print "Device "$1" is mounted on "$NF}' > $TEMP_FILE
+      #
+      echo >> $TEMP_FILE
+      echo "Which USB device do you want to dismount?" >> $TEMP_FILE
+      #
+      # Select the local device to dismount.
+      case $1 in
+           whiptail | text)
+              # Select one local device to dismount using a menu.
+              f_select_local_device_menu $1
+           ;;
+           dialog)
+              # Select multiple local devices to dismount using a Dialog checklist.
+              f_select_local_devices_checklist $1
+           ;;
+      esac
+      #
+      LOCAL_DEVICE=$ANS
+      #
+      if [ -n "$LOCAL_DEVICE" ] ; then
+         f_message $1 "NOK" "Umount Command" "Command: sudo umount $ANS"
+         #
+         # Dismount the local device.
+         sudo umount $ANS
+         ERROR=$?
+         #
+         if [ $ERROR -eq 0 ] ; then
+            f_message $1 "NOK" "Dismount OK" "The dismount command was successful.\nCommand: sudo umount $ANS"
+         else
+            f_message $1 "OK" "Error dismounting" "The dismount command failed. Error Code $ERROR.\nCommand: sudo umount $ANS"
+         fi
+      else
+         f_message $1 "NOK" "Error dismounting" "No umount command specified." 2
+      fi
+      #
+      # Delete temporary file.
+      if [ -e $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+}  # End of function f_dismount_local_usb_drive_2.
+#
+# +----------------------------------------------+
+# |      Function f_select_local_device_menu     |
+# +----------------------------------------------+
+#
+#     Rev: 2021-03-07
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
+# Outputs: None.
+#
+# Summary: This menu selects the local storage devices connected to the local host PC.
+#          It is created on-the-fly or dynamically since USB drives may or may not be
+#          plugged in at any time. The "lsblk" command gets the raw data on any local
+#          storage drives to be included in this menu.
+#
+#          (See also f_create_menu which may be used in place of this function.)
+#
+#          Simpler implementation than the Main Menu function.
+#          It assumes that this function is in a separate script library
+#          file which contains the Sub-Menu options delimited by "#@@".
+#
+#          Whereas the Main Menu function checks its script for the
+#          Main Menu options delimited by "#@@" and if it does not
+#          find any then it defaults to the specified library script.
+#
+# Dependencies: f_menu_arrays, f_create_show_menu.
+#
+f_select_local_device_menu () {
+      #
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_device_temp.txt"
+      #
+      # Get mount-points and drives from command lsblk and format data for pretty display.
+      # Prevent listing the unmountable RAID member drives by using "grep linux_raid_member --invert-match".
+      lsblk --list --output NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT | awk  '{ printf "%-9s %-4s %-6s %-4s is mounted on %s\n", $1,$2,$3,$4,$5}' | sed -e 's/is mounted on $/is not mounted./' | grep -e sd[a-z][1-9] -e md[0-9] | grep --invert-match linux_raid_member | sed 's/part /Local drive /' > $TEMP_FILE"_device_menu.txt"
+      #
+      # Format the Menu data of local devices to choose from.
+      #
+      # Insert field marker "#@@" that the menu will use to format data.
+      awk '{ print "#@@"$1"#@@"$2,$3,$4,$5,$6,$7,$8,$9"#@@f_local_device_action^$GUI^"$1 }' $TEMP_FILE"_device_menu.txt" > $TEMP_FILE"_device_menu2.txt"
+      #
+      # Put double-quotes around the 2nd phrase delimited by "#@@" which contains the mount point directory.
+      # The forward-slashes (/) in the directory may mess up the creation of the data array for the menu by f_menu_arrays.
+      sed -i -e 's|#@@|&"|2' -e 's|#@@|"&|3' $TEMP_FILE"_device_menu2.txt"
+      #
+      # Save output file to temp file.
+      mv $TEMP_FILE"_device_menu2.txt" $TEMP_FILE"_device_menu.txt"
+      #
+      # Insert the first menu option at the first line.
+      sed -i '1i #@@Exit#@@Return to previous menu.#@@break' $TEMP_FILE"_device_menu.txt"
+      #
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib"
+      #
+      # Create generated menu script from array data.
+      #
+      # Note: ***If Sub-Menu title contains spaces,
+      #       ***the size of the menu window will be too narrow.
+      #
+      # Menu title MUST substitute underscores for spaces.
+      MENU_TITLE="Local_Storage_Device_Menu"
+      #
+      #
+      #==================================================================
+      # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME
+      # (LIBRARY) WHERE THE MENU ITEM DATA IS LOCATED.
+      # THE LINES OF DATA ARE PREFIXED BY "#@@".
+      #==================================================================
+      #
+      #
+      # Specify library file name with menu item data.
+      #ARRAY_FILE=$TEMP_FILE"_device_menu.txt"
+      ARRAY_FILE=$TEMP_FILE"_device_menu.txt"
+      #
+      # Create arrays from data.
+      f_menu_arrays $ARRAY_FILE
+      #
+      # Create and show menu of local devices.
+      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      #
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_device_temp.txt"
+      #
+      if [ -r $GENERATED_FILE ] ; then
+         rm $GENERATED_FILE
+      fi
+      #
+      # Delete temporary file.
+      if [ -e $TEMP_FILE ] ; then
+         rm $TEMP_FILE
+      fi
+      #
+      # Delete temporary file.
+      if [ -e $TEMP_FILE"_device_menu.txt" ] ; then
+         rm $TEMP_FILE"_device_menu.txt"
+      fi
+      #
+      # Delete temporary file.
+      if [ -e $THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib" ] ; then
+         rm $THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib"
+      fi
+      #
+      # Delete temporary file.
+      if [ -e $THIS_DIR/$THIS_FILE"_menu_local_storage_temp.txt" ] ; then
+         rm $THIS_DIR/$THIS_FILE"_menu_local_storage_temp.txt"
+      fi
+      #
+}  # End of function f_select_local_device_menu.
+#
+# +----------------------------------------------+
+# |    Function f_select_local_device_radiolist  |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: ANS.
+#            Generated script: TEMP_FILE"_device_menu_out.txt"
+#          Generated function: f_radiolist_local_devices.
+#
+# Summary: Used when mounting a device with the "Dialog" UI.
+#          Choose a single mountable device to mount.
+#
+# Dependencies: f_msg_ui_file_box_size, f_checklist_local_devices $2 (generated script).
+#
+f_select_local_device_radiolist () {
+      #
+      # Format the Menu data of local devices to choose from.
+      #
+      # Get the screen resolution or X-window size.
+      # Get rows (height).
+      YSCREEN=$(stty size | awk '{ print $1 }')
+      # Get columns (width).
+      XSCREEN=$(stty size | awk '{ print $2 }')
+      #
+      # Get list of all mounted devices.
+      # Use command "lsblk --list --output NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT".
+      # awk printf command "%-9s %-6s %-4s" aligns columns i.e. 1st column's width is 9 characteers, 2nd column's width is 6 characteers, 3rd column's width is 4 characteers.
+      # grep finds the lines only containing disk partition designations i.e. "sda1" (not disks i.e. "sda") since you cannot mount entire disks, only their partitions.
+      lsblk --list --output NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT | awk  '{ printf "%-9s %-4s %-6s %-4s is mounted on %s\n", $1,$2,$3,$4,$5}' | sed 's/is mounted on $/is not mounted./' | grep --invert-match linux_raid_member | grep -e sd[a-z][1-9] -e md[0-9] > $TEMP_FILE"_device_menu.txt"
+      # Output looks like:
+      #                    sda1      931.5G ext4 is mounted on /media/usb-dev1
+      #                    sdb1      115.4G vfat is not mounted.
+      #
+      # Create radiolist choices from the lsblk statement above.
+      # Change from: sdb1 part 931.5G   is mounted on /media/usb-dev1
+      # Change   to: /dev/sdb1 'part 931.5G   is mounted on /media/usb-dev1' off\
+      #
+      # Calculate dialog/whiptail box dimensions $YBOX, $XBOX.
+      f_msg_ui_file_box_size $TEMP_FILE"_device_menu.txt"
+      #
+      # The calculations below allow the radiolist display to automatically resize
+      # depending on the X-Window size
+      #
+      # Dialog radiolist needs about 8 more lines for the header and [OK] button.
+      let Y=$YBOX+8
+      #
+      # YY is the window character width minus 3 characters.
+      let YY=$YSCREEN-3
+      #
+      # If number of lines exceeds screen/window height then set textbox height.
+      if [ $Y -gt $YY ] ; then
+         Y=$YY
+      fi
+      #
+      # Dialog needs about 30 more spaces for the right and left window frame to account for additional device descriptions.
+      let X=$XBOX+30
+      #
+      # XX is the window height (in lines) minus 4 lines.
+      let XX=$XSCREEN-4
+      #
+      # If number of characters exceeds the window width then set textbox width.
+      if [ $X -gt $XX ] ; then
+         X=$XX
+      fi
+      #
+      echo "#!/bin/bash" > $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "VERSION=\"$VERSION\"" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#***********************************CAUTION***********************************" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# Any edits made to this code will be lost since this code is" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# automatically generated and updated by running the function," >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# \"f_select_local_device_radiolist\" within the library script \"mountup_local.lib\"" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# which is called by script \"mountup.sh\"." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#***********************************CAUTION***********************************" >>$TEMP_FILE"_device_menu_out.txt"
+      echo "# +----------------------------------------+" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# |    Function f_radiolist_local_devices  |" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# +----------------------------------------+" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#  Inputs: None." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#    Uses: None." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# Outputs: ANS." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "f_radiolist_local_devices () {" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "ANS=\$(dialog --stdout --radiolist \"Choose local device:\" $Y $X $YBOX \\" >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Append string " off\" to the end of each line.
+      awk '{ print $0" off \\" }' $TEMP_FILE"_device_menu.txt" > $TEMP_FILE
+      #
+      # Insert an apostrophe before string "part" and before "off\" and prefix devices with "/dev/".
+      sed -e "s| part | 'part |" -e "s| off |' off |" -e "s|^|/dev/|" $TEMP_FILE >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Insert an apostrophe before string "raid".
+      sed -i "s| raid1 | 'raid1 |" $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Substitute string 'Local drive' for string "part".
+      sed -i 's/part /Local drive /' $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Substitute string 'Local drive' for string "raid1".
+      sed -i 's/raid1 /Local drive /' $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Finish dialog --radiolist command.
+      echo ")" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "} # End of function f_radiolist_local_devices." >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Invoke the file $TEMP_FILE"_device_menu_out.txt" which contains the function, f_choose_mountpoints_gui.
+      source $TEMP_FILE"_device_menu_out.txt"
+      f_radiolist_local_devices
+      ERROR=$?
+      #
+      # echo "Exit code ERROR=$ERROR"  # Diagnostic line.
+      # echo "CHOICE_ACT=$CHOICE_ACT"  # Diagnostic line.
+      # f_press_enter_key_to_continue  # Diagnostic line.
+      #
+      # Delete temporary file.
+      if [ -e $TEMP_FILE"_device_menu_out.txt" ] ; then
+         rm $TEMP_FILE"_device_menu_out.txt"
+      fi
+      #
+}  # End of function f_select_local_device_radiolist.
+#
+# +----------------------------------------------+
+# |   Function f_select_local_devices_checklist  |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: ANS.
+#
+# Summary: Used when dismounting a device with the "Dialog" UI.
+#
+# Dependencies: f_msg_ui_file_box_size, f_checklist_local_devices (generated script).
+#
+f_select_local_devices_checklist () {
+      #
+      # Format the Menu data of local devices to choose from.
+      #
+      # Get the screen resolution or X-window size.
+      # Get rows (height).
+      YSCREEN=$(stty size | awk '{ print $1 }')
+      # Get columns (width).
+      XSCREEN=$(stty size | awk '{ print $2 }')
+      #
+      # Create file $TEMP_FILE"_device_menu.txt".
+      # Get list of all mounted devices.
+      df -hT | grep -e /sd -e /md[0-9] | awk '{ print $1" is mounted on "$NF }' > $TEMP_FILE"_device_menu.txt"
+      #
+      # Output looks like: "/dev/sdb1 is mounted on /media/usb-dev1"
+      #
+      # Calculate dialog/whiptail box dimensions $YBOX, $XBOX.
+      f_msg_ui_file_box_size $TEMP_FILE"_device_menu.txt"
+      #
+      # Dialog needs about 16 more lines for the header and [OK] button.
+      let Y=$YBOX+10
+      # If number of lines exceeds screen/window height then set textbox height.
+      if [ $Y -gt $YSCREEN ] ; then
+         Y=$YSCREEN-3
+      fi
+      #
+      # Dialog needs about 0 more spaces for the right and left window frame.
+      let X=$XBOX+30
+      #
+      # If number of characters exceeds screen/window width then set textbox width.
+      if [ $X -gt $XSCREEN ] ; then
+         X=$XSCREEN-4
+      fi
+      #
+      echo "#!/bin/bash" > $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "VERSION=\"$VERSION\"" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#***********************************CAUTION***********************************" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# Any edits made to this code will be lost since this code is" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# automatically generated and updated by running the function," >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# \"f_select_local_device_checklist\" within the library script \"mountup_local.lib\"" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# which is called by script \"mountup.sh\"." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#***********************************CAUTION***********************************" >>$TEMP_FILE"_device_menu_out.txt"
+      echo "# +----------------------------------------+" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# |    Function f_checklist_local_devices  |" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# +----------------------------------------+" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#  Inputs: None." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#    Uses: None." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "# Outputs: ANS." >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "f_checklist_local_devices () {" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "#" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "ANS=\$(dialog --checklist \"Choose local devices:\" $Y $X 4 \\" >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Create menu choices from the df -hT statement above.
+      # Change from: /dev/sdb1 is mounted on /media/usb-dev1
+      # Change   to: /dev/sdb1 '/dev/sdb1 is mounted on /media/usb-dev1' off \
+      #
+      awk '{ print $1" "$0" off \\" }' $TEMP_FILE"_device_menu.txt" > $TEMP_FILE
+      sed -e "s|/dev/|'/dev/|2" -e "s| off |' off |" $TEMP_FILE >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Finish dialog --checklist command.
+      echo "2>&1 >/dev/tty)" >> $TEMP_FILE"_device_menu_out.txt"
+      echo "} # End of function f_checklist_local_devices." >> $TEMP_FILE"_device_menu_out.txt"
+      #
+      # Invoke the file $TEMP_FILE"_device_menu_out.txt" which contains the function, f_choose_mountpoints_gui.
+      source $TEMP_FILE"_device_menu_out.txt"
+      f_checklist_local_devices $2
+      ERROR=$?
+      #
+      # echo "Exit code ERROR=$ERROR"  # Diagnostic line.
+      # echo "CHOICE_ACT=$CHOICE_ACT"  # Diagnostic line.
+      # f_press_enter_key_to_continue  # Diagnostic line.
+      #
+      # Delete temporary file.
+      if [ -e $TEMP_FILE"_device_menu_out.txt" ] ; then
+         rm $TEMP_FILE"_device_menu_out.txt"
+      fi
+      #
+}  # End of function f_select_local_devices_checklist.
+#
+# +----------------------------------------------+
+# |         Function f_select_mount_point        |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Default directory where sub-directories are mount-points.
+#    Uses: None.
+# Outputs: ANS.
+#
+# Dependencies: f_select_dir, f_message.
+#
+f_select_mount_point () {
+      #
+      # Get mount-points.
+      # Select a single directory.
+      # The X-window must be larger than 80 characters across x 24 lines.
+      #
+      # User chooses a single directory, $DIR_LIST.
+      #
+      # Select a single directory.
+      f_select_dir $1 "Select_Mount-Point_Directory" "$2" 1
+      #
+      # Was any directory selected?
+      if [ -z "$ANS" ] ; then
+         # No directory selected.
+         #
+         # Compose user message.
+         echo "Directory was not specified. Cannot continue." > $TEMP_FILE
+         if [ $1 = "dialog" ] ; then
+            echo "If no directory was selected, then increase X-window size, and try again." >> $TEMP_FILE
+            f_message $1 "OK" "Directory not specified" $TEMP_FILE
+         else
+            f_message $1 "OK" "Directory not specified" "Directory was not specified. Cannot continue."
+         fi
+         #
+      fi
+      #
+}  # End of function f_select_mount_point.
+#
+# +----------------------------------------------+
+# |         Function f_local_device_action       |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - GUI - "dialog" or "whiptail" The CLI UI application in use.
+#          $2 - Menu choice data.
+#    Uses: None.
+# Outputs: ANS.
+#
+# Summary: Adds a prefix "/dev/" to the "Menu choice data" string.
+#          So that the resulting device name may be used in a (u)mount command.
+#
+# Dependencies: f_menu_arrays, f_create_show_menu.
+#
+f_local_device_action () {
+      #
+      f_message $1 "NOK" "Selected Menu Choice" "Selected menu choice is: $2\n\nNow returning to previous menu." 2
+      ANS="/dev/"$2
+      #
+}  # End of function f_local_device_action.
+#

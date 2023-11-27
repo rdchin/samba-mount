@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# ©2021 Copyright 2021 Robert D. Chin
+# ©2023 Copyright 2023 Robert D. Chin
 # Email: RDevChin@Gmail.com
 #
 # Usage: source mountup_servers.lib
@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2021-04-21 19:54"
+VERSION="2023-11-26 12:31"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -68,13 +68,13 @@ VERSION="2021-04-21 19:54"
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
-# |             Customize Server Menu choice options below.                  |
+# |             Customize Server SP-MP Menu choice options below.            |
 # |                                                                          |
 # +--------------------------------------------------------------------------+
 #
-#@@Exit#@@Exit to command line prompt.#@@break
+#@@Exit#@@Return to previous menu.#@@break
 #
-#@@Show#@@Show mounted directories.#@@f_show_mount_points^$GUI
+#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
 # Note: f_menu_server_action_gui will replace the 4th piece below with the actual server name automatically.
 #       It will use the "sed" command to substitute the actual server name automatically.
@@ -84,7 +84,7 @@ VERSION="2021-04-21 19:54"
 #
 #@@Dismount all#@@Dismount all shared directories.#@@f_dismount_all^$GUI^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY
 #
-#@@Pick#@@Pick shared directories to mount or dismount.#@@f_pick_mounts^$GUI^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY
+#@@Pick#@@Pick shared directories to mount/dismount.#@@f_pick_mounts^$GUI^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
@@ -113,6 +113,10 @@ VERSION="2021-04-21 19:54"
 #
 # Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
 #
+#@#//scotty/files#@#/mnt/scotty/files#@#Scotty Server - Restricted shared files.
+#@#//scotty/files-no-backup#@#/mnt/scotty/files-no-backup#@#Scotty Server - Shared files not backed-up.
+#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
+#@#//scotty/JW.org_files#@#/mnt/scotty/JW.org_files#@#Scotty Server - JW.org files.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -135,23 +139,10 @@ VERSION="2021-04-21 19:54"
 #       64     some mount succeeded
 #
 # +----------------------------------------+
-# |        Default Variable Values         |
-# +----------------------------------------+
-#
-VERSION="2021-02-09 00:32"
-#
-#@ Brief Description
-#@
-#@ Library of functions, mountup_servers.lib contains the Server Menu functions
-#@ used by script mountup.sh.
-#@
-#@ See script mountup.sh for Edit History.
-#
-# +----------------------------------------+
 # |       Function f_server_arrays         |
 # +----------------------------------------+
 #
-#  Inputs: $1=file of menu choice strings.
+#  Inputs: $1 - file of menu choice strings.
 #    Uses: XSTR, SERVER_NAME, NEXT_SERVER_NAME, SERVER_NUM, ARRAY_NUM.
 # Outputs: SERVER[$SERVER_NUM]=<Name of server>^<Description of shared directory>.
 #          SRV[$SERVER_NUM]=<1st 3-letters of server name for pattern matching in menu case statement>.
@@ -186,7 +177,7 @@ f_server_arrays () {
       # Read line of data having 3 delimiters and 4 fields. Save fields 2, 3, 4.
       # echo $(awk -F "$DELIMITER" '{ if ( $3 ) { print $2 "^" $3 "^" $4; }}' $THIS_FILE)
       #
-      if [ -r $TEMP_FILE ] ; then
+      if [ -e $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
       #
@@ -215,7 +206,7 @@ f_server_arrays () {
                fi
             done < $TEMP_FILE
       #
-      # Calculate number of lines or Menu Choices to find maximum menu lines 
+      # Calculate number of lines or Menu Choices to find maximum menu lines
       # for Dialog or Whiptail.
       MAX_LINES=$(wc --lines <$TEMP_FILE)
       #
@@ -264,20 +255,20 @@ f_server_arrays () {
                let ARRAY_NUM=$ARRAY_NUM+1
             done < $TEMP_FILE
       #
-      if [ -r $TEMP_FILE ] ; then
+      if [ -e $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
-      #
       unset XSTR SERVER_NUM ARRAY_NUM SERVER_NAME NEXT_SERVER_NAME # Throw out this variable.
+      #
 } # End of f_server_arrays.
 #
 # +----------------------------------------+
 # |     Function f_mount_or_dismount_all   |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Server name.
-#          $3 "mount" or "dismount".
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
+#          $3 - "mount" or "dismount".
 #    Uses: ERROR, EXITOUT, NUM, SP, MP.
 # Outputs: None.
 #
@@ -330,7 +321,7 @@ f_mount_or_dismount_all () {
                MP=$(eval echo "\$\{$2_MP[$NUM]\}")
                # Read Shared directory from array <Server name>_SP[1].
                SP=$(eval echo $SP)
-               # Does array element exist? (specifying Shared Directory).               
+               # Does array element exist? (specifying Shared Directory).
                if [ -n "$SP" ] ; then
                   # Read Mount-point directory from array <Server name>_MP[1].
                   MP=$(eval echo $MP)
@@ -361,11 +352,11 @@ f_mount_or_dismount_all () {
 # |              Function f_mount1         |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Share-point.
-#          $3=Mount-point.
-#          $4=SMBUSER  (smb username).
-#          $5=PASSWORD (smb password).
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Share-point.
+#          $3 - Mount-point.
+#          $4 - SMBUSER  (smb username).
+#          $5 - PASSWORD (smb password).
 #    Uses: QUIT, ERROR. $TEMP_FILE.
 # Outputs: None.
 #
@@ -412,7 +403,7 @@ f_mount1 () {
                #
             done
       #
-      if [ -r  $TEMP_FILE ] ; then
+      if [ -e  $TEMP_FILE ] ; then
          rm  $TEMP_FILE
       fi
       #
@@ -424,11 +415,11 @@ f_mount1 () {
 # |             Function f_mount2          |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Share-point.
-#          $3=Mount-point.
-#          $4=$SMBUSER  (smb username).
-#          $5=$PASSWORD (smb password).
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Share-point.
+#          $3 - Mount-point.
+#          $4 - $SMBUSER  (smb username).
+#          $5 - $PASSWORD (smb password).
 #    Uses: None.
 # Outputs: ERROR.
 #
@@ -464,11 +455,11 @@ f_mount2 () {
          # fi
       fi
       #
-      if [ -r  $TEMP_FILE ] ; then
+      if [ -e  $TEMP_FILE ] ; then
          rm  $TEMP_FILE
       fi
       #
-      if [ -r  $TEMP_FILE2 ] ; then
+      if [ -e  $TEMP_FILE2 ] ; then
          rm  $TEMP_FILE2
       fi
       #
@@ -478,9 +469,9 @@ f_mount2 () {
 # |          Function f_test_mount         |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Share-point.
-#          $3=Mount-point.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Share-point.
+#          $3 - Mount-point.
 #    Uses: ERROR.
 # Outputs: QUIT, SMBUSER. $TEMP_FILE.
 f_test_mount () {
@@ -539,7 +530,7 @@ f_test_mount () {
          fi
       fi
       #
-      if [ -r  $TEMP_FILE ] ; then
+      if [ -e  $TEMP_FILE ] ; then
          rm  $TEMP_FILE
       fi
       #
@@ -549,8 +540,8 @@ f_test_mount () {
 # |           Function f_dismount          |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Mount-point.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Mount-point.
 #    Uses: ERROR.
 # Outputs: None.
 #
@@ -572,7 +563,7 @@ f_dismount () {
       # Was umount command successful?
       if [ -s $TEMP_FILE ] ; then
          # File $TEMP_FILE contains error message, so display it.
-         fmessage $1 "OK" "Error Unmounting" $TEMP_FILE
+         f_message $1 "OK" "Error Unmounting" $TEMP_FILE
       fi
       #
       if [ -r $TEMP_FILE ] ; then
@@ -583,15 +574,15 @@ f_dismount () {
 } # End of function f_dismount.
 #
 # +----------------------------------------+
-# |         Function f_menu_action         |
+# |      Function f_server_menu_action     |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI
-#          $2=Server name.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
 #    Uses: CHOICE_ACT, ANS XNUM.
 # Outputs: SMBUSER="".
 #
-f_menu_action () {
+f_server_menu_action  () {
       #
       # Test connection to server.
       f_test_connection $1 $2 1
@@ -600,27 +591,29 @@ f_menu_action () {
          THIS_FILE="mountup_servers.lib"
          #TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_action_generated.lib"
          #
-         # Build Server Arrays for f_menu_action_txt/gui to (dis)mount servers.
+         # Build Server Arrays for f_server_menu_action _txt/gui to (dis)mount servers.
+         # Server share-points and local mount-points data delimited by "#@#" contained in $ARRAY_FILE.
          ARRAY_FILE=$THIS_DIR/"mountup_servers.lib"
+         #
          f_server_arrays $ARRAY_FILE
          #
          case $1 in
-              "text" | "whiptail")
+              "text")
                  f_menu_server_action_txt $2
               ;;
-              "dialog")
+              "dialog" | "whiptail")
                  f_menu_server_action_gui $1 $2
               ;;
          esac
          #
       fi
-}  # End of function f_menu_action
+}  # End of function f_server_menu_action
 #
 # +----------------------------------------+
 # |    Function f_menu_server_action_txt   |
 # +----------------------------------------+
 #
-#  Inputs: $1=Server name.
+#  Inputs: $1 - Server name.
 #    Uses: CHOICE_ACT, ANS XNUM.
 # Outputs: SMBUSER="".
 #
@@ -640,7 +633,7 @@ f_menu_server_action_txt () {
             echo "0 (Q/q) - Quit to previous menu."
             echo "1 (S/s) - Show mounted directories."
             echo "2 (M/m) - Mount   all shared directories."
-            echo "3 (D/d) - Disount all shared directories."
+            echo "3 (D/d) - Dismount all shared directories."
             ARRAY_NAME=$1"_DESC"
             ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
             ARRAY_LEN=$(eval echo $ARRAY_LEN)
@@ -673,7 +666,7 @@ f_menu_server_action_txt () {
                            f_show_mount_points $GUI
                            CHOICE_ACT=3
                            ;;
-                   [4-9][Mm] | [1-9][0-9][Mm]) 
+                   [4-9][Mm] | [1-9][0-9][Mm])
                            # Strip off trailing "M" or "m".
                            XNUM=$(echo $CHOICE_ACT |  tr -d 'Mm')
                            CHOICE_ACT=$XNUM
@@ -710,8 +703,8 @@ f_menu_server_action_txt () {
 # |    Function f_menu_server_action_gui   |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=Server name.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
 #    Uses: CHOICE_ACT, PASSWORD, MENU_TITLE.
 # Outputs: GENERATED_FILE, ARRAY_FILE, MENU_TITLE, TEMP_FILE, SERVER_NAME.
 #
@@ -724,7 +717,7 @@ f_menu_server_action_gui () {
       grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
       #
       # Substitute actual file server name for "SERVER-NAME_GOES_HERE" place-holder.
-      sed -i "s/\THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY/$2/g" $GENERATED_FILE
+      sed -i "s/THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY/$2/g" $GENERATED_FILE
       #
       # Create arrays from data.
       ARRAY_FILE="$GENERATED_FILE"
@@ -734,9 +727,15 @@ f_menu_server_action_gui () {
       THIS_FILE="mountup_servers.lib"
       GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
       # Menu title must substitute underscores for spaces
-      MENU_TITLE="Mount-Dismount_File_Server_Menu"
-      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_temp.txt"
       SERVER_NAME=$2
+      MENU_TITLE="Mount-Dismount_"$SERVER_NAME"_File_Server_Menu"
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_temp.txt"
+      #
+      # Increase values to enlarge dialog/whiptail boxes because for some
+      # unknown reason, f_menu_arrays calculated much too small values
+      # resulting in truncated text in dialog/whiptail boxes.
+      let MAX_CHOICE_LENGTH=$MAX_CHOICE_LENGTH+32  # Diagnostic Line.
+      let MAX_LENGTH=$MAX_LENGTH+27  # Diagnostic Line.
       #
       # Create generated menu script from array data.
       f_create_show_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
@@ -744,12 +743,12 @@ f_menu_server_action_gui () {
       THIS_FILE="mountup_servers.lib"
       #
       GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_data_generated.lib"
-      if [ -r $GENERATED_FILE ] ; then
+      if [ -e $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
       fi
       #
       GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
-      if [ -r $GENERATED_FILE ] ; then
+      if [ -e $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
       fi
       #
@@ -759,8 +758,8 @@ f_menu_server_action_gui () {
 # |          Function f_mount_all          |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          $2=Server name.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
 #    Uses: None.
 # Outputs: None.
 #
@@ -774,8 +773,8 @@ f_mount_all () {
 # |         Function f_dismount_all        |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          $2=Server name.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
 #    Uses: None.
 # Outputs: None.
 #
@@ -789,9 +788,9 @@ f_dismount_all () {
 # |          Function f_pick_mounts        |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          $2=Server name.
-#          $3=Mount-Point.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Server name.
+#          $3 - Mount-Point.
 #    Uses: None.
 # Outputs: None.
 #
@@ -803,7 +802,7 @@ f_pick_mounts () {
       #
       THIS_FILE="mountup_servers.lib"
       GENERATED_FILE=$THIS_FILE"_mount-dismount_menu_generated.lib"
-      if [ -r $GENERATED_FILE ] ; then
+      if [ -e $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
       fi
       #
@@ -815,10 +814,10 @@ f_pick_mounts () {
 # |          Function f_menu_pick          |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=SERVER NAME.
-#          $3=GENERATED_FILE.
-#          $4=MOUNT POINT.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - SERVER NAME.
+#          $3 - GENERATED_FILE.
+#          $4 - MOUNT POINT.
 #    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC, QUIT.
 # Outputs: STATUS[XNUM], $2_DESC[XNUM].
 #
@@ -839,7 +838,7 @@ f_menu_pick () {
       echo "# |        Function f_checklist_mp_gui     |" >>$3
       echo "# +----------------------------------------+" >>$3
       echo "#" >>$3
-      echo "#  Inputs: \$1=Server name." >>$3
+      echo "#  Inputs: None." >>$3
       echo "#    Uses: None." >>$3
       echo "# Outputs: CHOICE_ACT." >>$3
       echo "#" >>$3
@@ -898,7 +897,7 @@ f_menu_pick () {
       echo "} # End of function f_checklist_mp_gui." >>$3
       #
       # Invoke the file $3 which contains the function, f_checklist_mp.
-      . $3
+      source $3
       f_checklist_mp_gui $2
       ERROR=$?
       # echo "Exit code ERROR=$ERROR"  # Diagnostic line.
@@ -914,7 +913,7 @@ f_menu_pick () {
             f_username $1 $USER $4
             # if SMBUSER is null, so not yet set, then use $USER as the default username.
             # The default username $USER, is a System variable equivalent to your login username.
-            if [ $ERROR -ne 0 ] ; then  
+            if [ $ERROR -ne 0 ] ; then
                # <Cancel> button was pressed.
                # Quit out of loop in f_pick_menu.
                QUIT=1
@@ -959,12 +958,12 @@ f_menu_pick () {
 # |         Function f_pick_match          |
 # +----------------------------------------+
 #
-#  Inputs: $1=GUI - "dialog" or "whiptail" The CLI GUI application in use.
-#          $2=XNUM
-#          $3=SP Share-point.
-#          $4=MP Mount-point.
-#          $5=SMB user name.
-#          $6=PASSWORD.
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - XNUM
+#          $3 - SP Share-point.
+#          $4 - MP Mount-point.
+#          $5 - SMB user name.
+#          $6 - PASSWORD.
 #          CHOICE_ACT.
 #    Uses: MNT.
 # Outputs: QUIT.
@@ -978,7 +977,7 @@ f_pick_match () {
              do
                 # Does MNT contain XNUM?
                 if [[ $MNT =~ $2 ]] ; then
-                   # Yes, MNT contains XNUM so mount it. 
+                   # Yes, MNT contains XNUM so mount it.
                    # echo "Mount $3 on $4"  # Diagnostic line.
                    f_mount1 $1 $3 $4 $5 $6
                 fi
