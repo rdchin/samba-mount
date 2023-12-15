@@ -70,7 +70,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-11-26 12:31"
+VERSION="2023-12-14 23:51"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -236,6 +236,10 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2023-12-14 *f_pick_mounts, f_dismount_all, f_dismount_all added exiting
+##             of "Mount-Dismount [Server Name] File Server Menu" after
+##             selection of those menu options because it just makes sense.
 ##
 ## 2023-11-26 *Section "Customize Server Menu choice options" in mountup.lib
 ##             bug fixed by deleting an extraneous space after the function

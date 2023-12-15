@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-11-26 12:31"
+VERSION="2023-12-14 23:51"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.

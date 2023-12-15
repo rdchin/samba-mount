@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-11-26 12:31"
+VERSION="2023-12-14 23:51"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -767,6 +767,10 @@ f_mount_all () {
       #
       f_mount_or_dismount_all $1 $2 "mount"
       f_show_mount_points $1
+      #
+      # Return to previous menu.
+      CHOICE="QUIT"
+      #
 } # End of function f_mount_all.
 #
 # +----------------------------------------+
@@ -782,6 +786,10 @@ f_dismount_all () {
       #
       f_mount_or_dismount_all $1 $2 "dismount"
       f_show_mount_points $1
+      #
+      # Return to previous menu.
+      CHOICE="QUIT"
+      #
 } # End of function f_dismount_all.
 #
 # +----------------------------------------+
@@ -806,10 +814,11 @@ f_pick_mounts () {
          rm $GENERATED_FILE
       fi
       #
+      # Return to previous menu.
+      CHOICE="QUIT"
+      #
 } # End of function f_pick_mounts.
 #
-
-
 # +----------------------------------------+
 # |          Function f_menu_pick          |
 # +----------------------------------------+
@@ -817,7 +826,7 @@ f_pick_mounts () {
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
 #          $2 - SERVER NAME.
 #          $3 - GENERATED_FILE.
-#          $4 - MOUNT POINT.
+#          $4 - SERVER NAME OF MOUNT POINT.
 #    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC, QUIT.
 # Outputs: STATUS[XNUM], $2_DESC[XNUM].
 #
