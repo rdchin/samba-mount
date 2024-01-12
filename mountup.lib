@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-14 23:51"
+VERSION="2023-12-31 21:13"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -78,7 +78,7 @@ VERSION="2023-12-14 23:51"
 #
 #@@Parsley#@@Parsley file server.#@@f_server_menu_action^$GUI^parsley
 #
-#@@Local#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
+#@@Local_PC:_$HOSTNAME#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
@@ -196,7 +196,7 @@ f_menu_server () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Server_Menu"
+      MENU_TITLE="Local_PC_"$HOSTNAME":_Server_Menu"
       #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_temp.txt"
       #

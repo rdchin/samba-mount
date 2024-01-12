@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-14 23:51"
+VERSION="2023-12-31 21:13"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -150,7 +150,7 @@ f_mount_or_dismount_local_usb_drive () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Local_Storage_Action_Menu"
+      MENU_TITLE="Local_PC_"$HOSTNAME":_Storage_Action_Menu"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_temp.txt"
       #
       #
@@ -440,7 +440,7 @@ f_select_local_device_menu () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST substitute underscores for spaces.
-      MENU_TITLE="Local_Storage_Device_Menu"
+      MENU_TITLE="Local PC"$HOSTNAME": Local_Storage_Device_Menu"
       #
       #
       #==================================================================

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bas
 #
 # ©2023 Copyright 2023 Robert D. Chin
 # Email: RDevChin@Gmail.com
@@ -70,11 +70,12 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-14 23:51"
+VERSION="2023-12-31 21:13"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
 GENERATED_FILE=$THIS_FILE"_menu_generated.lib"
+HOSTNAME=$(cat /etc/hostname)
 #
 #
 #================================================================
@@ -236,6 +237,8 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2023-12-31 *Include Local PC Hostname in menu titles.
 ##
 ## 2023-12-14 *f_pick_mounts, f_dismount_all, f_dismount_all added exiting
 ##             of "Mount-Dismount [Server Name] File Server Menu" after
@@ -733,7 +736,8 @@ f_menu_main () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Mount/Dismount_Menu"
+      MENU_TITLE="Local_PC_"$HOSTNAME":_Mount/Dismount_Menu"
+      #MENU_TITLE="Mount/Dismount_Menu"
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_main_temp.txt"
       #
       f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
