@@ -1,6 +1,6 @@
 #!/bin/bas
 #
-# ©2023 Copyright 2023 Robert D. Chin
+# ©2024 Copyright 2024 Robert D. Chin
 # Email: RDevChin@Gmail.com
 #
 # Usage: bash mountup.sh
