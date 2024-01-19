@@ -70,7 +70,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-31 21:13"
+VERSION="2024-01-18 21:04"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -237,6 +237,10 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024-01-18 *f_select_local_devices_checklist bug fixed where Dialog
+##             --checklist window size parameters were wrong.
+##             Also display size of storage device for Dialog --checklist.
 ##
 ## 2023-12-31 *Include Local PC Hostname in menu titles.
 ##

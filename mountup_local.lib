@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-31 21:13"
+VERSION="2024-01-18 21:04"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -635,7 +635,7 @@ f_select_local_devices_checklist () {
       #
       # Create file $TEMP_FILE"_device_menu.txt".
       # Get list of all mounted devices.
-      df -hT | grep -e /sd -e /md[0-9] | awk '{ print $1" is mounted on "$NF }' > $TEMP_FILE"_device_menu.txt"
+      df -hT | grep -e /sd -e /md[0-9] | awk '{ print $1" (size: "$3") is mounted on "$NF }' > $TEMP_FILE"_device_menu.txt"
       #
       # Output looks like: "/dev/sdb1 is mounted on /media/usb-dev1"
       #
@@ -646,7 +646,7 @@ f_select_local_devices_checklist () {
       let Y=$YBOX+10
       # If number of lines exceeds screen/window height then set textbox height.
       if [ $Y -gt $YSCREEN ] ; then
-         Y=$YSCREEN-3
+         let Y=$YSCREEN-3
       fi
       #
       # Dialog needs about 0 more spaces for the right and left window frame.
@@ -654,7 +654,7 @@ f_select_local_devices_checklist () {
       #
       # If number of characters exceeds screen/window width then set textbox width.
       if [ $X -gt $XSCREEN ] ; then
-         X=$XSCREEN-4
+         let X=$XSCREEN-4
       fi
       #
       echo "#!/bin/bash" > $TEMP_FILE"_device_menu_out.txt"

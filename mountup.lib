@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2023-12-31 21:13"
+VERSION="2024-01-18 21:04"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -78,7 +78,7 @@ VERSION="2023-12-31 21:13"
 #
 #@@Parsley#@@Parsley file server.#@@f_server_menu_action^$GUI^parsley
 #
-#@@Local_PC:_$HOSTNAME#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
+#@@Local PC: $HOSTNAME#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
