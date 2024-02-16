@@ -70,7 +70,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-01-18 21:04"
+VERSION="2024-02-15 15:13"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -103,7 +103,7 @@ HOSTNAME=$(cat /etc/hostname)
 #                 Local PC Mount-point directory is "/mnt/file_server/public".
 #
 # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
-  LOCAL_REPO_DIR="$MP_DIR/LIBRARY/PC-stuff/PC-software/BASH_Scripting_Projects/Repository"
+  LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
 #
 #
 #=================================================================

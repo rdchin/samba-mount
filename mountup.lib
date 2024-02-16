@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-01-18 21:04"
+VERSION="2024-02-15 15:13"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -129,7 +129,7 @@ f_check_version () {
       #
       # Local PC mount-point with LAN File Server Local Repository full directory path.
       # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
-        LOCAL_REPO_DIR="$MP_DIR/LIBRARY/PC-stuff/PC-software/BASH_Scripting_Projects/Repository"
+        LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
       #
       # Local PC file to be compared.
       if [ $# -eq 2 ] ; then

@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-01-18 21:04"
+VERSION="2024-02-15 15:13"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -112,11 +112,8 @@ VERSION="2024-01-18 21:04"
 #
 #
 # Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
-#
-#@#//scotty/files#@#/mnt/scotty/files#@#Scotty Server - Restricted shared files.
-#@#//scotty/files-no-backup#@#/mnt/scotty/files-no-backup#@#Scotty Server - Shared files not backed-up.
-#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
-#@#//scotty/JW.org_files#@#/mnt/scotty/JW.org_files#@#Scotty Server - JW.org files.
+#@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+#@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
 #
 # MOUNT COMMAND RETURN CODES
