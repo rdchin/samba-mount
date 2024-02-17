@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-15 15:13"
+R2D2 Server shared geek scripts.VERSION="2024-02-16 20:15"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -68,19 +68,46 @@ VERSION="2024-02-15 15:13"
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
-# |           Customize Local Action Menu choice options below.             |
+# |           Customize Local Action Menu choice options below.              |
 # |                                                                          |
 # +--------------------------------------------------------------------------+
 #
-#@@Exit#@@Return to previous menu.#@@break
+#                 >>> !!!Warning!!! <<<
 #
-#@@Mount#@@Mount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^mount^"/dev/sdb1"
+# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
+# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
 #
-#@@Dismount#@@Dismount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount^"/dev/sdb1"
+# Forbidden characters include ; : * ' " & > <
+#
+# These characters will compromise the creation of arrays which
+# in turn creates the menu.
+#
+# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
+#
+# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
+#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
+#
+# List of inputs for f_menu_main_all_menus
+#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+#          $2 - MENU_TITLE (Title of the sub-menu)
+#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
+#
+#! +--------------------------------------------------------------+
+#! | Start Listing Storage Action Menu                            |
+#! |               (Required header, do not delete).              |
+#! +--------------------------------------------------------------+
+#
+#@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
+#
+#@@Mount#@@Mount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^mount
+#
+#@@Dismount#@@Dismount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
 #@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
+#
+#! End Listing Storage Action Menu (Required line, do not delete).
 #
 # +------------------------------------------------+
 # |   Function f_detect_state_of_local_usb_drive   |
@@ -136,13 +163,10 @@ f_detect_state_of_local_usb_drive () {
 #    Uses: None.
 # Outputs: None.
 #
-# Dependencies: f_menu_arrays, f_create_show_menu.
+# Summary: Display Storage Action Menu to mount or dismount local USB drive.
+# Dependencies: f_menu_main_all_menus.
 #
 f_mount_or_dismount_local_usb_drive () {
-      #
-      # Use Dialog --menu
-      #
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib"
       #
       # Create generated menu script from array data.
       #
@@ -150,8 +174,7 @@ f_mount_or_dismount_local_usb_drive () {
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Local_PC_"$HOSTNAME":_Storage_Action_Menu"
-      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_temp.txt"
+      MENU_TITLE="Storage_Action_Menu"
       #
       #
       #================================================================================
@@ -163,20 +186,8 @@ f_mount_or_dismount_local_usb_drive () {
       # Specify library file name with menu item data.
       ARRAY_FILE="$THIS_DIR/mountup_local.lib"
       #
-      #
-      # Create arrays from data.
-      f_menu_arrays $ARRAY_FILE
-      #
       # Create generated menu script from array data.
-      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
-      #
-      if [ -r $GENERATED_FILE ] ; then
-         rm $GENERATED_FILE
-      fi
-      #
-      if [ -r $TEMP_FILE ] ; then
-                 rm $TEMP_FILE
-      fi
+      f_menu_main_all_menus $1 $MENU_TITLE $ARRAY_FILE
       #
 }  # End of function f_mount_or_dismount_local_usb_drive.
 #
@@ -189,7 +200,11 @@ f_mount_or_dismount_local_usb_drive () {
 #    Uses: None.
 # Outputs: ERROR.
 #
-# Dependencies: apt, f_message, f_ask_question.
+# Summary: Determines which function based on $2.
+#
+# Dependencies: f_mount_local_usb_drive_2, 
+#               f_dismount_local_usb_drive_2,
+#               f_show_mount_points
 #
 f_mount_or_dismount_local_usb_drive_2 () {
       #
@@ -198,9 +213,9 @@ f_mount_or_dismount_local_usb_drive_2 () {
       fi
       #
       if [ $2 = "mount" ] ; then
-         f_mount_local_usb_drive_2 $1 $2
+         f_mount_local_usb_drive_2 $1
       else
-         f_dismount_local_usb_drive_2 $1 $2
+         f_dismount_local_usb_drive_2 $1
       fi
       # Show file shares and mount-points.
       f_show_mount_points $1
@@ -212,13 +227,15 @@ f_mount_or_dismount_local_usb_drive_2 () {
 # +------------------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
-#          $2 - "mount" or "dismount".
 #    Uses: None.
 # Outputs: ERROR.
 #
 # Summary: Mount a local USB device.
 #
-# Dependencies: apt, f_message, f_ask_question.
+# Dependencies: lsblk, f_message, f_ask_question
+#               f_select_local_device
+#               f_select_local_device_radiolist
+#               f_select_mount_point 
 #
 f_mount_local_usb_drive_2 () {
       #
@@ -316,13 +333,12 @@ f_mount_local_usb_drive_2 () {
 # +------------------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
-#          $2 -  "mount" or "dismount".
 #    Uses: None.
 # Outputs: ERROR.
 #
 # Summary: Dismount a local USB device.
 #
-# Dependencies: apt, f_message, f_ask_question.
+# Dependencies: df, f_message.
 #
 f_dismount_local_usb_drive_2 () {
       #
@@ -432,15 +448,25 @@ f_select_local_device_menu () {
       # Insert the first menu option at the first line.
       sed -i '1i #@@Exit#@@Return to previous menu.#@@break' $TEMP_FILE"_device_menu.txt"
       #
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_local_storage_generated.lib"
-      #
       # Create generated menu script from array data.
       #
       # Note: ***If Sub-Menu title contains spaces,
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST substitute underscores for spaces.
-      MENU_TITLE="Local PC"$HOSTNAME": Local_Storage_Device_Menu"
+      MENU_TITLE="Local_Storage_Device_Menu"
+      #
+      # Include required menu header and footer when using f_menu_main_all_menus.
+      echo "#! +--------------------------------------------------------------+" > $TEMP_FILE
+      echo "#! | Start Listing Local Storage Device Menu                      |" >> $TEMP_FILE
+      echo "#! |               (Required header, do not delete).              |" >> $TEMP_FILE
+      echo "#! +--------------------------------------------------------------+" >> $TEMP_FILE
+      echo "#" >> $TEMP_FILE
+      cat $TEMP_FILE"_device_menu.txt" >> $TEMP_FILE
+      echo "#" >> $TEMP_FILE
+      echo "#! End Listing Local Storage Device Menu (Required line, do not delete)." >> $TEMP_FILE
+      #
+      mv $TEMP_FILE $TEMP_FILE"_device_menu.txt"
       #
       #
       #==================================================================
@@ -454,22 +480,10 @@ f_select_local_device_menu () {
       #ARRAY_FILE=$TEMP_FILE"_device_menu.txt"
       ARRAY_FILE=$TEMP_FILE"_device_menu.txt"
       #
-      # Create arrays from data.
-      f_menu_arrays $ARRAY_FILE
-      #
       # Create and show menu of local devices.
-      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      f_menu_main_all_menus $1 $MENU_TITLE $ARRAY_FILE
       #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_local_device_temp.txt"
-      #
-      if [ -r $GENERATED_FILE ] ; then
-         rm $GENERATED_FILE
-      fi
-      #
-      # Delete temporary file.
-      if [ -e $TEMP_FILE ] ; then
-         rm $TEMP_FILE
-      fi
       #
       # Delete temporary file.
       if [ -e $TEMP_FILE"_device_menu.txt" ] ; then
@@ -714,6 +728,8 @@ f_select_local_devices_checklist () {
 #          $2 - Default directory where sub-directories are mount-points.
 #    Uses: None.
 # Outputs: ANS.
+#
+# Summary: Choose a single Mount-Point directory.
 #
 # Dependencies: f_select_dir, f_message.
 #

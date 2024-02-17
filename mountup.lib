@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-15 15:13"
+VERSION="2024-02-16 20:15"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -72,15 +72,42 @@ VERSION="2024-02-15 15:13"
 # |                                                                          |
 # +--------------------------------------------------------------------------+
 #
-#@@Exit#@@Return to previous menu.#@@break
+#                 >>> !!!Warning!!! <<<
 #
-#@@Scotty#@@Scotty back-up file server.#@@f_server_menu_action^$GUI^scotty
+# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
+# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
 #
-#@@Parsley#@@Parsley file server.#@@f_server_menu_action^$GUI^parsley
+# Forbidden characters include ; : * ' " & > <
+#
+# These characters will compromise the creation of arrays which
+# in turn creates the menu.
+#
+# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
+#
+# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
+#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
+#
+# List of inputs for f_menu_main_all_menus
+#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+#          $2 - MENU_TITLE (Title of the sub-menu)
+#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
+#
+#! +--------------------------------------------------------------+
+#! | Start Listing Server Menu                                    |
+#! |               (Required header, do not delete).              |
+#! +--------------------------------------------------------------+
+#
+#@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
+#
+#@@R2D2#@@R2D2 Server shared geek scripts.#@@f_menu_server_action^$GUI^R2D2
+#
+#@@C3PO#@@C3PO Server shared Library.#@@f_menu_server_action^$GUI^C3PO
 #
 #@@Local PC: $HOSTNAME#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#
+#! End Listing Server Menu (Required line, do not delete).
 #
 # +----------------------------------------+
 # |        Function f_check_version        |
@@ -172,60 +199,6 @@ f_check_version () {
       fi
       #
 }  # End of function f_check_version.
-#
-# +----------------------------------------+
-# |          Function f_menu_server        |
-# +----------------------------------------+
-#
-#     Rev: 2020-09-18
-#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
-#    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
-# Outputs: None.
-#
-# Summary: Display the "Server Menu".
-#
-# Dependencies: f_menu_arrays, f_create_show_menu.
-#
-f_menu_server () {
-      #
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_generated.lib"
-      #
-      # Create generated menu script from array data.
-      #
-      # Note: ***If Menu title contains spaces,
-      #       ***the size of the menu window will be too narrow.
-      #
-      # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Local_PC_"$HOSTNAME":_Server_Menu"
-      #
-      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_temp.txt"
-      #
-      #
-      #==================================================================
-      # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME
-      # (LIBRARY) WHERE THE MENU ITEM DATA IS LOCATED.
-      # THE LINES OF DATA ARE PREFIXED BY "#@@".
-      #==================================================================
-      #
-      #
-      # Specify library file name with menu item data.
-      ARRAY_FILE="$THIS_DIR/mountup.lib"
-      #
-      # Create arrays from data.
-      f_menu_arrays $ARRAY_FILE
-      #
-      # Create generated menu script from array data.
-      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
-      #
-      if [ -r $GENERATED_FILE ] ; then
-         rm $GENERATED_FILE
-      fi
-      #
-      if [ -r $TEMP_FILE ] ; then
-         rm $TEMP_FILE
-      fi
-      #
-}  # End of function f_menu_server.
 #
 # +----------------------------------------+
 # |          Function f_install_app        |

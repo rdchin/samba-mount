@@ -20,39 +20,40 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
-# +----------------------------------------+
-# |            Main Menu Options           |
-# +----------------------------------------+
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# |        Customize Local PC Mount-Dismount Menu choice options below.      |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
 #
 #                 >>> !!!Warning!!! <<<
 #
 # The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
 # single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
 #
-# Forbidden characters include ; : * ' " - & > < / \
+# Forbidden characters include ; : * ' " & > <
 #
 # These characters will compromise the creation of arrays which
 # in turn creates the menu.
 #
 # General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
 #
-# Format of <Corresponding function or action or command> when using f_create_a_menu
-#        f_create_menu^"text", "dialog", or "whiptail"^menu_generated.lib^Menu Name^Temporary File Name^Library name containing menu entries
+# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
+#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
 #
-# List of inputs for f_create_a_menu.
+# List of inputs for f_menu_main_all_menus
+#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+#          $2 - MENU_TITLE (Title of the sub-menu)
+#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
 #
-#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface application in use.
-#          $2 - GENERATED_FILE (The name of a temporary library file containing the suggested phrase "generated.lib" which contains the code to display the sub-menu).
-#          $3 - MENU_TITLE (Title of the sub-menu)
-#          $4 - TEMP_FILE (Temporary file).
-#          $5 - ARRAY_FILE (Temporary file) includes menu items imported from $ARRAY_SOURCE_FILE of a single menu.
-#          $6 - ARRAY_SOURCE_FILE (Not a temporay file) includes menu items from multiple menus.
+#! +--------------------------------------------------------------+
+#! | Start Listing Local PC Mount-Dismount Menu                   |
+#! |               (Required header, do not delete).              |
+#! +--------------------------------------------------------------+
 #
-# Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or cammand>
+#@@Exit#@@Exit to PC "$HOSTNAME" command-line.#@@break
 #
-#@@Exit#@@Exit this menu.#@@break
-#
-#@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_server^$GUI
+#@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_main_all_menus^$GUI^Server_Menu^$THIS_DIR/mountup.lib
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
@@ -66,11 +67,13 @@
 #
 #@@Help#@@Display help message.#@@f_help_message^$GUI
 #
+#! End Listing Local PC Mount-Dismount Menu (Required line, do not delete).
+#
 # +----------------------------------------+
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-15 15:13"
+VERSION="2024-02-16 20:15"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -142,7 +145,9 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #& corresponding mount-points (directories) on the Local PC.
 #&
 #& To add more file server names, share-points with corresponding
-#& mount-points, edit the text at the end of function f_server_arrays.
+#& mount-points, edit the text in file mountup_servers.lib after section:
+#& "Add additional source file servers, share-points, and mount-points here."
+#&
 #& Format: <DELIMITER>//<Source File Server>/<Shared directory><DELIMITER>
 #&        /<Mount-point on local PC>
 #&
@@ -237,6 +242,9 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024-02-16 *Extensive rewrite to improve documentation comments and
+##             rewrite all menus to use f_menu_main_all_menus.
 ##
 ## 2024-01-18 *f_select_local_devices_checklist bug fixed where Dialog
 ##             --checklist window size parameters were wrong.
@@ -678,83 +686,143 @@ f_display_common () {
       #
 } # End of function f_display_common.
 #
-# +----------------------------------------+
-# |          Function f_menu_main          |
-# +----------------------------------------+
+# +-----------------------------------------+
+# | Function f_menu_main_all_menus          |
+# +-----------------------------------------+
 #
-#     Rev: 2021-03-07
+#     Rev: 2024-02-15
 #  Inputs: $1 - "text", "dialog" or "whiptail" the preferred user-interface.
-#    Uses: ARRAY_FILE, GENERATED_FILE, MENU_TITLE.
+#          $2 - MENU_TITLE Title of menu which must also match the header
+#               and tail strings for the menu data in the ARRAY_SOURCE_FILE.
+#              !!!Menu title MUST use underscores instead of spaces!!!
+#          $3 - ARRAY_SOURCE_FILE is the file name where the menu data is stored.
+#               This can be the run-time script or a separate *.lib library file.
+#    Uses: ARRAY_SOURCE_FILE, ARRAY_TEMP_FILE, GENERATED_FILE, MENU_TITLE, TEMP_FILE.
 # Outputs: None.
 #
-# Summary: Display Main-Menu.
-#          This Main Menu function checks its script for the Main Menu
-#          options delimited by "#@@" and if it does not find any, then
-#          it it defaults to the specified library script.
+# Summary: Display any menu. Use this same function to display
+#          both Main-Menu and any sub-menus. The Main Menu and all sub-menu data
+#          may either be in the run-time script (*.sh) or a separate library (*.lib)
 #
-# Dependencies: f_menu_arrays, f_create_show_menu.
+#          A single script/library file contains data for multiple menus
+#          where there may be 1 or more menus within 1 file.
 #
-f_menu_main () {
+#          Simply state the Path/Filename of the library file, ARRAY_SOURCE_FILE
+#          which contains the menu data.
+#
+# Dependencies: f_create_a_menu.
+#
+# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
+#              THIS FUNCTION INTO THE MAIN SCRIPT WHICH WILL CALL IT.
+#
+f_menu_main_all_menus () {
       #
-      # Create and display the Main Menu.
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_main_generated.lib"
       #
-      # Does this file have menu items in the comment lines starting with "#@@"?
-      grep --silent ^\#@@ $THIS_DIR/$THIS_FILE
-      ERROR=$?
-      # exit code 0 - menu items in this file.
-      #           1 - no menu items in this file.
-      #               file name of file containing menu items must be specified.
-      if [ $ERROR -eq 0 ] ; then
-         # Extract menu items from this file and insert them into the Generated file.
-         # This is required because f_menu_arrays cannot read this file directly without
-         # going into an infinite loop.
-         grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
-         #
-         # Specify file name with menu item data.
-         ARRAY_FILE="$GENERATED_FILE"
-      else
-         #
-         #
-         #================================================================================
-         # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME (LIBRARY)
-         # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
-         #================================================================================
-         #
-         #
-         # Specify library file name with menu item data.
-         # ARRAY_FILE="[FILENAME_GOES_HERE]"
-           ARRAY_FILE="$THIS_DIR/mountup_dummy_file.lib"
-      fi
+      #================================================================================
+      # EDIT THE LINE BELOW TO DEFINE $ARRAY_SOURCE_FILE AS THE ACTUAL FILE NAME
+      # WHERE THE MENU ITEM DATA IS LOCATED. THE LINES OF DATA ARE PREFIXED BY "#@@".
+      #================================================================================
       #
-      # Create arrays from data.
-      f_menu_arrays $ARRAY_FILE
       #
-      # Calculate longest line length to find maximum menu width
-      # for Dialog or Whiptail using lengths calculated by f_menu_arrays.
-      let MAX_LENGTH=$MAX_CHOICE_LENGTH+$MAX_SUMMARY_LENGTH
+      # Note: Alternate menu data storage scheme.
+      # For a separate library file for each menu data (1 menu/1 library file),
+      # or for the run-time program to contain the Main Menu data (1 Main menu/run-time script),
+      # then see f_menu_main_TEMPLATE in common_bash_function.lib
       #
-      # Create generated menu script from array data.
+      # Specify the library file name with menu item data.
+      # ARRAY_SOURCE_FILE (Not a temporay file) includes menu items
+      # from one or more menus (multiple menus/1 library file ARRAY_SOURCE_FILE).
+      ARRAY_SOURCE_FILE=$3
+      #
+      #
+      #================================================================================
+      # EDIT THE LINE BELOW TO DEFINE MENU_TITLE AS THE ACTUAL TITLE OF THE MENU THAT
+      # CONTAINS THE MENU ITEM DATA. THE LINES OF DATA ARE PREFIXED BY "#@@".
+      #================================================================================
+      #
       #
       # Note: ***If Menu title contains spaces,
       #       ***the size of the menu window will be too narrow.
       #
       # Menu title MUST use underscores instead of spaces.
-      MENU_TITLE="Local_PC_"$HOSTNAME":_Mount/Dismount_Menu"
-      #MENU_TITLE="Mount/Dismount_Menu"
-      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_main_temp.txt"
+      MENU_TITLE=$2
       #
-      f_create_show_menu $1 $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      # Examples of valid $2 parameters:
+      # MENU_TITLE="Main_Menu"
+      # MENU_TITLE="Task_Menu"
+      # MENU_TITLE="Utility_Menu"
       #
-      if [ -r $GENERATED_FILE ] ; then
-         rm $GENERATED_FILE
-      fi
+      # The MENU_TITLE must match the strings in the ARRAY_SOURCE_FILE.
       #
-      if [ -r $TEMP_FILE ] ; then
+      #  Example:
+      #   The run-time script file, "ice_cream.sh" may also contain the data
+      #   for both Main menu and sub-menus.
+      #
+      #     MENU_TITLE="All_Ice_Cream_Menu"
+      #     ARRAY_SOURCE_FILE="ice_cream.sh"
+      #
+      #   If you have a lot of menus, you may want to have all the menu data
+      #   for both Main menu and sub-menus in a separate library file,
+      #   "all_ice_cream_menus.lib".
+      #
+      #     MENU_TITLE="All_Ice_Cream_Menu"
+      #     ARRAY_SOURCE_FILE="all_ice_cream_menus.lib"
+      #
+      # Format for $ARRAY_SOURCE_FILE: ("ice_cream.sh" or "all_ice_cream_menus.lib")
+      #
+      #  Listing of $ARRAY_SOURCE_FILE ("ice_cream.sh" or "all_ice_cream_menus.lib")
+      #          which includes menu item data:
+      #
+      #  Start Listing Tasty Ice Cream Menu (Required header, do not delete).
+      #      Data for Menu item 1
+      #      Data for Menu item 2
+      #      Data for Menu item 3
+      #  End Listing Tasty Ice Cream Menu (Required line, do not delete).
+      #
+      #  Start Listing Ice Cream Toppings Menu (Required header, do not delete).
+      #      Data for Menu item 1
+      #      Data for Menu item 2
+      #      Data for Menu item 3
+      #  End Listing Ice Cream Toppings Menu (Required line, do not delete).
+      #
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_temp.txt"
+      #
+      # GENERATED_FILE (The name of a temporary library file which contains the code to display the sub-menu).
+      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_generated.lib"
+      #
+      # ARRAY_TEMP_FILE (Temporary file) includes menu items imported from $ARRAY_SOURCE_FILE of a single menu.
+      ARRAY_TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_array_generated.lib"
+      #
+      # ARRAY_FILE is used by f_update_menu_gui and f_update_menu_txt.
+      # It is not included in formal passed parameters but is used anyways
+      # in the $GENERATED_FILE as a line: "source $ARRAY_FILE".
+      # I wanted to retire this variable name, but it has existed in the
+      # common_bash_function.lib library for quite a while.
+      ARRAY_FILE=$GENERATED_FILE
+      #
+      # When using f_create_a_menu, all subsequent sub-menus do not need a separate
+      # hard-coded function, since f_create_a_menu will generate sub-menu functions as needed.
+      #
+      # List of inputs for f_create_a_menu.
+      #
+      #  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+      #          $2 - GENERATED_FILE (The name of a temporary library file containing the suggested phrase "generated.lib" which contains the code to display the sub-menu).
+      #          $3 - MENU_TITLE (Title of the sub-menu)
+      #          $4 - TEMP_FILE (Temporary file).
+      #          $5 - ARRAY_TEMP_FILE (Temporary file) includes menu items imported from $ARRAY_SOURCE_FILE of a single menu.
+      #          $6 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
+      #
+      f_create_a_menu $1 $GENERATED_FILE $MENU_TITLE $TEMP_FILE $ARRAY_TEMP_FILE $ARRAY_SOURCE_FILE
+      #
+      if [ -e $TEMP_FILE ] ; then
          rm $TEMP_FILE
       fi
       #
-} # End of function f_menu_main.
+      if [ -e  $GENERATED_FILE ] ; then
+         rm  $GENERATED_FILE
+      fi
+      #
+} # End of function f_menu_main_all_menus
 #
 # +----------------------------------------+
 # |  Function fdl_dwnld_file_from_web_site |
@@ -1270,7 +1338,7 @@ f_about $GUI "NOK" 1
 # Run Main Code.
 #***************
 #
-f_menu_main $GUI
+f_menu_main_all_menus $GUI "Local_PC_Mount-Dismount_Menu" "$THIS_DIR/$THIS_FILE"
 #
 # Delete temporary files.
 #

@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-15 15:13"
+VERSION="2024-02-16 20:15"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -68,11 +68,36 @@ VERSION="2024-02-15 15:13"
 #
 # +--------------------------------------------------------------------------+
 # |                                                                          |
-# |             Customize Server SP-MP Menu choice options below.            |
+# |           Customize Server Action Menu choice options below.             |
 # |                                                                          |
 # +--------------------------------------------------------------------------+
 #
-#@@Exit#@@Return to previous menu.#@@break
+#                 >>> !!!Warning!!! <<<
+#
+# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
+# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
+#
+# Forbidden characters include ; : * ' " & > <
+#
+# These characters will compromise the creation of arrays which
+# in turn creates the menu.
+#
+# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
+#
+# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
+#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
+#
+# List of inputs for f_menu_main_all_menus
+#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+#          $2 - MENU_TITLE (Title of the sub-menu)
+#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
+#
+#! +--------------------------------------------------------------+
+#! | Start Listing Server Action Menu                             |
+#! |               (Required header, do not delete).              |
+#! +--------------------------------------------------------------+
+#
+#@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
 #
 #@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
 #
@@ -86,32 +111,34 @@ VERSION="2024-02-15 15:13"
 #
 #@@Pick#@@Pick shared directories to mount/dismount.#@@f_pick_mounts^$GUI^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY^THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY
 #
+#! End Listing Server Action Menu (Required line, do not delete).
+#
 # +--------------------------------------------------------------------------+
 # |                                                                          |
 # | Add additional source file servers, share-points, and mount-points here. |
+# |                (Please note: Avoid apostrophes, quotation marks,         |
+# |                and other reserved characters for BASH.)                  |
 # |                                                                          |
 # +--------------------------------------------------------------------------+
 #
 # Format: <Delimiter>//<Source File Server>/<Shared directory><Delimiter>/<Mount-point on local PC><Delimiter><Shared directory description>
 #
-# #@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
-# #@#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
+# commented out #@#//hansolo/public#@#/mnt/hansolo/public#@#Hansolo Server Publicly shared files.
+# commented out #@#//hansolo/public/jobs#@#/mnt/hansolo/jobs#@#Hansolo Server Publicly shared job information.
 #
-# #@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
+# commented out #@#//chewbacca/photos#@#/mnt/chewbacca/photos#@#Chewbacca Server shared photos.
 #
-# #@#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
+# commented out #@#//luke/school#@#/mnt/luke/school#@#Luke Server shared school files.
 #
-# #@#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
+# commented out #@#//leia/music#@#/mnt/leia/music#@#Leia Server shared music.
 #
-# #@#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
+# commented out #@#//yoda/public-no-backup#@#/mnt/yoda/public-no-backup#@#Yoda Server shared files not backed up.
 #
-# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
-# #@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
+# commented out #@#//r2d2/geekstuff#@#/mnt/r2d2/geekstuff#@#R2D2 Server shared geek stuff.
+# commented out #@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
 #
-# #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+# commented out #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
-#
-# Add your actual data below: (Please note: Avoid apostrophes, quotation marks, and other reserved characters for BASH.)
 #@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
 #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
@@ -273,16 +300,16 @@ f_mount_or_dismount_all () {
       #
       # Example:
       # Server name is "Server01"
-      # Shared directory to be mounted is "//server01/public/contacts"
-      # Local PC mount-point is "/mnt/server01/contacts"
+      # Shared directory to be mounted is "//server01/public/files"
+      # Local PC mount-point is "/mnt/server01/files"
       #
       # The arrays are <Server name>_SP=<Server_name>/<Shared directory>
       #                Server01_SP[2]="//mnt/server01/
       #                <Local PC name>_MP=<Local_PC_name>/<Mount-point directory>
       #
       # SERVER[1]="Server01"
-      # SERVER_SP[1]="//server01/public/contacts"
-      # LOCAL_MP[1]="/mnt/server01/contacts"
+      # SERVER_SP[1]="//server01/public/files"
+      # LOCAL_MP[1]="/mnt/server01/files"
       #
       EXITOUT=0
       NUM=1
@@ -571,133 +598,7 @@ f_dismount () {
 } # End of function f_dismount.
 #
 # +----------------------------------------+
-# |      Function f_server_menu_action     |
-# +----------------------------------------+
-#
-#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
-#          $2 - Server name.
-#    Uses: CHOICE_ACT, ANS XNUM.
-# Outputs: SMBUSER="".
-#
-f_server_menu_action  () {
-      #
-      # Test connection to server.
-      f_test_connection $1 $2 1
-      #
-      if [ $ERROR -eq 0 ] ; then
-         THIS_FILE="mountup_servers.lib"
-         #TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_action_generated.lib"
-         #
-         # Build Server Arrays for f_server_menu_action _txt/gui to (dis)mount servers.
-         # Server share-points and local mount-points data delimited by "#@#" contained in $ARRAY_FILE.
-         ARRAY_FILE=$THIS_DIR/"mountup_servers.lib"
-         #
-         f_server_arrays $ARRAY_FILE
-         #
-         case $1 in
-              "text")
-                 f_menu_server_action_txt $2
-              ;;
-              "dialog" | "whiptail")
-                 f_menu_server_action_gui $1 $2
-              ;;
-         esac
-         #
-      fi
-}  # End of function f_server_menu_action
-#
-# +----------------------------------------+
-# |    Function f_menu_server_action_txt   |
-# +----------------------------------------+
-#
-#  Inputs: $1 - Server name.
-#    Uses: CHOICE_ACT, ANS XNUM.
-# Outputs: SMBUSER="".
-#
-f_menu_server_action_txt () {
-      #
-      CHOICE_ACT=-1
-      until [ $CHOICE_ACT = "0" ]
-      do
-            # Set to null to force entry of a new SMB user name.
-            SMBUSER=""
-            # Blank the screen.
-            clear
-            echo -n $(tput bold)
-            echo "--- Mount/Dismount $1 Server Menu ---"
-            echo -n $(tput sgr0)
-            echo
-            echo "0 (Q/q) - Quit to previous menu."
-            echo "1 (S/s) - Show mounted directories."
-            echo "2 (M/m) - Mount   all shared directories."
-            echo "3 (D/d) - Dismount all shared directories."
-            ARRAY_NAME=$1"_DESC"
-            ARRAY_LEN=$(eval "echo \$\{#$ARRAY_NAME[@]\}")
-            ARRAY_LEN=$(eval echo $ARRAY_LEN)
-            for (( XNUM=0; XNUM<=${ARRAY_LEN}; XNUM++ ));
-                do
-                   MOUNT_POINT_DESC=$(eval "echo \$\{$ARRAY_NAME[$XNUM]\}")
-                   MOUNT_POINT_DESC=$(eval echo $MOUNT_POINT_DESC)
-                   MOUNT_POINT_DESC=$(echo $MOUNT_POINT_DESC | tr '_' ' ')
-                   if [ -n "$MOUNT_POINT_DESC" ] ; then
-                      let X=$XNUM+3
-                      echo "$X ($X""D/""$X""M) - (Dis)Mount $MOUNT_POINT_DESC"
-                   fi
-                done
-            echo
-            echo -n $(tput bold)
-            echo -n "Please select letter or 0-$X (0): " ; read CHOICE_ACT
-            echo -n $(tput sgr0)
-            #
-            case $CHOICE_ACT in
-                 0 | [Qq] | "") break ; CHOICE_ACT=0
-                           ;;
-                 1 | [Ss]) f_show_mount_points $GUI
-                           CHOICE_ACT=1
-                           ;;
-                 2 | [Mm]) f_mount_or_dismount_all $GUI $1 "mount"
-                           f_show_mount_points $GUI
-                           CHOICE_ACT=2
-                           ;;
-                 3 | [Dd]) f_mount_or_dismount_all $GUI $1 "dismount"
-                           f_show_mount_points $GUI
-                           CHOICE_ACT=3
-                           ;;
-                   [4-9][Mm] | [1-9][0-9][Mm])
-                           # Strip off trailing "M" or "m".
-                           XNUM=$(echo $CHOICE_ACT |  tr -d 'Mm')
-                           CHOICE_ACT=$XNUM
-                           let XNUM=XNUM-3
-                           # Create command "${<server_name>_SP[$NUM]}" to read string of Shared directory from array <Server name>_SP[n].
-                           SP=$(eval echo "\$\{$1_SP[$XNUM]\}")
-                           SP=$(eval echo $SP)
-                           # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
-                           MP=$(eval echo "\$\{$1_MP[$XNUM]\}")
-                           MP=$(eval echo $MP)
-                           f_username $GUI $USER $SP
-                           f_password $GUI $SP
-                           f_mount1 $GUI $SP $MP $SMBUSER $PASSWORD
-                           f_show_mount_points $GUI
-                           ;;
-                   [4-9][Dd] | [1-9][0-9][Dd])
-                           # Strip off trailing "D" or "d".
-                           XNUM=$(echo $CHOICE_ACT |  tr -d 'Dd')
-                           CHOICE_ACT=$XNUM
-                           let XNUM=XNUM-3
-                           # Create command "${<server_name>_MP[$NUM]}" to read string of Mount-point directory from array <Server name>_MP[n].
-                           MP=$(eval echo "\$\{$1_MP[$XNUM]\}")
-                           MP=$(eval echo $MP)
-                           f_dismount $GUI $MP
-                           f_show_mount_points $GUI
-                           ;;
-            esac
-      done
-      # Throw out these variables.
-      unset CHOICE_ACT ANS XNUM
-}  # End of function f_menu_server_action_txt
-#
-# +----------------------------------------+
-# |    Function f_menu_server_action_gui   |
+# |      Function f_menu_server_action     |
 # +----------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
@@ -705,51 +606,62 @@ f_menu_server_action_txt () {
 #    Uses: CHOICE_ACT, PASSWORD, MENU_TITLE.
 # Outputs: GENERATED_FILE, ARRAY_FILE, MENU_TITLE, TEMP_FILE, SERVER_NAME.
 #
-f_menu_server_action_gui () {
+f_menu_server_action () {
       #
-      THIS_FILE="mountup_servers.lib"
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_data_generated.lib"
+      # Build mount-point/share-point server arrays.
+      # Used by f_mount_or_dismount_all.
+      f_server_arrays $THIS_DIR"/mountup_servers.lib"
       #
-      # Find data in this file and write to $GENERATED_FILE.
-      grep ^\#@@ $THIS_DIR/$THIS_FILE >$GENERATED_FILE
+      ARRAY_FILE=$THIS_DIR"/mountup_servers.lib"
+      #
+      TEMP_FILE=$THIS_DIR"/mountup_servers.lib_temp.txt"
+      #
+      # Find data in this file and write to $TEMP_FILE.
+      grep ^\#@@ $ARRAY_FILE >$TEMP_FILE"_menu_server_action_generated.lib"
       #
       # Substitute actual file server name for "SERVER-NAME_GOES_HERE" place-holder.
-      sed -i "s/THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY/$2/g" $GENERATED_FILE
+      sed -i "s/THIS_STRING_WILL_BE_REPLACED_WITH_SERVER_NAME_AUTOMATICALLY/$2/g" $TEMP_FILE"_menu_server_action_generated.lib"
       #
       # Create arrays from data.
-      ARRAY_FILE="$GENERATED_FILE"
-      f_menu_arrays $ARRAY_FILE
+      ARRAY_FILE=$TEMP_FILE"_menu_server_action_generated.lib"
       #
-      # Create generated menu script from array data.
-      THIS_FILE="mountup_servers.lib"
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
       # Menu title must substitute underscores for spaces
-      SERVER_NAME=$2
-      MENU_TITLE="Mount-Dismount_"$SERVER_NAME"_File_Server_Menu"
-      TEMP_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_temp.txt"
+      MENU_TITLE="Server_Action_Menu"
       #
-      # Increase values to enlarge dialog/whiptail boxes because for some
-      # unknown reason, f_menu_arrays calculated much too small values
-      # resulting in truncated text in dialog/whiptail boxes.
-      let MAX_CHOICE_LENGTH=$MAX_CHOICE_LENGTH+32  # Diagnostic Line.
-      let MAX_LENGTH=$MAX_LENGTH+27  # Diagnostic Line.
+      # Include required menu header and footer when using f_menu_main_all_menus.
+      echo "#! +--------------------------------------------------------------+" > $TEMP_FILE
+      echo "#! | Start Listing Server Action Menu                             |" >> $TEMP_FILE
+      echo "#! |               (Required header, do not delete).              |" >> $TEMP_FILE
+      echo "#! +--------------------------------------------------------------+" >> $TEMP_FILE
+      echo "#" >> $TEMP_FILE
+      cat $TEMP_FILE"_menu_server_action_generated.lib" >> $TEMP_FILE
+      echo "#" >> $TEMP_FILE
+      echo "#! End Listing Server Action Menu (Required line, do not delete)." >> $TEMP_FILE
       #
-      # Create generated menu script from array data.
-      f_create_show_menu $GUI $GENERATED_FILE $MENU_TITLE $MAX_LENGTH $MAX_LINES $MAX_CHOICE_LENGTH $TEMP_FILE
+      mv $TEMP_FILE $TEMP_FILE"_menu_server_action_generated.lib"
       #
-      THIS_FILE="mountup_servers.lib"
+      #==================================================================
+      # EDIT THE LINE BELOW TO DEFINE $ARRAY_FILE AS THE ACTUAL FILE NAME
+      # (LIBRARY) WHERE THE MENU ITEM DATA IS LOCATED.
+      # THE LINES OF DATA ARE PREFIXED BY "#@@".
+      #==================================================================
       #
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_data_generated.lib"
+      ARRAY_FILE=$TEMP_FILE"_menu_server_action_generated.lib"
+      #
+      # Create and show menu of local devices.
+      f_menu_main_all_menus $1 $MENU_TITLE $ARRAY_FILE
+      #
+      GENERATED_FILE=$THIS_DIR"/mountup_servers.lib_menu_temp.txt_menu_server_action_generated.lib"
       if [ -e $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
       fi
       #
-      GENERATED_FILE=$THIS_DIR/$THIS_FILE"_menu_server_action_generated.lib"
+      GENERATED_FILE=$THIS_DIR"/mountup_servers.lib_temp.txt_menu_server_action_generated.lib"
       if [ -e $GENERATED_FILE ] ; then
          rm $GENERATED_FILE
       fi
       #
-} # End of function f_menu_server_action_gui.
+} # End of function f_menu_server_action.
 #
 # +----------------------------------------+
 # |          Function f_mount_all          |
