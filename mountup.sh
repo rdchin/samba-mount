@@ -1,4 +1,4 @@
-#!/bin/bas
+#!/bin/bash
 #
 # ©2024 Copyright 2024 Robert D. Chin
 # Email: RDevChin@Gmail.com
@@ -20,60 +20,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
-# +--------------------------------------------------------------------------+
-# |                                                                          |
-# |        Customize Local PC Mount-Dismount Menu choice options below.      |
-# |                                                                          |
-# +--------------------------------------------------------------------------+
-#
-#                 >>> !!!Warning!!! <<<
-#
-# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
-# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
-#
-# Forbidden characters include ; : * ' " & > <
-#
-# These characters will compromise the creation of arrays which
-# in turn creates the menu.
-#
-# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
-#
-# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
-#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
-#
-# List of inputs for f_menu_main_all_menus
-#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
-#          $2 - MENU_TITLE (Title of the sub-menu)
-#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
-#
-#! +--------------------------------------------------------------+
-#! | Start Listing Local PC Mount-Dismount Menu                   |
-#! |               (Required header, do not delete).              |
-#! +--------------------------------------------------------------+
-#
-#@@Exit#@@Exit to PC "$HOSTNAME" command-line.#@@break
-#
-#@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_main_all_menus^$GUI^Server_Menu^$THIS_DIR/mountup.lib
-#
-#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
-#
-#@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
-#
-#@@About#@@Version information of this script.#@@f_about^$GUI
-#
-#@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
-#
-#@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
-#
-#@@Help#@@Display help message.#@@f_help_message^$GUI
-#
-#! End Listing Local PC Mount-Dismount Menu (Required line, do not delete).
-#
 # +----------------------------------------+
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-16 20:15"
+VERSION="2024-02-26 18:04"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -84,6 +35,9 @@ HOSTNAME=$(cat /etc/hostname)
 #================================================================
 # EDIT THE LINES BELOW TO SET REPOSITORY SERVERS AND DIRECTORIES
 # AND TO INCLUDE ALL DEPENDENT SCRIPTS AND LIBRARIES TO DOWNLOAD.
+#
+# ALSO PLEASE EDIT f_check_version
+#
 #================================================================
 #
 #
@@ -93,20 +47,29 @@ HOSTNAME=$(cat /etc/hostname)
 #
 # LAN File Server shared directory.
 # SERVER_DIR="[FILE_SERVER_DIRECTORY_NAME_GOES_HERE]"
-  SERVER_DIR="//file_server/public"
+# SERVER_DIR="//file_server/files"
+SERVER_DIR="//file_server/files"
 #
 # Local PC mount-point directory.
 # MP_DIR="[LOCAL_MOUNT-POINT_DIRECTORY_NAME_GOES_HERE]"
-  MP_DIR="/mnt/file_server/public"
+# MP_DIR="/mnt/file_server/files"
+MP_DIR="/mnt/file_server/files"
 #
 # Local PC mount-point with LAN File Server Local Repository full directory path.
 # Example:
-#                   File server shared directory is "//file_server/public".
+#                   File server shared directory is "//file_server/files".
 # Repostory directory under the shared directory is "scripts/BASH/Repository".
-#                 Local PC Mount-point directory is "/mnt/file_server/public".
+#                 Local PC Mount-point directory is "/mnt/file_server/files".
 #
 # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
-  LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
+# LOCAL_REPO_DIR="$MP_DIR/Local_Repository"
+LOCAL_REPO_DIR="$MP_DIR/Local_Repository"
+#
+# Web Repository i.e. Hosted by GitHub.com or another web site.
+# WEB_REPOSITORY_URL="raw.githubusercontent.com/user/project/branch"
+WEB_REPOSITORY_URL="raw.githubusercontent.com/rdchin/samba-mount/master/"
+#
+# Warning: If the Github Repository is "Private", then anonymous downloads are not permitted.
 #
 #
 #=================================================================
@@ -115,21 +78,15 @@ HOSTNAME=$(cat /etc/hostname)
 #=================================================================
 #
 #
-# --------------------------------------------
-# Create a list of all dependent library files
-# and write to temporary file, FILE_LIST.
-# --------------------------------------------
-#
 # Temporary file FILE_LIST contains a list of file names of dependent
 # scripts and libraries.
-#
 FILE_LIST=$THIS_FILE"_file_temp.txt"
 #
 # Format: [File Name]^[Local/Web]^[Local repository directory]^[web repository directory]
-echo "mountup.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup.lib"                  > $FILE_LIST
-echo "mountup_servers.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup_servers.lib" >> $FILE_LIST
-echo "mountup_local.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/samba-mount/master/mountup_servers.lib"   >> $FILE_LIST
-echo "common_bash_function.lib^Local^$LOCAL_REPO_DIR^https://raw.githubusercontent.com/rdchin/BASH_function_library/master/"     >> $FILE_LIST
+echo "mountup.lib^Local^$LOCAL_REPO_DIR^$WEB_REPOSITORY_URL"               > $FILE_LIST
+echo "mountup_servers.lib^Local^$LOCAL_REPO_DIR^$WEB_REPOSITORY_URL"      >> $FILE_LIST
+echo "mountup_local.lib^Local^$LOCAL_REPO_DIR^$WEB_REPOSITORY_URL"        >> $FILE_LIST
+echo "common_bash_function.lib^Local^$LOCAL_REPO_DIR^$WEB_REPOSITORY_URL" >> $FILE_LIST
 #
 # Create a name for a temporary file which will have a list of files which need to be downloaded.
 FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
@@ -218,17 +175,17 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #    3) Delete instructions to update script in Section "Help and Usage".
 #
 # To disable the Main Menu:
-#    1) Comment out the call to function f_menu_main under "Run Main Code"
-#       in Section "Start of Main Program".
+#    1) Comment out the call to function f_menu_main_all_menus under
+#       "Run Main Code" in Section "Start of Main Program".
 #    2) Add calls to desired functions under "Run Main Code"
 #       in Section "Start of Main Program".
 #
 # To completely remove the Main Menu and its code:
-#    1) Delete the call to function f_menu_main under "Run Main Code" in
-#       Section "Start of Main Program".
+#    1) Delete the call to function f_menu_main_all_menus under
+#       "Run Main Code" in Section "Start of Main Program".
 #    2) Add calls to desired functions under "Run Main Code"
 #       in Section "Start of Main Program".
-#    3) Delete the function f_menu_main.
+#    3) Delete the function f_menu_main_all_menus.
 #    4) Delete "Menu Choice Options" in this script located under
 #       Section "Customize Menu choice options below".
 #       The "Menu Choice Options" lines begin with "#@@".
@@ -242,6 +199,8 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024-02-26 *Updated to latest standards.
 ##
 ## 2024-02-16 *Extensive rewrite to improve documentation comments and
 ##             rewrite all menus to use f_menu_main_all_menus.
@@ -620,15 +579,68 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ##             which (dis)mounted shared directories on a server.
 ##            *(Dis)mount all shared directories on any given server.
 #
+# +--------------------------------------------------------------------------+
+# |                                                                          |
+# |        Customize Local PC Mount-Dismount Menu choice options below.      |
+# |                                                                          |
+# +--------------------------------------------------------------------------+
+#
+#                 >>> !!!Warning!!! <<<
+#
+# The Menu Item Descriptions cannot have semi-colons, colons, asterisks,
+# single-quotes (apostrophes), double-quotes, ampersands, greater-than and less-than signs.
+#
+# Forbidden characters include ; : * ' " & > <
+#
+# These characters will compromise the creation of arrays which
+# in turn creates the menu.
+#
+# General Format: <#@@> <Menu Option> <#@@> <Description of Menu Option> <#@@> <Corresponding function or action or command>
+#
+# Sub-Menu Format when using f_menu_main_all_menus to show a sub-menu.
+#        f_menu_main_all_menus^"text", "dialog", or "whiptail"^Menu Title^$ARRAY_SOURCE_FILE (File containing sub-menu entries).
+#
+# List of inputs for f_menu_main_all_menus
+#  Inputs: $1 - "text", "dialog" or "whiptail" The command-line user-interface application in use.
+#          $2 - MENU_TITLE (Title of the sub-menu)
+#          $3 - ARRAY_SOURCE_FILE (Not a temporary file) includes menu items from multiple menus.
+#
+#! +--------------------------------------------------------------+
+#! | Start Listing Local PC Mount-Dismount Menu                   |
+#! |               (Required header, do not delete).              |
+#! +--------------------------------------------------------------+
+#
+#@@Exit#@@Exit to PC "$HOSTNAME" command-line.#@@break
+#
+#@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_main_all_menus^$GUI^Server_Menu^$THIS_DIR/mountup.lib
+#
+#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#
+#@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
+#
+#@@About#@@Version information of this script.#@@f_about^$GUI
+#
+#@@Code History#@@Display code change history of this script.#@@f_code_history^$GUI
+#
+#@@Version Update#@@Check for updates to this script and download.#@@f_check_version^$GUI
+#
+#@@Help#@@Display help message.#@@f_help_message^$GUI
+#
+#! End Listing Local PC Mount-Dismount Menu (Required line, do not delete).
+#
 # +------------------------------------+
 # |     Function f_display_common      |
 # +------------------------------------+
 #
-#     Rev: 2021-03-31
-#  Inputs: $1=UI - "text", "dialog" or "whiptail" the preferred user-interface.
-#          $2=Delimiter of text to be displayed.
-#          $3="NOK", "OK", or null [OPTIONAL] to control display of "OK" button.
-#          $4=Pause $4 seconds [OPTIONAL]. If "NOK" then pause to allow text to be read.
+#     Rev: 2024-02-24
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#          $2 - Delimiter of text to be displayed.
+#          $3 - [OPTIONAL] to control display of prompt to continue.
+#                          null (Default) - "OK" button or text prompt, display until either Enter key or "OK" button is pressed.
+#                          "OK"           - "OK" button or text prompt, display until either Enter key or "OK" button is pressed.
+#                          "NOK"          - No "OK" button or text prompt, display for $3 seconds before continuing automatically.
+#          $4 - [OPTIONAL] to control pause duration. Only used if $3="NOK".
+#                          $4 seconds pause to allow text to be read before continuing automatically.
 #          THIS_DIR, THIS_FILE, VERSION.
 #    Uses: X.
 # Outputs: None.
@@ -636,6 +648,10 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 # Summary: Display lines of text beginning with a given comment delimiter.
 #
 # Dependencies: f_message.
+#
+# PLEASE NOTE: RENAME THIS FUNCTION WITHOUT SUFFIX "_TEMPLATE" AND COPY
+#              THIS FUNCTION INTO ANY SCRIPT WHICH DEPENDS ON THE
+#              LIBRARY FILE "common_bash_function.lib".
 #
 f_display_common () {
       #
@@ -822,15 +838,15 @@ f_menu_main_all_menus () {
          rm  $GENERATED_FILE
       fi
       #
-} # End of function f_menu_main_all_menus
+} # End of function f_menu_main_all_menus.
 #
 # +----------------------------------------+
 # |  Function fdl_dwnld_file_from_web_site |
 # +----------------------------------------+
 #
-#     Rev: 2021-03-08
-#  Inputs: $1=GitHub Repository
-#          $2=file name to download.
+#     Rev: 2024-02-25
+#  Inputs: $1 - GitHub Repository
+#          $2 - file name to download.
 #    Uses: None.
 # Outputs: None.
 #
@@ -844,41 +860,29 @@ f_menu_main_all_menus () {
 fdl_dwnld_file_from_web_site () {
       #
       # $1 ends with a slash "/" so can append $2 immediately after $1.
-      echo
-      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<"
-      echo ">>> Download file from Web Repository <<<"
-      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<"
-      echo
       wget --show-progress $1$2
       ERROR=$?
+      #
+      # Make downloaded file executable.
+      chmod 755 $2
+      #
       if [ $ERROR -ne 0 ] ; then
             echo
             echo ">>>>>>>>>>>>>><<<<<<<<<<<<<<"
             echo ">>> wget download failed <<<"
             echo ">>>>>>>>>>>>>><<<<<<<<<<<<<<"
             echo
-            echo "Error copying from Web Repository file: \"$2.\""
+            echo "Error copying file: \"$2.\""
             echo
-      else
-         # Make file executable (useable).
-         chmod +x $2
-         #
-         if [ -x $2 ] ; then
-            # File is good.
-            ERROR=0
-         else
+            echo "from GitHub Repository:"
+            echo "$WEB_REPOSITORY_URL"
             echo
-            echo ">>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            echo ">>> File Error after download from Web Repository <<<"
-            echo ">>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            echo -e "Warning: If the Github Repository is \"Private\","
+            echo "         then anonymous downloads are not permitted."
             echo
-            echo "$2 is missing or file is not executable."
+            echo ">>>>>>>>>>>>>><<<<<<<<<<<<<<"
             echo
-         fi
       fi
-      #
-      # Make downloaded file executable.
-      chmod 755 $2
       #
 } # End of function fdl_dwnld_file_from_web_site.
 #
@@ -886,9 +890,9 @@ fdl_dwnld_file_from_web_site () {
 # | Function fdl_dwnld_file_from_local_repository |
 # +-----------------------------------------------+
 #
-#     Rev: 2021-03-08
-#  Inputs: $1=Local Repository Directory.
-#          $2=File to download.
+#     Rev: 2024-02-25
+#  Inputs: $1 - Local Repository Directory.
+#          $2 - File to download.
 #    Uses: TEMP_FILE.
 # Outputs: ERROR.
 #
@@ -900,13 +904,11 @@ fdl_dwnld_file_from_web_site () {
 #
 fdl_dwnld_file_from_local_repository () {
       #
-      echo
-      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<"
-      echo ">>> File Copy from Local Repository <<<"
-      echo ">>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<"
-      echo
       eval cp -p $1/$2 .
       ERROR=$?
+      #
+      # Make downloaded file executable.
+      chmod 755 $2
       #
       if [ $ERROR -ne 0 ] ; then
          echo
@@ -914,26 +916,14 @@ fdl_dwnld_file_from_local_repository () {
          echo ">>> File Copy Error from Local Repository <<<"
          echo ">>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"
          echo
-         echo -e "Error copying from Local Repository file: \"$2.\""
+         echo -e "Error copying file: \"$2.\""
+         echo
+         echo "from Local Repository:"
+         echo "$LOCAL_REPO_DIR"
+         echo
+         echo ">>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<"
          echo
          ERROR=1
-      else
-         # Make file executable (useable).
-         chmod +x $2
-         #
-         if [ -x $2 ] ; then
-            # File is good.
-            ERROR=0
-         else
-            echo
-            echo ">>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
-            echo ">>> File Error after copy from Local Repository <<<"
-            echo ">>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
-            echo
-            echo -e "File \"$2\" is missing or file is not executable."
-            echo
-            ERROR=1
-         fi
       fi
       #
       if [ $ERROR -eq 0 ] ; then
@@ -948,12 +938,12 @@ fdl_dwnld_file_from_local_repository () {
 # |       Function fdl_mount_local      |
 # +-------------------------------------+
 #
-#     Rev: 2021-03-10
-#  Inputs: $1=Server Directory.
-#          $2=Local Mount Point Directory
+#     Rev: 2024-02-21
+#  Inputs: $1 - Server Directory.
+#          $2 - Local Mount Point Directory
 #          TEMP_FILE
 #    Uses: TARGET_DIR, UPDATE_FILE, ERROR, SMBUSER, PASSWORD.
-# Outputs: ERROR.
+# Outputs: QUIT, ERROR.
 #
 # Summary: Mount directory using Samba and CIFS and echo error message.
 #          Cannot be dependent on "common_bash_function.lib" as this library
@@ -963,40 +953,115 @@ fdl_dwnld_file_from_local_repository () {
 #
 fdl_mount_local () {
       #
-      # Mount local repository on mount-point.
-      # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
-      mountpoint $2 >/dev/null 2>$TEMP_FILE
+      TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
+      #
+      # Get status of mountpoint, mounted? Do not display status.
+      mountpoint $2 >/dev/null
       ERROR=$?
-      if [ $ERROR -ne 0 ] ; then
-         # Mount directory.
-         # Cannot use any user prompted read answers if this function is in a loop where file is a loop input.
-         # The read statements will be treated as the next null parameters in the loop without user input.
-         # To solve this problem, specify input from /dev/tty "the keyboard".
+      if [ $ERROR -eq 0 ] ; then
+         # Directory is already mounted.
+         # Outputs ERROR=0.
+         # Quit loop.
+         QUIT=1
+      else
+         # Mount failed, Do you want to try again?
+         DEFAULT_ANS="Y"
+         QUES_STR="Failed to mount\n\nShare-point:\n$1\n\nonto\n\nMount-point:\n$2\n\nTry another password to mount $1?"
          #
-         echo
-         read -p "Enter user name: " SMBUSER < /dev/tty
-         echo
-         read -s -p "Enter Password: " PASSWORD < /dev/tty
-         echo sudo mount -t cifs $1 $2
-         sudo mount -t cifs -o username="$SMBUSER" -o password="$PASSWORD" $1 $2
+         clear  # Blank screen.
          #
-         # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
-         mountpoint $2 >/dev/null 2>$TEMP_FILE
-         ERROR=$?
+         # Does $QUES_STR contain "\n"?  Does the string $QUES_STR contain multiple sentences?
+         case $QUES_STR in
+              *\n*)
+                 # Yes, string $QUES_STR contains multiple sentences.
+                 #
+                 # Command-Line interface (CLI) does not have option "--colors" with "\Z" commands for font color bold/normal.
+                 # Use command "sed" with "-e" to filter out multiple "\Z" commands.
+                 # Filter out "\Z[0-7]", "\Zb", \ZB", "\Zr", "\ZR", "\Zu", "\ZU", "\Zn".
+                 ZNO=$(echo $QUES_STR | sed -e 's|\\Z0||g' -e 's|\\Z1||g' -e 's|\\Z2||g' -e 's|\\Z3||g' -e 's|\\Z4||g' -e 's|\\Z5||g' -e 's|\\Z6||g' -e 's|\\Z7||g' -e 's|\\Zb||g' -e 's|\\ZB||g' -e 's|\\Zr||g' -e 's|\\ZR||g' -e 's|\\Zu||g' -e 's|\\ZU||g' -e 's|\\Zn||g')
+                 TEXT_STR="$ZNO"
+              ;;
+              *)
+                 # No, string $QUES_STR contains a single sentence.
+                 #
+                 # Create a text file from the string.
+                 TEXT_STR="$QUES_STR"
+              ;;
+         esac
          #
-         if [ $ERROR -ne 0 ] ; then
+         case $DEFAULT_ANS in
+              [Yy] | [Yy][Ee][Ss])
+                 # "Yes" is the default answer.
+                 echo -e -n "$TEXT_STR (Y/n) "; read ANS # < /dev/tty
+                 #
+                 case $ANS in
+                      [Nn] | [Nn][Oo])
+                         ANS=1  # No.
+                      ;;
+                      *)
+                         ANS=0  # Yes (Default).
+                      ;;
+                 esac
+              ;;
+              [Nn] | [Nn][Oo])
+                 # "No" is the default answer.
+                 echo -e -n "$TEXT_STR (y/N) "; read ANS # < /dev/tty
+                 case $ANS in
+                      [Yy] | [Yy][Ee] | [Yy][Ee][Ss])
+                         ANS=0  # Yes.
+                      ;;
+                      *)
+                         ANS=1  # No (Default).
+                      ;;
+                 esac
+              ;;
+         esac
+         #
+         # Outputs user response to $ANS.
+         # Try another password to mount $1?"
+         if [ $ANS -eq 0 ] ; then
+            # Yes, try another SMB username and password to mount Share-point.
+            QUIT=0
+            # Try again to mount.
+            # Set the default username to the SMB username entered previously.
+            #
+            # Cannot use any user prompted read answers if this function is in a loop where file is a loop input.
+            # The read statements will be treated as the next null parameters in the loop without user input.
+            # To solve this problem, specify input from /dev/tty "the keyboard".
+            #
             echo
-            echo ">>>>>>>>>><<<<<<<<<<<"
-            echo ">>> Mount failure <<<"
-            echo ">>>>>>>>>><<<<<<<<<<<"
+            echo "Mounting share-point $1 onto local mount-point $2"
             echo
-            echo -e "Directory mount-point \"$2\" is not mounted."
+            read -p "Enter user name: " SMBUSER < /dev/tty
             echo
-            echo -e "Mount using Samba failed. Are \"samba\" and \"cifs-utils\" installed?"
-            echo "------------------------------------------------------------------------"
-            echo
+            read -s -p "Enter Password: " PASSWORD < /dev/tty
+            echo sudo mount -t cifs $1 $2
+            sudo mount -t cifs -o username="$SMBUSER" -o password="$PASSWORD" $1 $2
+            unset SMBUSER PASSWORD
+            #
+            # Write any error messages to file $TEMP_FILE. Get status of mountpoint, mounted?.
+            mountpoint $2 >/dev/null 2>$TEMP_FILE
+            ERROR=$?
+            #
+            if [ $ERROR -eq 0 ] ; then
+               # Successful mounting of share-point $1 onto local mount-point $2.
+               # Outputs ERROR=0.
+               QUIT=1
+            else
+               # Failed to mount share-point $1 onto local mount-point $2.
+               # Outputs ERROR=1.
+               QUIT=0
+            fi
+         else
+            # No, do not try another password just return to previous menu. Exit loop.
+            # Quit f_mount loop, return to previous menu.
+            # Outputs ERROR=1.
+            QUIT=1
          fi
-         unset SMBUSER PASSWORD
+      fi
+      #
+      if [ -e  $TEMP_FILE ] ; then
+         rm  $TEMP_FILE
       fi
       #
 } # End of function fdl_mount_local.
@@ -1005,8 +1070,8 @@ fdl_mount_local () {
 # |        Function fdl_source         |
 # +------------------------------------+
 #
-#     Rev: 2021-03-25
-#  Inputs: $1=File name to source.
+#     Rev: 2022-10-10
+#  Inputs: $1 - File name to source.
 # Outputs: ERROR.
 #
 # Summary: Source the provided library file and echo error message.
@@ -1047,7 +1112,7 @@ fdl_source () {
 # |  Function fdl_download_missing_scripts |
 # +----------------------------------------+
 #
-#     Rev: 2021-03-11
+#     Rev: 2024-02-21
 #  Inputs: $1 - File containing a list of all file dependencies.
 #          $2 - File name of generated list of missing file dependencies.
 # Outputs: ANS.
@@ -1070,6 +1135,10 @@ fdl_source () {
 #
 fdl_download_missing_scripts () {
       #
+      # Initialize variables.
+      #
+      TEMP_FILE=$THIS_FILE"_temp.txt"
+      #
       # Delete any existing temp file.
       if [ -r  $2 ] ; then
          rm  $2
@@ -1079,24 +1148,26 @@ fdl_download_missing_scripts () {
       # Create new list of files that need to be downloaded.
       # ****************************************************
       #
-      # While-loop will read the file names listed in FILE_LIST (list of
+      # While-loop will read the file names listed in FILE_LIST ($1 list of
       # script and library files) and detect which are missing and need
-      # to be downloaded and then put those file names in FILE_DL_LIST.
+      # to be downloaded and then put those file names in FILE_DL_LIST ($2).
+      #
+      #
+      # Download files from Local Repository or Web GitHub Repository
+      # or extract files from the compressed file "cli-app-menu-new-main.zip"
+      # which may be downloaded from the repository on the Github.com website.
       #
       while read LINE
             do
+               ERROR=0
+               #
                FILE=$(echo $LINE | awk -F "^" '{ print $1 }')
-               if [ ! -x $FILE ] ; then
-                  # File needs to be downloaded or is not executable.
-                  # Write any error messages to file $TEMP_FILE.
-                  chmod +x $FILE 2>$TEMP_FILE
-                  ERROR=$?
-                  #
-                  if [ $ERROR -ne 0 ] ; then
-                     # File needs to be downloaded. Add file name to a file list in a text file.
-                     # Build list of files to download.
-                     echo $LINE >> $2
-                  fi
+               #
+               # Does the file exist?
+               if [ ! -e $FILE ] ; then
+                  # No, file needs to be downloaded.
+                  # Build list of files to download so add file name to download list.
+                  echo $LINE >> $2
                fi
             done < $1
       #
@@ -1112,13 +1183,31 @@ fdl_download_missing_scripts () {
                   echo $LINE | awk -F "^" '{ print $1 }'
                done < $2
          echo
-         echo "You will need to present credentials."
+         echo "You may need to present credentials, unless anonymous downloads are permitted."
          echo
          echo -n "Press '"Enter"' key to continue." ; read X ; unset X
          #
          #----------------------------------------------------------------------------------------------
          # From list of files to download created above $FILE_DL_LIST, download the files one at a time.
          #----------------------------------------------------------------------------------------------
+         #
+         # Downloaded the list of files $DL_FILE from the Local Repository?
+         grep Local^ $2 >/dev/null
+         ERROR=$?
+         #
+         # Initialize for while-loop.
+         QUIT=0
+         #
+         # Are any of the missing files to be downloaded from the Local Repository?
+         if [ $ERROR -eq 0 ] ; then
+            # Yes, there are files to be downloaded from the Local Repository.
+            #
+            # Are LAN File Server directories available on Local Mount-point?
+             while [ $QUIT -ne 1 ]  # Start loop.
+                   do
+                     fdl_mount_local $SERVER_DIR $MP_DIR
+                   done
+         fi
          #
          while read LINE
                do
@@ -1131,17 +1220,16 @@ fdl_download_missing_scripts () {
                   # Initialize Error Flag.
                   ERROR=0
                   #
-                  # If a file only found in the Local Repository has source changed
-                  # to "Web" because LAN connectivity has failed, then do not download.
+                  # If a file which only exists in the Local Repository has
+                  # its source changed to "Web" because LAN connectivity has
+                  # failed, then do not download since the file is not in a
+                  # GitHub.com Repository.
                   if [ -z $DL_REPOSITORY ] && [ $DL_SOURCE = "Web" ] ; then
                      ERROR=1
                   fi
-                  #
                   case $DL_SOURCE in
                        Local)
                           # Download from Local Repository on LAN File Server.
-                          # Are LAN File Server directories available on Local Mount-point?
-                          fdl_mount_local $SERVER_DIR $MP_DIR
                           #
                           if [ $ERROR -ne 0 ] ; then
                              # Failed to mount LAN File Server directory on Local Mount-point.
@@ -1162,8 +1250,10 @@ fdl_download_missing_scripts () {
                        Web)
                           # Download from Web Repository.
                           fdl_dwnld_file_from_web_site $DL_REPOSITORY $DL_FILE
-                          if [ $ERROR -ne 0 ] ; then
-                             # Failed so mount LAN File Server directory on Local Mount-point.
+                          if [ $ERROR -ne 0 ] && [ $LOCAL_REPO_CRED_FAIL -eq 0 ] ; then
+                             # Failed to download from Web Repository.
+                             # So download from Local Repository.
+                             # Try to mount LAN File Server directory on Local Mount-point.
                              fdl_mount_local $SERVER_DIR $MP_DIR
                              #
                              if [ $ERROR -eq 0 ] ; then
@@ -1228,7 +1318,7 @@ fdl_download_missing_scripts () {
 # ***     Start of Main Program      ***
 # **************************************
 # **************************************
-#     Rev: 2021-03-11
+#     Rev: 2024-02-24
 #
 #
 if [ -e $TEMP_FILE ] ; then
@@ -1281,6 +1371,11 @@ if [ -r  $FILE_DL_LIST ] || [ $ERROR -ne 0 ] ; then
            # process /bin/bash is created using up resources.
 fi
 #
+# Remove FILE_LIST since already checked for missing files/libraries.
+if [ -r  $FILE_LIST ] ; then
+   rm  $FILE_LIST
+fi
+#
 #***************************************************************
 # Process Any Optional Arguments and Set Variables THIS_DIR, GUI
 #***************************************************************
@@ -1291,21 +1386,45 @@ f_script_path
 # Set Temporary file using $THIS_DIR from f_script_path.
 TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
 #
-# If command already specifies GUI, then do not detect GUI.
-# i.e. "bash mountup.sh dialog" or "bash mountup.sh text".
-if [ -z $GUI ] ; then
-   # Test for GUI (Whiptail or Dialog) or pure text environment.
-   f_detect_ui
-fi
-#
-# Final Check of Environment
-#GUI="whiptail"  # Diagnostic line.
-#GUI="dialog"    # Diagnostic line.
-#GUI="text"      # Diagnostic line.
-#
+# If command already specifies $GUI, then do not detect UI, but verify that
+# it is an installed and valid UI.
+# i.e. "bash menu.sh dialog" or "bash menu.sh text".
 # Test for Optional Arguments.
 # Also sets variable GUI.
 f_arguments $1 $2
+#
+# Was a UI specified in the command as a passed parameter argument?
+if [ -z "$GUI" ] ; then
+   # No, no UI specified on the command-line.
+   # Set variable GUI.
+   # Detect user-interface environment type, "Whiptail", "Dialog", or pure text environment.
+   f_detect_ui
+else
+   case $GUI in
+        whiptail | dialog)
+           # User-interface environment was already specified by user by
+           # an argument, passed-parameter in the command-line.
+           # Verify that argument is an installed, valid UI environment type.
+           command -v $GUI >/dev/null
+           # "&>/dev/null" does not work in Debian distro.
+           # 1=standard messages, 2=error messages, &=both.
+           ERROR=$?
+           # Is $GUI installed?
+           if [ $ERROR -eq 1 ] ; then
+              # No, $GUI is not installed.
+              # Set $GUI to an installed environment.
+              f_detect_ui
+           fi
+           #
+           unset ERROR
+        ;;
+   esac
+fi
+#
+# Override detected or selected $GUI for testing purposes.
+#GUI="whiptail"  # Diagnostic line.
+#GUI="dialog"    # Diagnostic line.
+#GUI="text"      # Diagnostic line.
 #
 # Delete temporary files.
 if [ -r  $FILE_LIST ] ; then
@@ -1322,7 +1441,7 @@ fi
 # fi
 #
 # Test for BASH environment.
-f_test_environment $1
+f_test_environment $GUI
 #
 # If an error occurs, the f_abort() function will be called.
 # trap 'f_abort' 0
@@ -1337,6 +1456,14 @@ f_about $GUI "NOK" 1
 #***************
 # Run Main Code.
 #***************
+#  Inputs for f_menu_main_all_menus
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the preferred user-interface.
+#          $2 - MENU_TITLE Title of menu which must also match the header
+#               and tail strings for the menu data in the ARRAY_SOURCE_FILE.
+#              !!!Menu title MUST use underscores instead of spaces!!!
+#          $3 - ARRAY_SOURCE_FILE is the file name where the menu data is stored.
+#               This can be the run-time script or a separate *.lib library file.
 #
 f_menu_main_all_menus $GUI "Local_PC_Mount-Dismount_Menu" "$THIS_DIR/$THIS_FILE"
 #
