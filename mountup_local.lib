@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-26 18:13"
+VERSION="2024-03-27 20:15"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -297,7 +297,7 @@ f_mount_local_usb_drive_2 () {
          # Format the Question text in the $TEMP_FILE
          # for use by f_ask_question.
          echo >>$TEMP_FILE
-         echo "Enter entire mount command i.e. sudo mount /dev/sdb1 /media/server-name/usb1" >>$TEMP_FILE
+         echo "Enter entire mount command i.e. sudo mount /dev/sdb1 /media/server-name/sdb1" >>$TEMP_FILE
          #
          # Now the entire question text is contained in TEMP_FILE.
          #
@@ -431,6 +431,7 @@ f_select_local_device_menu () {
       #
       # Get mount-points and drives from command lsblk and format data for pretty display.
       # Prevent listing the unmountable RAID member drives by using "grep linux_raid_member --invert-match".
+      # If the output string of lsblk, ends in "is mounted on" without a trailing mountpoint, then change string to "is not mounted.
       lsblk --list --output NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT | awk  '{ printf "%-9s %-4s %-6s %-4s is mounted on %s\n", $1,$2,$3,$4,$5}' | sed -e 's/is mounted on $/is not mounted./' | grep -e sd[a-z][1-9] -e md[0-9] | grep --invert-match linux_raid_member | sed 's/part /Local drive /' > $TEMP_FILE"_device_menu.txt"
       #
       # Format the Menu data of local devices to choose from.

@@ -24,7 +24,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-02-26 18:13"
+VERSION="2024-03-27 20:15"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -199,6 +199,9 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024-03-27 *f_mount_local_usb_drive_2 changed default mount-point from
+##             /mnt/usb1 to /mnt/sdb1 in the example user help instructions.
 ##
 ## 2024-02-26 *Updated to latest standards.
 ##
