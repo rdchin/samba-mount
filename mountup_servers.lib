@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-03-27 20:15"
+VERSION="2024-05-29 18:12"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -99,7 +99,7 @@ VERSION="2024-03-27 20:15"
 #
 #@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
 #
-#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#@@Local/LAN storage#@@Show local removable storage devices and LAN mount points.#@@f_show_mount_points^$GUI
 #
 # Note: f_menu_server_action_gui will replace the 4th piece below with the actual server name automatically.
 #       It will use the "sed" command to substitute the actual server name automatically.
@@ -139,8 +139,10 @@ VERSION="2024-03-27 20:15"
 #
 # commented out #@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
 #
-#@#//r2d2/geekstuff#@#/mnt/r2d2/geekscripts#@#R2D2 Server shared geek scripts.
-#@#//c3po/library#@#/mnt/c3po/library#@#C3PO Server shared Library.
+#@#//file_server/public#@#/mnt/file_server/public#@#Scotty Server - Restricted shared files.
+#@#//file_server/public-no-backup#@#/mnt/file_server/public-no-backup#@#Scotty Server - Shared files not backed-up.
+#@#//scotty/robert#@#/mnt/scotty/robert#@#Scotty Server - Roberts personal files.
+#@#//scotty/JW.org_files#@#/mnt/scotty/JW.org_files#@#Scotty Server - JW.org files.
 #
 #
 # MOUNT COMMAND RETURN CODES
@@ -175,9 +177,12 @@ VERSION="2024-03-27 20:15"
 #          SERVER_DESC[1]=<Description of Shared Directory contents>.
 #          MAX_LENGTH. MAX_LINES, MAX_CHOICE_LENGTH.
 #
+# Summary: Create arrays to handle mount-point names
+#          and server source directory names.
+#
+# Dependencies: None.
+#
 f_server_arrays () {
-      #
-      # Create arrays to handle mount-point names and server source directory names.
       #
       # Example:
       # Server name is "hansolo"
@@ -296,6 +301,10 @@ f_server_arrays () {
 #    Uses: ERROR, EXITOUT, NUM, SP, MP.
 # Outputs: None.
 #
+# Summary: Mount all share-points to mount-points.
+#
+# Dependencies: f_username, f_password, f_mount1, f_dismount1.
+#
 f_mount_or_dismount_all () {
       #
       # Example:
@@ -384,6 +393,10 @@ f_mount_or_dismount_all () {
 #    Uses: QUIT, ERROR. $TEMP_FILE.
 # Outputs: None.
 #
+# Summary: Mount a single share-point onto a single mount-point.
+#
+# Dependencies: f_mount2, f_test_mount, f_message.
+#
 f_mount1 () {
       #
       # mountpoint command 0=directory is a mountpoint (already mounted).
@@ -447,6 +460,11 @@ f_mount1 () {
 #    Uses: None.
 # Outputs: ERROR.
 #
+# Summary: Mount a single share-point onto a single mount-point.
+#          Execute the mount command and handle error messages, if any.
+#
+# Dependencies: f_message.
+#
 f_mount2 () {
       #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
@@ -498,6 +516,11 @@ f_mount2 () {
 #          $3 - Mount-point.
 #    Uses: ERROR.
 # Outputs: QUIT, SMBUSER. $TEMP_FILE.
+#
+# Summary: Handle error if mount fails and ask for credentials again.
+#
+# Dependencies: f_yn_question, f_username, f_password.
+#
 f_test_mount () {
       #
       TEMP_FILE=$THIS_DIR/$THIS_FILE"_temp.txt"
@@ -569,12 +592,17 @@ f_test_mount () {
 #    Uses: ERROR.
 # Outputs: None.
 #
+# Summary: Dismount a mounted mount-point.
+#          Execute umount command.
+#
+# Dependencies: f_message.
+#
 f_dismount () {
       #
       # mountpoint command 0=directory is a mountpoint (already mounted).
       #                    1=directory is not a mountpoint (not mounted).
-      # Test if unmounted already,
-      # if so then don't unmount again or will get mount error.
+      # Test if dismounted already,
+      # if so then don't dismount again or will get mount error.
       #
       #
       mountpoint $2 >/dev/null
@@ -587,7 +615,7 @@ f_dismount () {
       # Was umount command successful?
       if [ -s $TEMP_FILE ] ; then
          # File $TEMP_FILE contains error message, so display it.
-         f_message $1 "OK" "Error Unmounting" $TEMP_FILE
+         f_message $1 "OK" "Error Dismounting" $TEMP_FILE
       fi
       #
       if [ -r $TEMP_FILE ] ; then
@@ -605,6 +633,10 @@ f_dismount () {
 #          $2 - Server name.
 #    Uses: CHOICE_ACT, PASSWORD, MENU_TITLE.
 # Outputs: GENERATED_FILE, ARRAY_FILE, MENU_TITLE, TEMP_FILE, SERVER_NAME.
+#
+# Summary: Display "Server Action Menu".
+#
+# Dependencies: f_server_arrays, f_menu_main_all_menus.
 #
 f_menu_server_action () {
       #
@@ -672,6 +704,10 @@ f_menu_server_action () {
 #    Uses: None.
 # Outputs: None.
 #
+# Summary: Mount all sd devices and show mount-points.
+#
+# Dependencies: f_mount_or_dismount_all, f_show_mount_points.
+#
 f_mount_all () {
       #
       f_mount_or_dismount_all $1 $2 "mount"
@@ -690,6 +726,10 @@ f_mount_all () {
 #          $2 - Server name.
 #    Uses: None.
 # Outputs: None.
+#
+# Summary: Dismount all mounted mount-points on a specific file server.
+#
+# Dependencies: f_mount_or_dismount_all, f_show_mount_points.
 #
 f_dismount_all () {
       #
@@ -710,6 +750,10 @@ f_dismount_all () {
 #          $3 - Mount-Point.
 #    Uses: None.
 # Outputs: None.
+#
+# Summary: Select mount-points from a menu and show the results.
+#
+# Dependencies: f_menu_pick, f_show_mount_points.
 #
 f_pick_mounts () {
       #
@@ -738,6 +782,10 @@ f_pick_mounts () {
 #          $4 - SERVER NAME OF MOUNT POINT.
 #    Uses: GENERATED_FILE, ARRAY_NAME, ARRAY_LEN, XNUM, SERVER, MP, SP, ERROR, MOUNT_POINT_DESC, QUIT.
 # Outputs: STATUS[XNUM], $2_DESC[XNUM].
+#
+# Summary: Create a script $3 containing function f_checklist_mp_gui, and then run it.
+#
+# Dependencies: f_checklist_mp_gui, f_username, f_password, f_pick_match.
 #
 f_menu_pick () {
       #
@@ -886,8 +934,15 @@ f_menu_pick () {
 #    Uses: MNT.
 # Outputs: QUIT.
 #
+# Summary: Mount Share-point onto Mount-point if picked or selected.
+#          Dismount Mount-point if not picked or selected.
+#
+# Dependencies: f_mount1, f_dismount.
+#
 f_pick_match () {
       #
+      # Using the regex operator "=~" rather than [[ "$CHOICE_ACT" == *"$2"* ]] which also works.
+      # Does $CHOICE_ACT contain $XNUM?
       if [[ "$CHOICE_ACT" =~ "$2" ]] ; then  # Does CHOICE_ACT contain XNUM?
          # Yes, CHOICE_ACT contains XNUM so mount it.
          # for-loop to allow username and password to be asked more than once if needed.
@@ -900,9 +955,9 @@ f_pick_match () {
                    f_mount1 $1 $3 $4 $5 $6
                 fi
             done
-      # No CHOICE_ACT does not contain XNUM, so unmount it.
+      # No CHOICE_ACT does not contain XNUM, so dismount it.
       else
-         # echo "Unmount $4 from $3"  # Diagnostic line.
+         # echo "Dismount $4 from $3"  # Diagnostic line.
          f_dismount $1 $4
       fi
       unset MNT

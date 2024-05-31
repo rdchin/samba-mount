@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-03-27 20:15"
+VERSION="2024-05-29 18:12"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -99,13 +99,13 @@ VERSION="2024-03-27 20:15"
 #
 #@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
 #
-#@@R2D2#@@R2D2 Server shared geek scripts.#@@f_menu_server_action^$GUI^R2D2
+#@@Scotty#@@    Scotty primary file server.#@@f_menu_server_action^$GUI^scotty
 #
-#@@C3PO#@@C3PO Server shared Library.#@@f_menu_server_action^$GUI^C3PO
+#@@Parsley#@@Parsley secondary file server.#@@f_menu_server_action^$GUI^parsley
 #
 #@@Local PC: $HOSTNAME#@@This PC with USB drive attached.#@@f_detect_state_of_local_usb_drive^$GUI
 #
-#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#@@Local/LAN storage#@@Show local removable storage devices and LAN mount points.#@@f_show_mount_points^$GUI
 #
 #! End Listing Server Menu (Required line, do not delete).
 #
@@ -229,12 +229,12 @@ f_check_version () {
 # +----------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
-#          $2 - Application to execute.
+#          $2 - Application to install.
 #          THIS_DIR, THIS_FILE.
 #    Uses: None.
 # Outputs: RUNAPP.
 #
-# Summary: Run an executable application.
+# Summary:Install an application.
 #
 # Dependencies: apt, f_message, f_bad_sudo_password.
 #
@@ -343,7 +343,7 @@ f_install_app () {
 #    Uses: RUNAPP, FILE_MANAGER.
 # Outputs: None.
 #
-# Summary: Run an executable script or script
+# Summary: Select and run a file manager application.
 #
 # Dependencies: apt, f_message, f_bad_sudo_password.
 #

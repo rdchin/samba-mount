@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-03-27 20:15"
+VERSION="2024-05-29 18:12"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -99,11 +99,15 @@ VERSION="2024-03-27 20:15"
 #
 #@@Exit#@@Return to previous menu on PC "$HOSTNAME".#@@break
 #
+#@@All Mount#@@Mount all local storage devices.#@@^f_mount_all_local_usb_drives^$GUI
+#
+#@@All Dismount#@@Dismount all local storage devices.#@@^f_dismount_all_local_usb_drives^$GUI
+#
 #@@Mount#@@Mount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^mount
 #
 #@@Dismount#@@Dismount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount
 #
-#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#@@Local/LAN storage#@@Show local removable storage devices and LAN mount points.#@@f_show_mount_points^$GUI
 #
 #@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
 #
@@ -118,7 +122,7 @@ VERSION="2024-03-27 20:15"
 # Outputs: ERROR.
 #
 # Summary: Detect USB drive(s) available and whether it is mounted.
-#          If unmounted, then mount. If mounted, then dismount or mount to another mount-point.
+#          If dismounted, then mount. If mounted, then dismount or mount to another mount-point.
 #
 # Dependencies: apt, f_message, f_ask_question.
 #
@@ -138,22 +142,108 @@ f_detect_state_of_local_usb_drive () {
          return 1
       fi
       #
-      # Check if there are any 'sd' or 'md' devices mounted.
-      df -hT | grep -e /sd -e /md[0-9] >/dev/null
-      ERROR=$?
-      # Are there any "sd" and/or "md" devices mounted?
-      if [ $ERROR -ne 0 ] ; then
-         # No, there are no "sd" or "md" devices mounted.
-         # Choose the "sd" and or "md" devices available to be mounted.
-         f_mount_or_dismount_local_usb_drive_2 "$1" "mount" "/dev/sdb1"
-       else
-         # Yes, there are "sd" devices already mounted.
-         # Select an "sd" device and choose to either dismount or mount to an additional mount-point.
-         # Display the menu to mount or dismount.
-         f_mount_or_dismount_local_usb_drive "$1"
-       fi
+      # Select an "sd" device and choose to either dismount or mount to an additional mount-point.
+      # Display the menu to mount or dismount.
+      f_mount_or_dismount_local_usb_drive "$1"
       #
 }  # End of function f_detect_state_of_local_usb_drive
+#
+# +----------------------------------------------+
+# |     Function f_mount_all_local_usb_drives    |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: None.
+#
+# Summary: Display Storage Action Menu to mount or dismount local USB drive.
+#
+# Dependencies: f_menu_main_all_menus.
+#
+f_mount_all_local_usb_drives () {
+      #
+      LOCAL_SERVER_NAME=$(cat /etc/hostname)
+      #
+      # Get mount-points and drives from command lsblk and format data for pretty display.
+      # Prevent listing the unmountable RAID member drives by using "grep linux_raid_member --invert-match".
+      # Write results to a $TEMP_FILE.
+      lsblk --list --output NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT | awk  '{ printf "%-9s %-4s %-6s %-4s is mounted on %s\n", $1,$2,$3,$4,$5}' | sed -e 's/is mounted on $/is not mounted./' | grep -e sd[a-z][1-9] -e md[0-9] | grep --invert-match linux_raid_member | sed 's/part /Local drive /' > $TEMP_FILE_"lsblk.txt"
+      #
+      # Find any unmounted local storage devices
+      grep "is not mounted" $TEMP_FILE_"lsblk.txt" >/dev/null
+      ERROR=$?
+      #
+      # Are there any unmounted local storage devices?
+      if [ "$ERROR" -eq 0 ] ; then
+         # Yes, display list of unmounted Mount-points.
+         # Include results of lsblk in $TEMP_FILE.
+         # Convert from a text file to a single string substituting underscores for spaces.
+         # Substitute "@" for <CR><LF> and then substitute "\n" for "@".
+         QUES=$(cat $TEMP_FILE_"lsblk.txt" | tr "\n" "@" | sed 's/@/\\n/g')
+         QUES="$QUES\n\nDo you want to mount local storage devices on PC $HOSTNAME?"
+         #
+         # Substitute underscores for spaces for use in f_yn_question.
+         QUES=$(echo $QUES | tr " " "_")
+         #
+         # Ask question to mount devices.
+         f_yn_question $1 "Y" "Unmounted Local Devices" $QUES
+         #
+         case $ANS in
+              0)
+                 # Yes, mount them.
+                 while read LINE
+                       do
+                          LOCAL_DEVICE=$(echo $LINE | awk '{ print $1 }')
+                          BLOCK_DEVICE="/dev/"$LOCAL_DEVICE
+                          sudo mount $BLOCK_DEVICE /media/$LOCAL_SERVER_NAME/$LOCAL_DEVICE
+                       done < $TEMP_FILE_"lsblk.txt"
+              ;;
+         esac
+         #
+         unset LINE ANS QUES
+      else
+         f_message $1 "NOK" "Nothing to Mount" "There are no local storage devices to mount on PC $HOSTNAME."
+      fi
+      #
+      if [ -e $TEMP_FILE_"lsblk.txt" ] ; then
+         rm $TEMP_FILE_"lsblk.txt"
+      fi
+      #
+      f_show_mount_points $1
+      #
+}  # End of function f_mount_all_local_usb_drives.
+#
+# +----------------------------------------------+
+# |   Function f_dismount_all_local_usb_drives   |
+# +----------------------------------------------+
+#
+#  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
+#    Uses: None.
+# Outputs: None.
+#
+# Summary: Display Storage Action Menu to mount or dismount local USB drive.
+#
+# Dependencies: f_menu_main_all_menus.
+#
+f_dismount_all_local_usb_drives () {
+      #
+      LOCAL_SERVER_NAME=$(cat /etc/hostname)
+      #
+      # Check if there are any 'sd' or 'md' devices mounted.
+      findmnt --all --df --output=source,size,used,use%,avail,target | grep -e /media/ -e /md
+      ERROR=$?
+      # Are there any "sd" and/or "md" devices mounted?
+      if [ $ERROR -eq 0 ] ; then
+         # Yes, there are "sd" or "md" devices mounted.
+         # Dismount all "sd" storage devices.
+         sudo umount /media/$LOCAL_SERVER_NAME/sd*
+      else
+         f_message $1 "NOK" "Dismount Status" "There are no storage devices to dismount."
+      fi
+      #
+      f_show_mount_points $1
+      #
+}  # End of function f_dismount_all_local_usb_drives.
 #
 # +----------------------------------------------+
 # | Function f_mount_or_dismount_local_usb_drive |
@@ -164,6 +254,7 @@ f_detect_state_of_local_usb_drive () {
 # Outputs: None.
 #
 # Summary: Display Storage Action Menu to mount or dismount local USB drive.
+#
 # Dependencies: f_menu_main_all_menus.
 #
 f_mount_or_dismount_local_usb_drive () {
@@ -200,10 +291,10 @@ f_mount_or_dismount_local_usb_drive () {
 #    Uses: None.
 # Outputs: ERROR.
 #
-# Summary: Determines which function based on $2.
+# Summary: Determines which function either to mount or to dismount based on $2.
 #
-# Dependencies: f_mount_local_usb_drive_2,
-#               f_dismount_local_usb_drive_2,
+# Dependencies: f_mount_local_usb_drive,
+#               f_dismount_local_usb_drive,
 #               f_show_mount_points
 #
 f_mount_or_dismount_local_usb_drive_2 () {
@@ -212,10 +303,10 @@ f_mount_or_dismount_local_usb_drive_2 () {
          rm $TEMP_FILE
       fi
       #
-      if [ $2 = "mount" ] ; then
-         f_mount_local_usb_drive_2 $1
+      if [ "$2" = "mount" ] ; then
+         f_mount_local_usb_drive $1
       else
-         f_dismount_local_usb_drive_2 $1
+         f_dismount_local_usb_drive $1
       fi
       # Show file shares and mount-points.
       f_show_mount_points $1
@@ -223,7 +314,7 @@ f_mount_or_dismount_local_usb_drive_2 () {
 }  # End of function f_mount_or_dismount_local_usb_drive_2.
 #
 # +------------------------------------------------+
-# |       Function f_mount_local_usb_drive_2       |
+# |        Function f_mount_local_usb_drive        |
 # +------------------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
@@ -237,7 +328,7 @@ f_mount_or_dismount_local_usb_drive_2 () {
 #               f_select_local_device_radiolist
 #               f_select_mount_point
 #
-f_mount_local_usb_drive_2 () {
+f_mount_local_usb_drive () {
       #
       # Mount USB device.
       #
@@ -259,6 +350,9 @@ f_mount_local_usb_drive_2 () {
            whiptail | text)
               # Select one local device to mount using a menu.
               f_select_local_device_menu $1
+              if [ -n "$ANS" ] ; then
+                 break
+              fi
            ;;
            dialog)
               # Select one local device to mount using a radiolist.
@@ -279,21 +373,39 @@ f_mount_local_usb_drive_2 () {
       case $LOCAL_DEVICE in
            /dev/md*)
            # If local device is a RAID disk array.
-           DEFAULT_MP="/mnt/$LOCAL_SERVER_NAME/RAID/"
+           DEFAULT_MP="/mnt/$LOCAL_SERVER_NAME/RAID"
            ;;
            *)
            # If local device is a USB drive.
-           DEFAULT_MP="/media/$LOCAL_SERVER_NAME/"
+           DEFAULT_MP="/media/$LOCAL_SERVER_NAME"
            ;;
       esac
       # Select the mount-point.
-      f_select_mount_point $1 "$DEFAULT_MP"
+      case $1 in
+           dialog | whiptail)
+              # Select one mount-point using a menu.
+              f_select_mount_point $1 "$DEFAULT_MP"
+              MOUNT_POINT=$ANS
+           ;;
+           text)
+              case $LOCAL_DEVICE in
+                   /dev/sd*)
+                      # MOUNTPOINT Format /media/<hostname>/sd[a-z]1
+                      MOUNT_POINT="$DEFAULT_MP/$(basename $LOCAL_DEVICE)"
+                   ;;
+                   /dev/md*)
+                      MOUNT_POINT="$DEFAULT_MP"
+                   ;;
+                   *)
+                      MOUNT_POINT="$DEFAULT_MP"
+                   ;;
+              esac
+           ;;
+      esac
       #
-      if [ -z "$ANS" ] ; then
+      if [ -z "$MOUNT_POINT" ] ; then
          f_message $1 "NOK" "Error mounting" "No mount command specified."
       else
-         MOUNT_POINT=$ANS
-         #
          # Format the Question text in the $TEMP_FILE
          # for use by f_ask_question.
          echo >>$TEMP_FILE
@@ -326,10 +438,12 @@ f_mount_local_usb_drive_2 () {
          fi
       fi
       #
-}  # End of function f_mount_local_usb_drive_2.
+      unset LOCAL_DEVICE
+      #
+}  # End of function f_mount_local_usb_drive.
 #
 # +------------------------------------------------+
-# |     Function f_dismount_local_usb_drive_2      |
+# |      Function f_dismount_local_usb_drive       |
 # +------------------------------------------------+
 #
 #  Inputs: $1 - "text", "dialog" or "whiptail" the command-line user-interface in use.
@@ -340,7 +454,7 @@ f_mount_local_usb_drive_2 () {
 #
 # Dependencies: df, f_message.
 #
-f_dismount_local_usb_drive_2 () {
+f_dismount_local_usb_drive () {
       #
       # Dismount USB device.
       #
@@ -356,16 +470,9 @@ f_dismount_local_usb_drive_2 () {
          return 1
       fi
       #
-      # Get list of all mounted devices.
-      df -hT | grep -e /sd -e /md[0-9] | awk '{print "Device "$1" is mounted on "$NF}' > $TEMP_FILE
-      #
-      echo >> $TEMP_FILE
-      echo "Which USB device do you want to dismount?" >> $TEMP_FILE
-      #
       # Select the local device to dismount.
       case $1 in
            whiptail | text)
-              # Select one local device to dismount using a menu.
               f_select_local_device_menu $1
            ;;
            dialog)
@@ -377,8 +484,6 @@ f_dismount_local_usb_drive_2 () {
       LOCAL_DEVICE=$ANS
       #
       if [ -n "$LOCAL_DEVICE" ] ; then
-         f_message $1 "NOK" "Umount Command" "Command: sudo umount $ANS"
-         #
          # Dismount the local device.
          sudo umount $ANS
          ERROR=$?
@@ -397,7 +502,9 @@ f_dismount_local_usb_drive_2 () {
          rm $TEMP_FILE
       fi
       #
-}  # End of function f_dismount_local_usb_drive_2.
+      unset LOCAL_DEVICE
+      #
+}  # End of function f_dismount_local_usb_drive.
 #
 # +----------------------------------------------+
 # |      Function f_select_local_device_menu     |
@@ -415,13 +522,13 @@ f_dismount_local_usb_drive_2 () {
 #
 #          (See also f_create_menu which may be used in place of this function.)
 #
-#          Simpler implementation than the Main Menu function.
+#          Simpler implementation than the Main Menu function "f_menu_main_TEMPLATE".
 #          It assumes that this function is in a separate script library
 #          file which contains the Sub-Menu options delimited by "#@@".
 #
-#          Whereas the Main Menu function checks its script for the
-#          Main Menu options delimited by "#@@" and if it does not
-#          find any then it defaults to the specified library script.
+#          Whereas the Main Menu function "f_menu_main_TEMPLATE" checks
+#          its script for the Main Menu options delimited by "#@@" and
+#          if it does not find any then it defaults to the specified library script.
 #
 # Dependencies: f_menu_arrays, f_create_show_menu.
 #
@@ -778,8 +885,12 @@ f_select_mount_point () {
 #
 f_local_device_action () {
       #
-      f_message $1 "NOK" "Selected Menu Choice" "Selected menu choice is: $2\n\nNow returning to previous menu." 2
+      # Compose actual device name to be mounted or dismounted.
       ANS="/dev/"$2
+      #
+      # Automatically quit out of the menu after a device has been selected.
+      # This avoids returning to the menu and user required to select "QUIT".
+      CHOICE="QUIT"
       #
 }  # End of function f_local_device_action.
 #

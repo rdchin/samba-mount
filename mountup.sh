@@ -24,7 +24,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-03-27 20:15"
+VERSION="2024-05-29 18:12"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -48,12 +48,12 @@ HOSTNAME=$(cat /etc/hostname)
 # LAN File Server shared directory.
 # SERVER_DIR="[FILE_SERVER_DIRECTORY_NAME_GOES_HERE]"
 # SERVER_DIR="//file_server/files"
-SERVER_DIR="//file_server/files"
+SERVER_DIR="//file_server/public"
 #
 # Local PC mount-point directory.
 # MP_DIR="[LOCAL_MOUNT-POINT_DIRECTORY_NAME_GOES_HERE]"
 # MP_DIR="/mnt/file_server/files"
-MP_DIR="/mnt/file_server/files"
+MP_DIR="/mnt/file_server/public"
 #
 # Local PC mount-point with LAN File Server Local Repository full directory path.
 # Example:
@@ -63,7 +63,7 @@ MP_DIR="/mnt/file_server/files"
 #
 # LOCAL_REPO_DIR="$MP_DIR/[DIRECTORY_PATH_TO_LOCAL_REPOSITORY]"
 # LOCAL_REPO_DIR="$MP_DIR/Local_Repository"
-LOCAL_REPO_DIR="$MP_DIR/Local_Repository"
+LOCAL_REPO_DIR="$MP_DIR/scripts/BASH/Repository"
 #
 # Web Repository i.e. Hosted by GitHub.com or another web site.
 # WEB_REPOSITORY_URL="raw.githubusercontent.com/user/project/branch"
@@ -199,6 +199,44 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024 05-28 *f_local_device_action changed so that when a device is
+##             selected, the user is automatically exited from the menu and
+##             the device is then (dis)mounted.
+##            *f_mount_local_usb_drive, f_dismount_local_usb_drive
+##             bug fixed when (dis)mounting a second device, the first
+##             device was used even though the second device was selected.
+##             Reduced user messages of device status.
+##
+## 2024-05-28 *f_mount_local_usb_drive_2 renamed to
+##             f_mount_local_usb_drive.
+##            *f_dismount_local_usb_drive_2 renamed to
+##             f_dismount_local_usb_drive.
+##            *f_mount_local_usb_drive changed to not use fzf to select the
+##             mount-point if the UI is plain text mode. But use the chosen
+##             device name to derive the mount-point name.
+##
+## 2024-05-22 *Improved documentation of functions missing "Summary" and
+##             "Dependencies" comments.
+##
+## 2024-05-18 *Section "Storage Action Menu"
+##                     "All Mount" and "All Dismount" added.
+##            *f_mount_all_local_usb_drives added.
+##            *f_dismount_all_local_usb_drives added.
+##            *f_local_device_action improved user message.
+##            *f_dismount_local_usb_drive_2 added user message explanation.
+##
+## 2024-04-20 *Section "Server Menu", "Server Action Menu"
+##                     "Storage Action Menu", "Local/LAN storage"
+##                     "Local PC Mount-Dismount Menu"
+##             changed wording of menu item for clarity.
+##            *f_detect_state_of_local_usb_drive remove extraneous paremeter
+##             from call to f_mount_or_dismount_local_usb_drive_2.
+##             Replaced "df" with "findmnt" because of false error message
+##             in Ubuntu and Linux Mint:
+##             "df: /run/user/1000/doc: Operation not permitted"
+##             Apparently this is a bug in Flatpak according to what
+##             other nerds can deduce.
 ##
 ## 2024-03-27 *f_mount_local_usb_drive_2 changed default mount-point from
 ##             /mnt/usb1 to /mnt/sdb1 in the example user help instructions.
@@ -617,7 +655,7 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 #
 #@@Mount-Dismount#@@Mount/Dismount Server Mount-points.#@@f_menu_main_all_menus^$GUI^Server_Menu^$THIS_DIR/mountup.lib
 #
-#@@Show Local/LAN drives#@@Show Local drives, LAN drive mount points.#@@f_show_mount_points^$GUI
+#@@Local/LAN storage#@@Show local removable storage devices and LAN mount points.#@@f_show_mount_points^$GUI
 #
 #@@File Managers#@@Manage files/folders.#@@f_file_manager_select^$GUI^"/home/robert"^2
 #
