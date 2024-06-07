@@ -24,7 +24,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-05-29 18:12"
+VERSION="2024-06-05 20:16"
 THIS_FILE=$(basename $0)
 FILE_TO_COMPARE=$THIS_FILE
 TEMP_FILE=$THIS_FILE"_temp.txt"
@@ -199,6 +199,11 @@ FILE_DL_LIST=$THIS_FILE"_file_dl_temp.txt"
 ## (After each edit made, please update Code History and VERSION.)
 ##
 ## Includes changes to mountup.sh, mountup.lib, and mountup_servers.lib.
+##
+## 2024-06-05 *f_dismount_all_local_usb_drives enhanced to dismount devices
+##             in both hostname and username ($USER) mountpoints.
+##             The auto-mounting of removeable devices happens on username
+##             mountpoints for many linux distributions.
 ##
 ## 2024 05-28 *f_local_device_action changed so that when a device is
 ##             selected, the user is automatically exited from the menu and

@@ -23,7 +23,7 @@
 # |        Default Variable Values         |
 # +----------------------------------------+
 #
-VERSION="2024-05-29 18:12"
+VERSION="2024-06-05 20:16"
 #
 # Commented out THIS_FILE since it will conflict other scripts which
 # use this library.
@@ -105,7 +105,7 @@ VERSION="2024-05-29 18:12"
 #
 #@@Mount#@@Mount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^mount
 #
-#@@Dismount#@@Dismount the local storage device.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount
+#@@Dismount#@@Dismount local storage devices on /media.#@@f_mount_or_dismount_local_usb_drive_2^$GUI^dismount
 #
 #@@Local/LAN storage#@@Show local removable storage devices and LAN mount points.#@@f_show_mount_points^$GUI
 #
@@ -221,7 +221,8 @@ f_mount_all_local_usb_drives () {
 #    Uses: None.
 # Outputs: None.
 #
-# Summary: Display Storage Action Menu to mount or dismount local USB drive.
+# Summary: Dismount all local removeable USB drives in /media including
+#          those mounted in User Space ($USER).
 #
 # Dependencies: f_menu_main_all_menus.
 #
@@ -229,16 +230,24 @@ f_dismount_all_local_usb_drives () {
       #
       LOCAL_SERVER_NAME=$(cat /etc/hostname)
       #
-      # Check if there are any 'sd' or 'md' devices mounted.
-      findmnt --all --df --output=source,size,used,use%,avail,target | grep -e /media/ -e /md
+      # Check if there are any 'sd' devices mounted in hostname space.
+      findmnt --all --df --output=source,size,used,use%,avail,target | grep -e /media/$LOCAL_SERVER_NAME/sd
       ERROR=$?
-      # Are there any "sd" and/or "md" devices mounted?
+      # Are there any "sd" devices mounted?
       if [ $ERROR -eq 0 ] ; then
-         # Yes, there are "sd" or "md" devices mounted.
-         # Dismount all "sd" storage devices.
-         sudo umount /media/$LOCAL_SERVER_NAME/sd*
-      else
-         f_message $1 "NOK" "Dismount Status" "There are no storage devices to dismount."
+         # Yes, there are "sd" devices mounted.
+         # Dismount all "sd" storage devices in /media/$LOCAL_SERVER_NAME/sd*.
+         sudo umount /media/$LOCAL_SERVER_NAME/sd* 2>/dev/null
+      fi
+      #
+      # Check if there are any devices mounted in $USER space.
+      findmnt --all --df --output=source,size,used,use%,avail,target | grep -e /media/$USER/
+      ERROR=$?
+      # Are there any "sd" devices mounted?
+      if [ $ERROR -eq 0 ] ; then
+         # Yes, there are "sd" devices mounted.
+         # Dismount all "sd" storage devices in /media/$LOCAL_SERVER_NAME/sd*.
+         sudo umount /media/$USER/* 2>/dev/null
       fi
       #
       f_show_mount_points $1
